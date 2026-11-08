@@ -34,6 +34,8 @@ def queries():
     dashboard = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(dashboard)
     result = dashboard.datasets()
+    # The public app builds the tribunal from filtered machine rows and reads the hold case from actions.
+    del result["tribunal"], result["hold_case"], result["model_comparison"], result["model_bias"]
     result["machine"] = MACHINE
     result["demand"] = """SELECT d.gaming_date,d.coin_in_usd,f.forecast_usd,f.split
         FROM workspace.royale.gold_demand_context_day d

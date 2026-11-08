@@ -2,7 +2,7 @@
 
 [Public source repository](https://github.com/kavuruhasini03-hue/gilded-ace-royale-submission)
 
-This list contains 146 files from final release `943a132`. It includes the July budget panel, the prepared Ask the Pit Boss answers, the Genie configuration and validation, and the strict April 30 forecast cutoff.
+This snapshot contains 166 files, including the three-action July plan, the four-model comparison, Genie setup, the Evidence Vault and final public screenshots.
 
 The snapshot excludes challenge data, generated exports, local settings, browser profiles, and credentials.
 
@@ -50,6 +50,26 @@ docs/PUBLIC_COPY_REVIEW.md
 docs/RECON.md
 docs/STRATEGIC_INSIGHTS.md
 docs/screens/README.md
+docs/screens/final/README.md
+docs/screens/final/budget-allocation.png
+docs/screens/final/budget-phone.png
+docs/screens/final/comps.png
+docs/screens/final/demand.png
+docs/screens/final/evidence.png
+docs/screens/final/judge-01-dates.png
+docs/screens/final/judge-02-bank-timeline.png
+docs/screens/final/judge-03-gold.png
+docs/screens/final/judge-04-evidence.png
+docs/screens/final/judge-04-model.png
+docs/screens/final/leak.png
+docs/screens/final/luck.png
+docs/screens/final/mobile.png
+docs/screens/final/model-comparison.png
+docs/screens/final/model.png
+docs/screens/final/plan-flipped.png
+docs/screens/final/plan.png
+docs/screens/final/players.png
+docs/screens/final/verdict.png
 docs/screens/restyle/README.md
 docs/screens/restyle/after/comps.png
 docs/screens/restyle/after/demand.png

@@ -24,21 +24,22 @@ The five source queries returned 1 cage row, 20 July actions, 20 annual actions,
 
 | Model | April MAE | May–June MAE | May–June MAPE |
 | --- | ---: | ---: | ---: |
-| Constant baseline | Not compared | $218,258.10 | 16.43% |
-| Primary ridge with April 30 cutoff | $65,286.54 | $51,128.96 | 3.84% |
-| Ridge with a trend | $68,584.75 | $66,519.66 | 5.00% |
+| Constant baseline | $203,431 | $218,258 | 16.43% |
+| Seasonal (weekday mean) baseline | $40,715 | $68,699 | 5.02% |
+| Weekday + events model (primary) | $65,287 | $51,129 | 3.84% |
+| Trend model (tested, rejected) | $68,585 | $66,520 | 5.00% |
 
-Bias below is forecast minus actual. Positive values mean the forecast was too high.
+Residual is actual minus forecast. Negative values mean the forecast was too high.
 
-| Weekday | Constant baseline | Primary ridge | Ridge with a trend |
-| --- | ---: | ---: | ---: |
-| Mon | $208,469.96 | $19,820.06 | $51,899.11 |
-| Tue | $310,024.40 | $14,090.32 | $45,097.67 |
-| Wed | $241,586.31 | $-15,109.47 | $16,514.17 |
-| Thu | $117,681.02 | $-1,951.06 | $31,483.82 |
-| Fri | $-214,511.92 | $39,447.62 | $71,606.86 |
-| Sat | $-386,538.32 | $32,279.20 | $64,438.44 |
-| Sun | $-19,295.95 | $44,805.47 | $76,964.71 |
+| Weekday | Constant baseline | Seasonal baseline | Primary model | Rejected trend |
+| --- | ---: | ---: | ---: | ---: |
+| Mon | −$208,470 | −$35,689 | −$19,820 | −$51,899 |
+| Tue | −$310,024 | −$38,047 | −$14,090 | −$45,098 |
+| Wed | −$241,586 | −$6,648 | $15,109 | −$16,514 |
+| Thu | −$117,681 | −$23,742 | $1,951 | −$31,484 |
+| Fri | $214,512 | −$56,306 | −$39,448 | −$71,607 |
+| Sat | $386,538 | −$49,138 | −$32,279 | −$64,438 |
+| Sun | $19,296 | −$61,664 | −$44,805 | −$76,965 |
 
 The trend estimated from January through April was upward after allowing for the weekday, holiday and event effects. That fitted slope helps explain why the added term worsened the overforecast on every weekday. It does not rule out other forms of drift. We predeclared a single trend variant, made the April comparison before reading holdout outcomes, and scored its frozen predictions once. We keep the current ridge as primary.
 
@@ -64,3 +65,7 @@ The input checks passed 62 checksums and sizes, 31 row-count and format comparis
 - [July plan](screens/review/plan.png), [budget bar](screens/review/budget-allocation.png), and [phone-width budget](screens/review/budget-phone.png)
 - [Model Room](screens/review/model.png) and [model comparison](screens/review/model-comparison.png)
 - [Dates](screens/review/judge-01-dates.png), [bank and timeline](screens/review/judge-02-bank-timeline.png), [Gold tier](screens/review/judge-03-gold.png), and [inspection evidence](screens/review/judge-04-evidence.png)
+
+## July machine scheduling
+
+For the first eligible gaming days, the profile puts the inspection at 4 to 6 a.m. Thursday, July 3, and the move at 3 to 6 a.m. Friday, July 4. Expected win lost rounds to $6 and $14, versus $86 and $130 for the same durations beginning Saturday at 7 p.m. These are estimates from the April-frozen hourly profile, not actual July losses.

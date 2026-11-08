@@ -30,9 +30,9 @@ SELECT 'Technician coverage must cover package cost', 'Cashier’s Cage',
        'Full wait removal is an upper-bound scenario for the modeled tickets, before operational constraints.'
 FROM workspace.royale.gold_tech_shift_economics
 UNION ALL
-SELECT 'Fund positive July information value and preserve the rest', 'Cashier’s Cage',
+SELECT 'Fund three July tests and keep the rest in reserve', 'Cashier’s Cage',
        'gold_action_plan / action_plan.sql',
-       CONCAT('USD ', ROUND(kept_usd, 2), ' retained'),
+       CONCAT('$', FORMAT_NUMBER(spent_usd, 0), ' funded and $', FORMAT_NUMBER(kept_usd, 0), ' kept in reserve'),
        'Catalogue-wide comparison, uncertainty scenarios and ±30% downtime-value sensitivity',
        'Information values are scenario assumptions. A-HOLD remains the zero-value comparison.'
 FROM workspace.royale.gold_cage_slip

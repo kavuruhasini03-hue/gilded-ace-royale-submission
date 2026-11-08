@@ -2,7 +2,7 @@
 
 [Public source repository](https://github.com/kavuruhasini03-hue/gilded-ace-royale-submission)
 
-We recommend not replacing any of the ten lowest-earning machines in July. Instead, inspect machine M-1158, hold off on the comp pilot until it can give a clear answer, and keep $98,800 of the budget in reserve.
+We recommend not replacing any of the ten lowest-earning machines in July. Their low earnings come mostly from the Back Forty's lost foot traffic and from game settings, so we spend $10,500 on three tests: new signage for the Back Forty, a payout check on machine M-1158, and moving machine M-1184 to a busier spot to learn whether its weakness is the spot or the machine. We keep $89,500 in reserve.
 
 The primary weekday forecast uses only announcements known by April 30. On the 61-day holdout it missed by $51,129 per day (3.84%), about 77% less than the constant baseline.
 

@@ -7,7 +7,7 @@
 - **Pass. Ratios.** The SQL audit found 20 uses of `AVG`. The only average of ratios is mean absolute percentage error, which gives each forecast day equal weight by definition. The other averages describe daily levels, weekday reference levels, weekly wagers, player outcomes, or model errors. Hold, comp reinvestment, occupancy, and similar business rates divide totals.
 - **Pass. Time and floor eligibility.** The semantic check confirmed off-floor exclusion and the 23-hour spring gaming day. The Databricks checks confirmed that session dates and hourly downtime reconcile. The public hourly chart lists all 24 hour labels from 06:00 through 05:00.
 - **Pass. Forecast.** Both forecasts were fixed through April 30 before scoring the 61 May and June days. Inputs use the calendar and events announced by April 30. The constant baseline had $218,258 in mean absolute error, and the primary weekday model had $51,129 (3.84%), a 76.57% reduction.
-- **Pass. July budget.** The selected action costs $1,200 and leaves $98,800. Gold checks passed the budget, action count, quantity limits, incompatibilities, lead time, and July lease formula.
+- **Pass. July budget.** The three selected actions cost $10,500 and leave $89,500. Gold checks passed the budget, action count, quantity limits, incompatibilities, lead time, and July lease formula.
 - **Pass. Contrast and chart alternatives.** The palette checks passed. Suit names, chart labels, and data tables carry the meaning alongside the colors.
 - **Pass. Language.** The site and submission describe a fictional casino, frame the inspection as a check, and rule out targeting heavy losers. The built site and the generated submission documents contain no em dashes.
 - **Pass. Public judge workflow.** Playwright verified dates, Bank 40 and its machine timeline, Tier Gold, model validation, and the M-1158 evidence link in a fresh browser context with third-party cookies blocked. All nine header KPIs matched Databricks exactly at the defined precision across three date ranges. The screenshots are in [the view index](../docs/screens/views/README.md).
@@ -20,3 +20,11 @@ The separate organizer data release check remains blocked on the draft data vers
 The browser reran the judge workflow, the three exact Gold KPI comparisons, the machine deal, and the plan-card flip. It also checked phone-width overflow and reduced-motion behavior. The restored palette passed the contrast checks. The built assets contain zero em dashes and no DuckDB or Parquet references. [Before and after screenshots](../docs/screens/restyle/README.md).
 
 The warehouse also checked that all holdout event flags use only announcements known at the forecast origin. The public Ask the Pit Boss panel uses fixed answers from Gold without an LLM. Genie is separate and requires Databricks workspace access.
+
+## Final July plan checks
+
+The Databricks placement records show that Center Pit slot L-07-3 was vacant at the proposed July 3 move time. The catalog prices one move at $1,800 with two lead days and three hours of downtime. No other selected action targets M-1184. The warehouse returned three funded action types, $10,500 funded and $89,500 in reserve. One signage unit costs $7,500 and leaves 20 July operating days after 10 lead days. Its catalog limit is two units. All eight action checks passed.
+
+The final warehouse rerun passed Gold reconciliation and the component checks across three date windows, the player and demand checks, and the frozen April 30 forecast checks. The data and semantic checks also passed. The signed-in AI/BI dashboard was republished with individual data permissions. The changed widget queries returned data, and Genie returned all three funded actions and the correct reserve. The signed-in visual walkthrough remains pending.
+
+[Final public view and judge screenshots](../docs/screens/final/README.md).

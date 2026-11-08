@@ -36,13 +36,13 @@ Result: July base net USD -8118.33, range USD -9671.63 to -6565.02
 Alternative tested: Preselect a comparable bank and receiving site. Advance only if net combined theo improves after displacement.
 Limitation: Scenario recovers 0% / 25% / 50% of net bank machine-specific shortfall. The bank cluster is descriptive.
 
-## A-MOVE-MACHINE · M-1184 · Back Forty
+## Move M-1184 to Center Pit · Bank 07 (A-MOVE-MACHINE)
 
 Dashboard page: Cashier’s Cage
 Gold source and query: gold_machine_verdict / action_plan.sql
-Result: July base net USD -253.23, range USD -1812.87 to 1306.41
-Alternative tested: Test peer-adjusted theo per available hour before committing to a move.
-Limitation: Recapture 0% / 25% / 50% of the location gap. Receiving-slot and displacement checks required.
+Result: The $1,800 move has a July operating net of about −$253, with a range from −$1,813 to +$1,306. The estimate assigns no dollar value to learning from the move.
+Alternative tested: Compare the change in M-1184’s expected win per available hour with M-1212, M-1296 and M-1087 in Center Pit. Back Forty is exposed to the signage test and cannot serve as a control. Use June 3 to June 30 for the pre-move window and July 4 to July 31 for the 28 complete gaming days after the July 3 move. Divide total expected win by total available hours in each window. Compare the machine’s change with each peer group’s change and check its post-move gap against the Center Pit peers. Read the result at the end of August. Reassess Bank 40 if M-1184 catches up. Review the $22,000 replacement if a clear shortfall persists. Keep measuring if the result is inconclusive.
+Limitation: Slot L-07-3 was vacant in the July 3 placement records. Since reopening, Center Pit recorded 168.7 entries per covered hour versus 22.8 for Back Forty. The Center Pit comparison can detect about $4.38 per available hour, at 80% power and a two-sided 5% test. The calculation uses April 8 through June 30 daily machine-minus-peer gaps and allows for up to seven days of correlation. Against M-1184’s $10.87 baseline, this is a large change, so July gives a directional read.
 
 ## A-PREVENTIVE · Ridgeline
 
@@ -153,14 +153,14 @@ Limitation: Recover 25% / 50% / 75% of wait within shift hours, priced at the af
 Dashboard page: Cashier’s Cage
 Gold source and query: gold_back_forty_lasting_gap / action_plan.sql
 Result: July base net USD -2215.53, range USD -7500.0 to 3068.93
-Alternative tested: Track exposure-adjusted traffic and theo against other zones. Verify the causal gap before scaling.
-Limitation: Recover 0% / 25% / 50% of descriptive post-closure gap. Annual case assumes the gap and effect persist.
+Alternative tested: Compare July 11 to July 30 with the 20 gaming days before installation. Compare changes in entries per covered sensor-hour and expected win per installed machine-day in Back Forty with changes on the rest of the floor. At the end of August, extend signage if it closes at least 25% of the initial gap on both measures. Otherwise revisit the bank-move test.
+Limitation: The gap after the closure is descriptive. The 12-month central scenario nets $86.3K only if the gap and a 25% recovery persist. With no effect, the loss is $7,500. M-1184 leaves before the signs go up.
 
-## Fund positive July information value and preserve the rest
+## Fund three July tests and keep the rest in reserve
 
 Dashboard page: Cashier’s Cage
 Gold source and query: gold_action_plan / action_plan.sql
-Result: USD 98800.00 retained
+Result: $10,500 funded and $89,500 kept in reserve.
 Alternative tested: Catalogue-wide comparison, uncertainty scenarios and ±30% downtime-value sensitivity
 Limitation: Information values are scenario assumptions. A-HOLD remains the zero-value comparison.
 
@@ -299,6 +299,10 @@ Gold source and query: gold_machine_verdict / machine_verdict.sql
 Result: 0 machines appear in both lists
 Alternative tested: Availability-adjusted peer comparison and day bootstrap
 Limitation: Peer benchmarks are fixed to the six-month release
+
+## The weekday baseline is a close comparison
+
+The weekday-mean baseline had the lowest April validation error at $40,715. The weekday, events and holidays model had the lowest May–June error at $51,129, compared with $68,699 for the weekday mean. We chose the primary model before adding the weekday baseline and kept that choice without using the holdout to switch models. A simple weekday average does almost as well, so events and holidays add modest accuracy.
 
 ## A linear trend did not improve the forecast
 

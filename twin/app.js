@@ -3,14 +3,22 @@ const $ = id => document.getElementById(id);
 const escape = value => String(value ?? "Unavailable").replace(/\bGM\b/g,"general manager").replaceAll(String.fromCharCode(8212), ". ").replace(/[&<>"']/g, char =>
   ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"})[char]);
 const fmt = new Intl.NumberFormat("en-US", {maximumFractionDigits: 2});
-const usd = new Intl.NumberFormat("en-US", {style:"currency",currency:"USD"});
-const axisMoney = new Intl.NumberFormat("en-US", {style:"currency",currency:"USD",notation:"compact",maximumFractionDigits:2});
-const pct = new Intl.NumberFormat("en-US", {style:"percent",maximumFractionDigits:2});
+const wholeDollars = new Intl.NumberFormat("en-US", {style:"currency",currency:"USD",maximumFractionDigits:0});
+const compact = new Intl.NumberFormat("en-US", {maximumFractionDigits:1,minimumFractionDigits:1});
+const usd = {format(value) {
+  const magnitude = Math.abs(value);
+  const unit = magnitude >= 999950 ? [1e6,"M"] : magnitude >= 10000 ? [1e3,"K"] : null;
+  return unit ? (value < 0 ? "−" : "")+"$"+compact.format(magnitude/unit[0])+unit[1] : wholeDollars.format(value);
+}};
+const axisMoney = usd;
+const holdPct = new Intl.NumberFormat("en-US", {style:"percent",minimumFractionDigits:2,maximumFractionDigits:2});
+const pct = new Intl.NumberFormat("en-US", {style:"percent",minimumFractionDigits:1,maximumFractionDigits:2});
 const unique = values => [...new Set(values.filter(Boolean))].sort();
 const sum = (rows, key) => rows.reduce((total, row) => total + Number(row[key] ?? 0), 0);
 const ratio = (a,b) => b ? a / b : null;
+const moveSpots = [{x:27.5,y:106,label:"Old spot · L-33-6"},{x:69,y:50,label:"New spot · L-07-3"}];
 const colors = ["#e3b850","#6fb6ff","#c79bff","#ff5f57","#ffa24c","#fbf6e9","#5fd39a"];
-const suitColor = label => ({"♦":colors[6],"♣":colors[1],"♥":colors[4],"⚙":colors[2],"♠":colors[0],"🔍":colors[3]})[Array.from(label || "")[0]] ?? colors[5];
+const suitColor = label => ({"♦":colors[6],"♣":colors[1],"♥":colors[4],"⚙":colors[2],"♠":colors[0],"🔍":colors[6]})[Array.from(label || "")[0]] ?? colors[5];
 const filters = {start:"2025-01-01",end:"2025-06-30",zone:"",bank:"",tier:"",region:"",age:""};
 let data, pages, review, insights, active = 0, selectedMachine = "", evidenceMachine = "";
 const dateIn = value => value && value.slice(0,10) >= filters.start && value.slice(0,10) <= filters.end;
@@ -38,9 +46,17 @@ function table(columns, rows) {
   if (!rows.length) return '<p role="status" class="muted">No rows match these filters.</p>';
   const cell = (value,column,row) => {
     if (value == null) return "Unavailable";
+    if (column.fieldName === "page_label" && row.route) return '<a href="#/'+escape(row.route)+'">'+escape(value)+'</a>';
     if (column.fieldName === "machine_id") return '<button class="link" data-machine="' + escape(value) + '">' + escape(value) + '</button>';
     if (column.fieldName === "verdict_chip") return '<span class="chip" style="color:' + suitColor(value) + '">' + escape(value) + '</span>';
     if (typeof value === "boolean") return value ? "Yes" : "No";
+    if (column.fieldName === "gaming_hour") return hourLabel(value);
+    if (column.fieldName === "mape_pct") return pct.format(value / 100);
+    if (["estimate", "ci90_lower", "ci90_upper"].includes(column.fieldName) && row.metric) {
+      if (row.metric.endsWith("_usd_week")) return usd.format(value);
+      if (row.metric.endsWith("_usd")) return (value < 0 ? "−" : "")+"$"+fmt.format(Math.abs(value));
+      return row.metric.endsWith("_pct") ? pct.format(value / 100) : fmt.format(value)+" pp";
+    }
     const friendly = {constant_baseline:"Constant baseline",weekday_event_holiday:"Weekday, event, and holiday model",
       relative_coin_in_pct:"Change in tracked wagers relative to untracked wagers (%)",
       relative_coin_in_usd_week:"Change in tracked wagers relative to untracked wagers ($ per week)",
@@ -48,11 +64,15 @@ function table(columns, rows) {
       tracked_theo_per_player_raw_usd:"Raw change in expected win per tracked player ($)",
       tracked_theo_per_player_control_adjusted_usd:"Change in expected win per tracked player after comparison ($)",
       face:"Face value",economic:"Economic cost"};
-    if (typeof value==="string") value=value.replace(/\bGM\b/g,"general manager");
+    if (typeof value==="string") value=value.replace(/\bGM\b/g,"general manager").replace(/^[0-7] (?=[A-Z−$])/,"");
     if (typeof value==="string" && friendly[value]) return friendly[value];
-    if (column.fieldName==="action_type_id" && row.action_name) return escape(row.action_name);
+    if (column.fieldName==="action_type_id" && row.action_name) return escape(row.action_name)+' <small>('+escape(value)+')</small>';
     if (["claim","result","alternative_tested","limitation"].includes(column.fieldName)) {
       const sentence = String(value).replace(/\bUSD (-?\d+(?:\.\d+)?)/g,(_,amount)=>usd.format(Number(amount)))
+        .replace(/\b(-?\d+(?:\.\d+)?) USD\b/g,(_,amount)=>usd.format(Number(amount)))
+        .replace(/\b[a-z]+(?:_[a-z]+)+(?=:)/g, label=>friendly[label] ?? label)
+        .replace(/(-?\d+\.\d{3,})/g,(_,amount)=>fmt.format(Number(amount)))
+        .replace(/(range [−-]?\$[\d.,]+[KM]?) to (-?\d+(?:\.\d+)?)/g,(_,first,end)=>first+" to "+usd.format(Number(end)))
         .replace(/\bvs\b/g,"compared with").replace(/\b90% interval\b/g,"90% uncertainty range")
         .replace(/\bcarded\b/g,"tracked").replace(/\buncarded\b/g,"untracked").trim();
       return escape(/[.!?]$/.test(sentence)?sentence:sentence+".");
@@ -66,7 +86,7 @@ function table(columns, rows) {
   return '<div class="table-wrap" tabindex="0" role="region" aria-label="Scrollable data table"><table><thead><tr>'
     + columns.map(c => '<th scope="col">' + escape(c.displayName) + '</th>').join("") + '</tr></thead><tbody>'
     + rows.map(row => '<tr' + (evidenceMachine && row.claim?.includes(evidenceMachine) ? ' class="focus-row" id="evidence-match"' : '') + '>'
-      + columns.map(c => '<td'+(c.format?.type === 'number-currency' ? ' class="money"' : '')+'>' + cell(row[c.fieldName],c,row) + '</td>').join("") + '</tr>').join("") + '</tbody></table></div>';
+      + columns.map(c => '<td'+(c.format?.type === 'number-currency' ? ' class="money"' : '')+' data-label="'+escape(c.displayName)+'">' + cell(row[c.fieldName],c,row) + '</td>').join("") + '</tr>').join("") + '</tbody></table></div>';
 }
 const columns = (x,series) => [x,...series].map(([fieldName,displayName,format]) => ({fieldName,displayName,format}));
 const currency = {type:"number-currency"};
@@ -96,38 +116,28 @@ function line(title, rows, x, series, {shade, shadeEnd, numeric = false} = {}) {
     return '<path d="'+path+'" fill="none" stroke="'+colors[i]+'" stroke-width="2" stroke-dasharray="'+["none","6 3","2 3"][i%3]+'"/>';
   }).join("");
   const ticks = [...new Set([0,Math.floor((rows.length-1)/2),rows.length-1])].map(i => {
-    const value = rows[i][x[0]], label = numeric && x[0].includes("share") ? pct.format(value) : String(value).slice(0,10);
+    const value = rows[i][x[0]], label = numeric && x[0].includes("share") ? pct.format(value) : (x[0]==="gaming_hour"?hourLabel(value):x[0]==="period"?String(value).replace(/^\d /,"").replace(/^Closed$/,"During closure"):String(value));
     return '<text x="'+xx(i)+'" y="217" text-anchor="'+(i===rows.length-1&&i!==0?"end":i===0?"start":"middle")+'">'+escape(label)+'</text>';
   }).join("");
   return '<svg class="chart" viewBox="0 0 705 230" role="img" aria-label="'+escape(title)+'">'+overlay+grid+paths+ticks+'</svg>'
     + '<div class="series">'+series.map(([,label],i) => '<span style="color:'+colors[i]+'">'+escape(label)+'</span>').join("")+'</div>'
     + fallback(columns(x,series),rows);
 }
-function waterfall(rows) {
-  const parts = [["Potential",sum(rows,"potential_theo_usd"),false],["♥ Leak",-sum(rows,"leak_usd"),true],
-    ["♣ Location",sum(rows,"location_usd"),true],["⚙ Lineup",sum(rows,"lineup_usd"),true],
-    ["♠ Machine",sum(rows,"machine_specific_usd"),true],["Theo",sum(rows,"theo_usd"),false],
-    ["♦ Luck",sum(rows,"luck_residual_usd"),true],["Actual",sum(rows,"house_win_usd"),false]];
-  let running = 0;
-  const bars = parts.map(([label,value,change]) => {
-    const start = change ? running : 0;
-    running = start+value;
-    return {label,value,start,end:running};
-  });
-  const low = Math.min(0,...bars.map(b=>Math.min(b.start,b.end))), high = Math.max(0,...bars.map(b=>Math.max(b.start,b.end)));
-  const xx = v => 147+(v-low)/(high-low || 1)*350;
-  return '<svg class="chart" viewBox="0 0 705 273" role="img" aria-label="Waterfall from potential theo to actual win">'
-    + bars.map((b,i) => '<text x="4" y="'+(24+33*i)+'">'+escape(b.label)+'</text><rect x="'+Math.min(xx(b.start),xx(b.end))
-      +'" y="'+(9+33*i)+'" width="'+Math.max(1,Math.abs(xx(b.start)-xx(b.end)))+'" height="21" rx="3" fill="'+
-      [colors[0],colors[3],colors[1],colors[4],colors[5],colors[0],colors[2],colors[6]][i]+'"/>'
-      +'<text x="695" y="'+(24+33*i)+'" text-anchor="end">'+usd.format(b.value)+'</text>').join("")
-    + '</svg>'+fallback(columns(["label","Component"],[["value","Amount",currency]]),bars);
+function shortfallChart(title,rows) {
+  const components = [
+    ["Downtime", -sum(rows,"leak_usd")], ["Location", sum(rows,"location_usd")],
+    ["Game mix", sum(rows,"lineup_usd")], ["Machine effect", sum(rows,"machine_specific_usd")],
+    ["Luck", sum(rows,"luck_residual_usd")]
+  ].map(([label,value])=>({label,value}));
+  return bars(title,components,"label","value",currency);
 }
 function scatter(title,rows,x,y,{map=false,funnel=false}={}) {
   if (!rows.length) return table(columns(["machine_id","Machine"],[x,y]),[]);
   const xs = rows.map(r=>Number(r[x[0]])), ys = rows.map(r=>Number(r[y[0]]));
-  const xmin = funnel ? 0 : Math.min(...xs), xmax = Math.max(...xs);
-  const ymin = funnel ? Math.min(-3*xmax,...ys) : Math.min(...ys), ymax = funnel ? Math.max(3*xmax,...ys) : Math.max(...ys);
+  const markers = map && !filters.zone && !filters.bank ? moveSpots : [];
+  const mapX = [...xs,...markers.map(spot=>spot.x)], mapY = [...ys,...markers.map(spot=>spot.y)];
+  const xmin = funnel ? 0 : Math.min(...mapX), xmax = Math.max(...mapX);
+  const ymin = funnel ? Math.min(-3*xmax,...ys) : Math.min(...mapY), ymax = funnel ? Math.max(3*xmax,...ys) : Math.max(...mapY);
   const xx = v => 55+(v-xmin)/(xmax-xmin || 1)*605;
   const yy = v => 195-(v-ymin)/(ymax-ymin || 1)*160;
   const guides = funnel ? [-3,-2,2,3].map(k=>'<path d="M'+xx(0)+' '+yy(0)+'L'+xx(xmax)+' '+yy(k*xmax)
@@ -136,10 +146,10 @@ function scatter(title,rows,x,y,{map=false,funnel=false}={}) {
     +'" data-machine="'+escape(r.machine_id)+'" cx="'+xx(xs[i])+'" cy="'+yy(ys[i])+'" r="'+(map?5:4)+'" fill="'+suitColor(r.verdict_chip)+'"><title>'
     +escape(r.machine_id+' · '+r.verdict_chip)+'</title></circle>').join("");
   return '<svg class="chart" viewBox="0 0 705 245" role="group" aria-label="'+escape(title)+'"><path d="M55 35V195H660" fill="none" stroke="#9faea6"/>'
-    + guides+points+'<text x="360" y="231" text-anchor="middle">'+escape(x[1])+'</text><text x="54" y="22">'+escape(y[1])
-    + '</text></svg>'+fallback(columns(["machine_id","Machine"],[x,y,["bank_name","Bank"],["verdict_chip","Verdict"]]),rows);
+    + guides+points+markers.map((spot,i)=>'<path d="M'+(xx(spot.x)-7)+' '+yy(spot.y)+'h14m-7 -7v14" stroke="#fbf6e9" stroke-width="2"/><title>'+escape(spot.label)+'</title>').join("")+'<text x="360" y="231" text-anchor="middle">'+escape(x[1])+'</text><text x="54" y="22">'+escape(y[1])
+    + '</text></svg>'+(markers.length?'<p>M-1184 moves from L-33-6 in Back Forty to L-07-3 in Center Pit. Crosses mark both spots.</p>':"")+fallback(columns(["machine_id","Machine"],[x,y,["bank_name","Bank"],["verdict_chip","Verdict"]]),rows);
 }
-function hourLabel(hour) { return String((hour+6)%24).padStart(2,"0")+":00"; }
+function hourLabel(hour) { const local=(hour+6)%24; return (local%12||12)+(local<12?"a":"p"); }
 function heat(title,rows,kind) {
   const grouped = groups(rows,["zone_name","gaming_hour"],{entries:"entries",coverage:"coverage_minutes",loss:"lost_theo_usd"});
   for (const row of grouped) row.value = kind === "traffic" ? ratio(60*row.entries,row.coverage) : row.loss;
@@ -167,7 +177,7 @@ function bars(title,rows,label,value,format) {
       return '<text x="4" y="'+(y+15)+'">'+escape(row[label])+'</text><rect x="'+(455-(v<0?w:0))+'" y="'+y
         +'" width="'+Math.max(1,w)+'" height="20" fill="'+colors[v<0?3:1]+'"/><text x="699" y="'+(y+15)
         +'" text-anchor="end">'+escape(format===currency?usd.format(v):fmt.format(v))+'</text>';
-    }).join("")+'</svg>'+fallback(columns([label,"Group"],[[value,"Value",format]]),rows);
+    }).join("")+'</svg>'+fallback(columns([label,({band:"Player result",hour:"Gaming hour",label:"Component"})[label] ?? "Category"],[[value,format===currency?"Amount":"Players",format]]),rows);
 }
 const stable = name => data[name] || [];
 const datasets = {
@@ -180,18 +190,18 @@ const machineGroups = rows => groups(rows,["machine_id","verdict_chip"],{varianc
   theo:"theo_usd",win:"house_win_usd",hours:"available_hours",effect:"machine_specific_usd"});
 function charts(name,title,rows) {
   switch(name) {
-    case "bridge": return rows.length ? waterfall(rows) : table([],[]);
-    case "luck-funnel": return scatter(title,machineGroups(rows).map(r=>({...r,sigma:Math.sqrt(r.variance)})),["sigma","Expected sigma ($)"],["luck","Luck residual ($)"],{funnel:true});
+    case "bridge": return rows.length ? shortfallChart(title,rows) : table([],[]);
+    case "luck-funnel": return scatter(title,machineGroups(rows).map(r=>({...r,sigma:Math.sqrt(r.variance)})),["sigma","Typical payout variation ($)",currency],["luck","Actual win minus expected win ($)",currency],{funnel:true});
     case "actual-theo": {
       const shortlist=new Set(stable("comparison").map(r=>r.machine_id));
-      return scatter(title,machineGroups(rows).filter(r=>shortlist.has(r.machine_id)),["theo","Expected win ($)"],["win","Actual win ($)"]);
+      return scatter(title,machineGroups(rows).filter(r=>shortlist.has(r.machine_id)),["theo","Expected win ($)",currency],["win","Actual win ($)",currency]);
     }
     case "peers": {
       const rates = groups(rows,["config_id","machine_id","verdict_chip"],{theo:"theo_usd",hours:"available_hours"})
         .filter(r=>r.hours>0).map(r=>({...r,rate:r.theo/r.hours}));
       const configs = unique(rates.map(r=>r.config_id));
       return scatter(title,rates.map(r=>({...r,config:configs.indexOf(r.config_id)+1})),
-        ["config","Configuration index"],["rate","Theo per available hour ($)"]);
+        ["config","Game settings group"],["rate","Expected win per available hour ($)",currency]);
     }
     case "slot-map": {
       const positions = new Map(rows.map(r=>[JSON.stringify([r.machine_id,r.bank_name,r.x_m,r.y_m]),r]));
@@ -204,7 +214,7 @@ function charts(name,title,rows) {
         && (!focus || focus.has(r.zone_name))),name==="traffic-heat"?"traffic":"leak");
     }
     case "demand-timeline": return line(title,stable("demand").filter(r=>dateIn(r.gaming_date)),["gaming_date","Gaming date"],
-      [["coin_in_usd","Actual",currency],["forecast_usd","Forecast",currency]],{shade:"2025-03-03",shadeEnd:"2025-04-06"});
+      [["coin_in_usd","Actual",currency],["forecast_usd","Forecast",currency]],{shade:"2025-05-01"});
     case "walkway-did": {
       const phases=stable("machine").filter(r=>dateIn(r.gaming_date)).map(r=>({...r,day:1,
         period:r.gaming_date<"2025-03-03"?"1 Before":r.gaming_date<"2025-04-07"?"2 Closed":"3 After",
@@ -244,9 +254,9 @@ function charts(name,title,rows) {
     case "net-histogram": {
       const full=filters.start==="2025-01-01" && filters.end==="2025-06-30" && !filters.tier && !filters.region && !filters.age;
       const rows=[...stable("hist")].sort((a,b)=>a.bin_id-b.bin_id);
-      return full ? bars(title,rows,"band","observations") : table(columns(["band","Six-month result"],[["observations","Players"]]),rows);
+      return full ? bars(title,rows.map(r=>({...r,band:r.band.replace(/^[0-7] /,"")})),"band","observations") : table(columns(["band","Six-month result"],[["observations","Players"]]),rows);
     }
-    case "action-board": return bars(title,stable("actions").map(r=>({...r,label:r.action_type_id+" "+r.target_label})),"label","expected_net_usd",currency);
+    case "action-board": return actionBars();
     case "model-holdout": return line(title,stable("forecast").filter(r=>dateIn(r.gaming_date)),["gaming_date","Gaming date"],
       [["actual_usd","Actual",currency],["forecast_usd","Weekday model",currency],["baseline_usd","Baseline",currency]],{shade:"2025-05-01"});
     default: return "";
@@ -259,12 +269,13 @@ const layout = {
   leak:["downtime-total","downtime-month","downtime-hour","downtime-maker","fault-hour","leak-heat"],
   players:["player-segments","concentration-curve","top-shares","player-outcomes","net-histogram"],
   comps:["comp-price","comp-rates","points-exposure","comp-weekly","comp-control"],
-  plan:["budget-allocation","unfunded-options","spent","kept","hold-ref","action-board","cage-slip","annual-options","tech-compare","tech-sensitivity"],
-  model:["forecast-review","model-holdout","model-score","model-residual"],
-  evidence:["review-evidence","claims"]
+  plan:["budget-allocation","unfunded-options","spent","kept","hold-ref","action-board","cage-slip","annual-options","tech-compare","tech-sensitivity","review-evidence"],
+  model:["forecast-review","model-holdout","action-schedule"],
+  evidence:["claims"]
 };
 const extraCopy = {
-  "budget-allocation":["Most of the July budget stays in reserve","The thin slice is the funded inspection. The labels show the amount and share on both sides."],
+  "action-schedule":["Use the lowest-value windows for the two machine tests","The April-frozen hourly profile estimates expected win lost per machine. We choose the lowest-value continuous window on the first eligible gaming day (early morning the next calendar day) and compare it with the same duration starting Saturday at 7 p.m."],
+  "budget-allocation":["Most of the July budget stays in reserve","The thin slice is the three funded tests. The labels show the amount and share on both sides."],
   "unfunded-options":["What we chose to leave unfunded","Net value includes cost and the estimated benefit. Pilot and survey values describe what their findings might be worth."],
   "forecast-review":["A trend checks whether the weekday forecast can handle falling demand","We compared the two ridge models on April, using January through March to fit them. Then we froze the trend forecast through April 30 before checking May and June."],
   "review-evidence":["The forecast sensitivity leaves the staffing decision unchanged","We repriced the expected recovery using the trend forecast. Even a generous upper bound does not cover the staffing package."],
@@ -304,13 +315,17 @@ function pitBossAnswers() {
   const actions=stable("actions");
   const inspection=actions.find(r=>r.action_type_id==="A-INSPECT" && r.selected);
   const pilot=actions.find(r=>r.action_type_id==="A-COMP-PILOT");
+  const testMove=actions.find(r=>r.action_type_id==="A-MOVE-MACHINE" && r.selected);
+  const buy=actions.find(r=>r.action_type_id==="A-REPLACE-BUY" && r.target_id===testMove?.target_id);
+  const bank=actions.find(r=>r.action_type_id==="A-MOVE-BANK");
   const threshold=pilot.success_rule.match(/at most ([\d.]+%)/)?.[1];
   const primary=stable("scores").find(r=>r.model==="weekday_event_holiday");
   const baseline=stable("scores").find(r=>r.model==="constant_baseline");
   const reduction=1-primary.mae_usd/baseline.mae_usd;
   const answers=[
-    ["How much should we spend in July?", "Fund "+usd.format(cage.spent_usd)+" and keep "+usd.format(cage.kept_usd)+" in reserve.",
+    ["How much should we spend in July?", "Add Back Forty signage, inspect M-1158 and move M-1184. Fund "+wholeDollars.format(cage.spent_usd)+" and keep "+wholeDollars.format(cage.kept_usd)+" in reserve.",
       "plan","Open the July plan"],
+    ...(testMove ? [["Why move "+testMove.target_id+"?", "It is a long-term replacement candidate. The "+wholeDollars.format(testMove.cash_cost_usd)+" move to Center Pit tests whether its low earnings come from its spot or from the machine itself. The result will help decide whether to consider the "+wholeDollars.format(buy.cash_cost_usd)+" replacement or the "+wholeDollars.format(bank.cash_cost_usd)+" move of Hotel Corridor · Bank 40.", "plan", "Review the move and its decision rule"]] : []),
     ["Why inspect "+inspection.target_id+"?", "The "+usd.format(inspection.cash_cost_usd)+" check can determine whether the payout meter, game settings, or accounting show a repeatable problem. The estimated net value of what we might learn is "+usd.format(inspection.expected_net_usd)+".",
       "evidence","Open the evidence"],
     ["How accurate is the primary forecast?", "Using announcements known by April 30, the model missed by "+usd.format(primary.mae_usd)+" per day on average over "+primary.scored_days+" days. That is "+pct.format(reduction)+" less error than the constant forecast.",
@@ -329,11 +344,28 @@ function budgetAllocation() {
   const spent=sum(stable("actions").filter(row=>row.selected),"cash_cost_usd");
   const reserve=data.cage[0].kept_usd;
   const total=spent+reserve, share=100*spent/total;
-  const label=(name,amount)=>name+" "+usd.format(amount)+" ("+(100*amount/total).toFixed(1)+"%)";
-  const funded=label("Funded",spent), kept=label("Reserve",reserve);
+  const label=(name,amount)=>wholeDollars.format(amount)+" "+name+" ("+(100*amount/total).toFixed(1)+"%)";
+  const funded=label("funded",spent), kept=label("reserve",reserve);
   return '<figure class="budget-allocation" tabindex="0" aria-label="'+escape(funded+". "+kept+". Total "+usd.format(total))+'">'
     +'<div class="budget-callout">'+escape(funded)+'</div><div class="budget-track" aria-hidden="true">'
-    +'<span style="width:'+share+'%"></span></div><figcaption>'+escape(kept)+' · Total '+usd.format(total)+'</figcaption></figure>';
+    +'<span style="width:'+share+'%"></span></div><figcaption>'+escape(kept)+' · Total '+wholeDollars.format(total)+'</figcaption><p>Funded actions: install signs for Back Forty, inspect M-1158 and move M-1184.</p></figure>';
+}
+function actionBars() {
+  const rows=[...stable("actions")].sort((a,b)=>b.expected_net_usd-a.expected_net_usd);
+  const min=Math.min(0,...rows.map(r=>r.low_net_usd));
+  const max=Math.max(0,...rows.map(r=>r.high_net_usd));
+  const x = value => 4+192*(value-min)/(max-min || 1);
+  return '<ul class="action-bars">'+rows.map(row=>{
+    const net=row.expected_net_usd;
+    const alt="Low "+usd.format(row.low_net_usd)+", high "+usd.format(row.high_net_usd);
+    return '<li><div>'+escape(row.action_name)+' <small>('+escape(row.action_type_id)+')</small><br>'
+      +escape(row.target_label)+(row.selected?' <strong>Funded</strong>':'')+'</div>'
+      +'<svg viewBox="0 0 200 24" role="img" aria-label="'+escape(alt)+'"><title>'+escape(alt)+'</title>'
+      +'<line x1="'+x(0)+'" x2="'+x(0)+'" y1="0" y2="24" stroke="#9faea6"/>'
+      +'<rect x="'+Math.min(x(net),x(0))+'" y="5" width="'+Math.max(1,Math.abs(x(net)-x(0)))+'" height="14" fill="'+(row.selected?'#e3b850':'#8a9690')+'"/>'
+      +'<line x1="'+x(row.low_net_usd)+'" x2="'+x(row.high_net_usd)+'" y1="12" y2="12" stroke="#fbf6e9" stroke-width="2"/>'
+      +'</svg><div class="action-amount">'+usd.format(net)+'<br><small>'+escape(alt)+'</small></div></li>';
+  }).join("")+'</ul>';
 }
 function unfundedOptions() {
   const reasons={
@@ -354,17 +386,17 @@ function unfundedOptions() {
     metric("annualNet","12-month net value",currency),metric("reason","Why it stays unfunded")],rows);
 }
 function forecastReview() {
-  const scores=Object.entries(review.holdout).map(([model,values])=>({model,...values}));
+  const labels={"Constant baseline":"Constant baseline","Seasonal (weekday mean) baseline":"Seasonal (weekday mean) baseline","Current ridge":"Weekday + events model (primary)","Ridge with a trend":"Trend model (tested, rejected)"};
+  const scores=Object.keys(labels).map(model=>({model,label:labels[model],...review.holdout[model],april:review.april[model==="Current ridge"?"current":model==="Ridge with a trend"?"trend":model].mae,mape_pct:review.holdout[model].mape}));
   const bias=Object.entries(review.bias).map(([weekday,values])=>({weekday,...values}));
-  return '<p>April average error was '+usd.format(review.april.current.mae)+' for the current model and '+usd.format(review.april.trend.mae)
-    +' for the trend model. '+(review.promote?'The trend also reduced error in May and June. It qualifies as a candidate to replace the current model.':'The trend did not improve both tests. The current model remains primary.')+'</p>'
-    +table([metric("model","Model"),metric("mae","May–June average dollar error",currency),metric("mape","May–June average percentage error")],scores)
-    +'<p>Positive bias means the forecast was too high. These averages use the same 61 days.</p>'
-    +table([metric("weekday","Weekday"),...scores.map(row=>metric(row.model,row.model,currency))],bias)
+  return '<p>The weekday-mean baseline had the lowest April validation error at $40,715. The weekday, events and holidays model had the lowest May–June error at $51,129, compared with $68,699 for the weekday mean. We chose the primary model before adding the weekday baseline and kept that choice without using the holdout to switch models. A simple weekday average does almost as well, so events and holidays add modest accuracy.</p>'
+    +table([metric("label","Model"),metric("april","April validation error",currency),metric("mae","May–June error",currency),metric("mape_pct","May–June average percentage error")],scores)
+    +'<p>Residual is actual minus forecast. A negative value means the forecast was too high. These averages use the same 61 days.</p>'
+    +table([metric("weekday","Weekday"),...scores.map(row=>metric(row.model,row.label,currency))],bias)
     +'<div class="forecast-disclosure"><h4>Why the primary score changed</h4><p>'+escape(review.disclosure.event)
     +' was announced on May 26, after the April 30 forecast date. The earlier forecast used it on seven June dates. We removed it, refit the model through April 30, froze the forecasts, and rescored the 61 holdout days once.</p>'
-    +'<p>Earlier score: '+usd.format(review.disclosure.old.mae)+' and '+review.disclosure.old.mape.toFixed(2)+'%. Corrected primary score: '
-    +usd.format(review.holdout["Current ridge"].mae)+' and '+review.holdout["Current ridge"].mape.toFixed(2)
+    +'<p>Earlier score: '+wholeDollars.format(review.disclosure.old.mae)+' and '+review.disclosure.old.mape.toFixed(2)+'%. Corrected primary score: '
+    +wholeDollars.format(review.holdout["Current ridge"].mae)+' and '+review.holdout["Current ridge"].mape.toFixed(2)
     +'%. The trend lost because it increased error in April and in May and June.</p></div>';
 }
 function staffingReview() {
@@ -376,6 +408,10 @@ function extra(name,title,rows) {
   if(name==="budget-allocation") return budgetAllocation();
   if(name==="unfunded-options") return unfundedOptions();
   if(name==="forecast-review") return forecastReview();
+  if(name==="action-schedule") {
+    const timing=stable("action_schedule").map(r=>({...r,window:r.weekday+" gaming day, "+hourLabel(r.start_hour)+" to "+hourLabel(r.start_hour+r.minutes/60)}));
+    return table([metric("action","Action"),metric("minutes","Minutes offline"),metric("window","Lowest-value window"),metric("quiet_usd","Expected win lost",currency),metric("saturday_usd","Saturday at 7 p.m.",currency)],timing);
+  }
   if(name==="review-evidence") return staffingReview();
   const days = stable("floor").filter(r=>dateIn(r.gaming_date));
   const monthDays = new Map(groups(monthRows(days),["month"],{days:"count"}).map(r=>[r.month,r.days]));
@@ -437,15 +473,15 @@ function extra(name,title,rows) {
 
 function planCards(rows) {
   const inspection = rows.find(row=>row.action_type_id==="A-INSPECT" && row.selected);
-  const pilot = rows.find(row=>row.action_type_id==="A-COMP-PILOT");
-  const move = rows.find(row=>row.action_type_id==="A-MOVE-BANK");
+  const signs = rows.find(row=>row.action_type_id==="A-WAYFINDING" && row.selected);
+  const testMove = rows.find(row=>row.action_type_id==="A-MOVE-MACHINE" && row.selected);
+  const annualMove = stable("annual").find(row=>row.action_type_id==="A-MOVE-MACHINE" && row.target_id===testMove?.target_id);
   const cards = [
     ["A","♥","Funded",inspection.cash_cost_usd,"Inspect "+inspection.target_id,
       "Check the payout meter, game settings, and accounting. Compare the records by "+inspection.measurement_date+". Confirm a repeatable discrepancy before approving more work."],
-    ["K","♠","Deferred",pilot.cash_cost_usd,"Comp pilot",
-      "The trial can only detect a change of 5.77% over 60 days. We need it to detect 2.5% before funding it."],
-    ["Q","♦","Watchlist",move.cash_cost_usd,"Test the bank position",
-      "Check whether the bank position explains the gap. A move does not pay for itself in July."],
+    ...(testMove ? [["2","♣","Funded",testMove.cash_cost_usd,"Move "+testMove.target_id,"Move to vacant slot L-07-3. Compare expected win per available hour with same-setting Center Pit peers over 28 days. Decide at the end of August. If the gain persists, the 12-month central scenario nets "+usd.format(annualMove.expected_net_usd)+"."]] : []),
+    ...(signs ? [["K","♠","Funded",signs.cash_cost_usd,"Install Back Forty signs",
+      "Compare Back Forty traffic and expected win with the rest of the floor. Extend the signs if both gaps close by at least 25%."]] : []),
     ["J","♣","Kept in reserve",data.cage[0].kept_usd,"Preserve the budget",
       "Keep the cash available and revisit the decision after the inspection and August results."]
   ];
@@ -487,7 +523,7 @@ function render() {
   const totals = kpis(rows,stable("floor").filter(r=>dateIn(r.gaming_date)));
   const scope = [selectedMachine,filters.start+" to "+filters.end,filters.zone,filters.bank,
     ...(["players","comps"].includes(slug)?[filters.tier,filters.region,filters.age]:[])].filter(Boolean).join(" · ");
-  const intro = slug==="verdict" ? '<p>The longer comp trial could detect a smaller percentage change, 5.77% instead of 6.44%, even though the dollar change grew from $4.15 to $7.61. More expected win accumulates over 60 days.</p>'
+  const intro = slug==="plan" ? '<p>The longer comp trial could detect a smaller percentage change, 5.77% instead of 6.44%, even though the dollar change grew from $4.15 to $7.61. More expected win accumulates over 60 days.</p>'
     : slug==="luck" ? '<p>After accounting for the number of machines checked, a payout gap this large would occur by chance about 0.15% of the time. We put the chance of a fixable problem at 34% because a meter or accounting issue, a resolved fault, or a non-fixable cause could explain the gap.</p>'
     : slug==="demand" ? '<p>Las Vegas visitation from the LVCVA provides regional context. It does not enter the forecast or explain changes at this fictional property.</p>'
     : slug==="players" ? '<p>The six-month ranking and winner/loser split stay fixed. The tier and decile table uses the selected dates and guest group.</p>'
@@ -506,32 +542,59 @@ function render() {
       const widget = pages.get(name);
       const [heading,explanation] = copy[name] ?? extraCopy[name];
       let body, cls = "";
-      if (!widget) {
+      if (!widget || name==="action-schedule") {
         body=extra(name,heading,rows);
         cls=["monthly-demand","demand-bridge","high-limit","downtime-hour","budget-allocation","unfunded-options","forecast-review","review-evidence"].includes(name)?" wide":"";
       } else {
         const s = widget.spec, query = widget.queries[0].query;
         if (s.widgetType==="counter") {
-          const value = totals[name] ?? ({spent:data.cage[0].spent_usd,kept:data.cage[0].kept_usd,"hold-ref":0})[name];
+          const value = totals[name] ?? ({spent:data.cage[0].spent_usd,kept:data.cage[0].kept_usd,"hold-ref":stable("actions").find(row=>row.action_type_id==="A-HOLD")?.expected_net_usd})[name];
           const type = s.encodings.value.format?.type;
           const digits = type==="number-currency" ? 2 : 8;
           cls = " kpi";
           body = '<output data-kpi="'+name+'" data-value="'+(value==null?"":Number(value).toFixed(digits))+'">'+(value==null?"Unavailable":
-            type==="number-currency"?usd.format(value):type==="number-percent"?pct.format(value):fmt.format(value))+'</output>';
+            type==="number-currency"?usd.format(value):type==="number-percent"?(['hold','theo-hold'].includes(name)?holdPct:pct).format(value):fmt.format(value))+'</output>';
         } else if (s.widgetType==="table") {
           let found = datasets[name] ? datasets[name](rows) : stable(query.datasetName);
           const order = query.orders?.[0]?.expression?.replaceAll(String.fromCharCode(96),"");
           if (order) found = [...found].sort((a,b)=>typeof a[order]==="number"?a[order]-b[order]:String(a[order]).localeCompare(b[order]));
-          let cols = s.encodings.columns;
+          let cols = s.encodings.columns.map(c => ({
+            ...c, fieldName: ({action_label:"action_type_id",funded_label:"selected"})[c.fieldName] ?? c.fieldName
+          }));
+          if(name==="claims") found=found.map(row=>{
+            const routes={"Tribunal":"luck","Pit Boss":"luck","Luck Funnel":"luck","Floor Radar":"demand","High-Roller Ladder":"players","Cashier’s Cage":"plan","Cashier's Cage":"plan","Model Room":"model"};
+            const route=row.evidence?.includes("gold_points_liability_bridge") || row.evidence?.includes("comp_control") ? "comps" : (routes[row.widget] ?? "evidence");
+            const code=row.claim.split(" · ")[0];
+            const action=stable("actions").find(r=>r.action_type_id===code);
+            return {...row,page_label:views.find(([slug])=>slug===route)[1],route,
+              claim:action?row.claim.replace(code,action.action_name+" ("+code+")"):row.claim};
+          });
+          if(name==="adjusted") found=found.map(row=>({...row,payback_label:row.payback_month ?? "Does not pay back within 12 months"}));
+          if(name==="top-shares") found=found.map(row=>({...row,top_group:"Top "+row.top_percent+"%"}));
+          if(name==="model-score") {
+            const names={constant_baseline:"Constant baseline",weekday_event_holiday:"Weekday + events model"};
+            found=found.map(row=>({...row,model_label:names[row.model]})).sort((a,b)=>a.model.localeCompare(b.model));
+            const trend=review?.holdout["Ridge with a trend"];
+            if(trend) found.push({model_label:"Trend model (tested, rejected)",scored_days:61,mae_usd:trend.mae,mape_pct:trend.mape});
+          }
+          if(name==="model-residual") {
+            const order=["Mon","Tue","Wed","Thu","Fri","Sat","Sun"];
+            found=[...found].sort((a,b)=>order.indexOf(a.local_weekday.slice(0,3))-order.indexOf(b.local_weekday.slice(0,3)));
+          }
           if(name==="player-outcomes"){
             const tracked=found.filter(r=>r.outcome!=="No tracked gaming").reduce((n,r)=>n+r.players,0);
-            found=found.map(r=>({...r,tracked_share:r.outcome==="No tracked gaming"?null:r.players/tracked}));
+            found=found.map(r=>({...r,outcome_label:({Loser:"Finished down",Winner:"Finished up","Exactly zero":"Exactly even"})[r.outcome] ?? r.outcome,tracked_share:r.outcome==="No tracked gaming"?null:r.players/tracked}));
             cols=[...cols,metric("tracked_share","Share of players who wagered",percent)];
           }
           if(name==="player-segments") cols=cols.filter(c=>!["players","comp","contrib"].includes(c.fieldName))
             .map(c=>({...c,displayName:({theo:"Expected win",luck:"Player payout variation",wagers:"Wagers"})[c.fieldName]??c.displayName}));
           if(name==="cage-slip"){
-            body=planCards(found)+table(cols.filter(c=>!["assumption","success_rule","evidence_view"].includes(c.fieldName)),found);
+            found=[...found].sort((a,b)=>Number(b.selected)-Number(a.selected)||b.expected_net_usd-a.expected_net_usd);
+            const tests=found.filter(row=>["A-WAYFINDING","A-MOVE-MACHINE"].includes(row.action_type_id) && row.selected);
+            const measurement=tests.map(move=>'<details><summary>How we will measure: '+escape(move.target_label)+'</summary><p>'+escape(move.assumption)+'</p><p>'+escape(move.success_rule)+'</p></details>').join("");
+            const compactCols=cols.filter(c=>["action_type_id","target_label","selected","cash_cost_usd","expected_net_usd"].includes(c.fieldName));
+            const rowsWithRange=found.map(r=>({...r,range:usd.format(r.low_net_usd)+" to "+usd.format(r.high_net_usd)}));
+            body=planCards(found)+measurement+table([...compactCols,metric("range","Range")],rowsWithRange);
           } else {
             body=table(cols,found);
             if(name==="comp-control"){

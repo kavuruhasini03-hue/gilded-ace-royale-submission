@@ -46,8 +46,14 @@ def features(start, end, cutoff):
 
 
 def score(actual, prediction):
-    residual = np.asarray(prediction) - np.asarray(actual)
+    residual = np.asarray(actual) - np.asarray(prediction)
     return {"mae": float(np.mean(abs(residual))), "mape": float(100 * np.mean(abs(residual) / actual))}
+
+
+def mean_forecast(train, dates, seasonal):
+    means = {day: np.mean([float(row[4]) for row in train if not seasonal or row[1] == day])
+             for day in DAYS}
+    return [float(means[row[1]]) for row in dates]
 
 
 def main():
@@ -61,11 +67,15 @@ def main():
     assert len(train) == 120 and len(april) == 30
     current_april = score(april_actual, matrix(april, False) @ fit(jan_mar, False))
     variant_april = score(april_actual, matrix(april, True) @ fit(jan_mar, True))
+    baselines = {"Constant baseline": False, "Seasonal (weekday mean) baseline": True}
+    april_baselines = {name: score(april_actual, mean_forecast(jan_mar, april, seasonal))
+                       for name, seasonal in baselines.items()}
     ridge = fit(train, False)
     trend = fit(train, True)
     future = features("2025-05-01", "2025-06-30", "2025-04-30")
     assert len(future) == 61
     predicted = matrix(future, True) @ trend
+    seasonal_prediction = mean_forecast(train, future, True)
     FROZEN.write_text(json.dumps({"origin":"2025-04-30","april_mae":variant_april["mae"],
         "predictions":dict(zip([r[0] for r in future],map(float,predicted)))},indent=2)+"\n")
     digest = hashlib.sha256(FROZEN.read_bytes()).hexdigest()
@@ -79,10 +89,11 @@ def main():
     origin_flag_differences = sum(int(float(old[5])) != int(new[2]) for old,new in zip(holdout,future))
     primary_origin = matrix(future, False) @ ridge
     series = {"Constant baseline": [float(r[3]) for r in holdout],
-              "Current ridge": [float(r[4]) for r in holdout], "Ridge with a trend": predicted}
+              "Current ridge": [float(r[4]) for r in holdout], "Ridge with a trend": predicted,
+              "Seasonal (weekday mean) baseline": seasonal_prediction}
     results = {label:score(actual,values) for label,values in series.items()}
     origin_ridge = score(actual,primary_origin)
-    bias = {day: {label:float(np.mean([values[i]-actual[i] for i,row in enumerate(holdout) if row[1]==day]))
+    bias = {day: {label:float(np.mean([actual[i]-values[i] for i,row in enumerate(holdout) if row[1]==day]))
                   for label,values in series.items()} for day in DAYS}
 
     # July sensitivity: reprice each covered date with the non-event daily forecast ratio.
@@ -106,7 +117,7 @@ def main():
             "original_recovery":action["mid_uplift_usd"],
             "repriced_recovery":float(action["mid_uplift_usd"]*np.mean(weights)),
             "maximum_recovery":float(row["full_recovery_theo_per_shift"]*len(weights)*max(weights))})
-    result={"april":{"current":current_april,"trend":variant_april},"holdout":results,"bias":bias,
+    result={"april":{"current":current_april,"trend":variant_april,**april_baselines},"holdout":results,"bias":bias,
         "strict_origin_ridge":origin_ridge,"origin_flag_differences":origin_flag_differences,
         "trend_usd_per_week":float(trend[-1]),"frozen_sha256":digest,"tech":sensitivity,
         "promote":variant_april["mae"]<current_april["mae"] and results["Ridge with a trend"]["mae"]<origin_ridge["mae"]

@@ -2,7 +2,7 @@
 
 ## Verdict
 
-**Keep $98,800 in reserve and inspect one machine.** Theoretical win, or theo, is what the house expects to win given the wagers and game settings. Start with that expectation before reacting to actual payouts.
+**Fund three tests and keep $89,500 in reserve.** Theoretical win, or theo, is what the house expects to win given the wagers and game settings. Start with that expectation before reacting to actual payouts.
 
 - **Expected win captured** This compares expected win with the opportunity after allowing for downtime and a better floor location.
 - **Coin-in** This is the total amount wagered in the selected period.
@@ -75,11 +75,11 @@
 
 **Spend $1,200 to inspect M-1158.** The July plan funds the payout check and keeps the rest of the $100,000 budget in reserve. The plan is a fixed decision based on January through June.
 
-- **Funded in July** The budget funds one inspection for M-1158.
+- **Funded in July** The budget funds Back Forty signage, an inspection of M-1158 and a move of M-1184.
 - **Kept in reserve** The remaining cash is available if stronger evidence emerges.
 - **Expected gain from holding all cash** Keeping the full budget is the comparison case and costs nothing.
-- **Only the inspection clears the July screen** The bars show estimated net value after costs. Information value is an estimate of what a finding could be worth.
-- **The July plan funds one inspection** Compare each option’s cost and estimated net value. Open an action to read its assumptions and success rule.
+- **July funds signs, an inspection and a machine move** The bars show estimated net value after costs. Information value is an estimate of what a finding could be worth.
+- **The July plan funds three tests** Compare each option’s cost and estimated net value. Open an action to read its assumptions and success rule.
 - **Some replacement candidates pay back over 12 months** The annual estimates include costs and show how the outcome varies across scenarios.
 - **Extra technician coverage costs more than the estimated recovery** We price recoverable wait hours at the expected win for the affected machines and compare overnight with Saturday evening.
 - **The staffing decision holds under different downtime estimates** This compares results when the estimated downtime cost is 30% lower or higher.

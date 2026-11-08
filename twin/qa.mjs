@@ -37,8 +37,8 @@ const decode = d=>d.rows.map(row=>Object.fromEntries(d.columns.map((c,i)=>[c,row
 try {
   await page.goto(base+"/#/leak");
   await page.locator("#downtime-total").waitFor();
-  const hours=(await page.locator("#downtime-hour svg text").allTextContents()).filter(value=>/^\d{2}:00$/.test(value));
-  assert.deepEqual(hours,Array.from({length:24},(_,h)=>String((h+6)%24).padStart(2,"0")+":00"));
+  const hours=(await page.locator("#downtime-hour svg text").allTextContents()).filter(value=>/^\d{1,2}[ap]$/.test(value));
+  assert.deepEqual(hours,Array.from({length:24},(_,h)=>(((h+6)%12)||12)+((h+6)%24<12?"a":"p")));
   assert.equal(await page.locator("main h2").count(),1);
   assert.equal(await page.getByLabel("Music",{exact:true}).isChecked(),false);
   assert.equal(await page.getByLabel("Sound",{exact:true}).isChecked(),false);
@@ -51,12 +51,12 @@ try {
   const gold=JSON.parse(await readFile(new URL("../embed/.gold-export.json",import.meta.url),"utf8"));
   await open("verdict");
   assert.deepEqual(await page.locator(".house-verdict p").allTextContents(),[
-    "We recommend not replacing any of the ten lowest-earning machines in July. Instead, inspect machine M-1158, hold off on the comp pilot until it can give a clear answer, and keep $98,800 of the budget in reserve.",
+    "We recommend not replacing any of the ten lowest-earning machines in July. Their low earnings come mostly from the Back Forty's lost foot traffic and from game settings, so we spend $10,500 on three tests: new signage for the Back Forty, a payout check on machine M-1158, and moving machine M-1184 to a busier spot to learn whether its weakness is the spot or the machine. We keep $89,500 in reserve.",
     "Nine of the ten machines are in the Back Forty, an area that lost foot traffic when its entrance walkway was closed for renovation from March 3 to April 7. Most of their shortfall comes from their location and from game settings that keep less of each bet by design, not from faulty machines."
   ]);
   const prepared=page.locator(".pit-boss-answers").getByText("How much should we spend in July?",{exact:true});
   await prepared.click();
-  assert.match(await page.locator(".pit-boss-answers details[open]").innerText(),/\$1,200\.00.*\$98,800\.00/);
+  assert.match(await page.locator(".pit-boss-answers details[open]").innerText(),/\$10,500.*\$89,500/);
   await prepared.click();
   for(const expected of decode(gold.kpi_expected)){
     await dates(expected.start,expected.end);
@@ -68,13 +68,16 @@ try {
       assert.equal(actual,Number(value).toFixed(digits),name+" in "+expected.start+" to "+expected.end);
     }
   }
+  await dates("2025-01-01","2025-06-30");
+  for (const [name,label] of Object.entries({coin:"$248.9M",hold:"9.50%","theo-hold":"9.46%",luck:"$92.8K",leak:"$98.1K"}))
+    assert.equal(await page.locator('[data-kpi="'+name+'"]').textContent(),label);
   await page.getByRole("button",{name:"Pull the lever"}).click();
   const dealt=page.locator("#deal-status [data-machine]");
   await dealt.click();
   assert.match(await page.getByRole("dialog").innerText(),/06:00 → 06:00/);
   await page.keyboard.press("Escape");
   await dates("2025-04-01","2025-06-30");
-  assert.equal(await page.locator('[data-kpi="coin"]').textContent(),"$124,003,503.70");
+  assert.equal(await page.locator('[data-kpi="coin"]').textContent(),"$124.0M");
   await capture("judge-01-dates");
   await open("demand");
   assert.equal(await page.getByLabel("From",{exact:true}).inputValue(),"2025-04-01");
@@ -111,19 +114,22 @@ try {
   await open("model");
   const forecast=page.locator("#forecast-review");
   await forecast.waitFor();
-  assert.match(await forecast.innerText(),/66,519\.66/);
+  assert.match(await forecast.innerText(),/66\.5K/);
   await forecast.screenshot({path:new URL("model-comparison.png",out).pathname});
-  assert.match(await page.locator("#model-score").innerText(),/51,128\.96/);
+  assert.match(await page.locator("#forecast-review").innerText(),/51\.1K/);
   await capture("judge-04-model");
   await open("plan");
   const allocation=page.locator(".budget-allocation");
   await allocation.focus();
   assert.equal(await allocation.evaluate(el=>el===document.activeElement),true);
   const cage=decode(gold.cage)[0];
-  const currency=new Intl.NumberFormat("en-US",{style:"currency",currency:"USD"});
+  const currency=new Intl.NumberFormat("en-US",{style:"currency",currency:"USD",maximumFractionDigits:0});
   assert.ok((await allocation.innerText()).includes(currency.format(cage.spent_usd)));
   assert.ok((await allocation.innerText()).includes(currency.format(cage.kept_usd)));
   assert.equal(await page.locator("#unfunded-options tbody tr").count(),8);
+  assert.equal(await page.locator(".plan-card").count(),4);
+  assert.match(await allocation.innerText(),/signs for Back Forty.*M-1158.*M-1184/);
+  assert.equal(await page.locator("#cage-slip tbody tr").filter({hasText:"L-07-3"}).first().getByText("Yes",{exact:true}).count(),1);
   await page.locator("#budget-allocation").screenshot({path:new URL("budget-allocation.png",out).pathname});
   const card=page.locator(".plan-card").first();
   await card.click();
@@ -140,6 +146,8 @@ try {
     assert.equal(await page.getByText("No rows match these filters.",{exact:true}).count(),0,slug);
     assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth),1440,slug);
     const text=await page.locator("body").innerText();
+    assert.doesNotMatch(text,/\b(?:NaN|undefined|null|No data)\b/,slug+" contains an invalid value");
+    assert.doesNotMatch(text,/\d+\.\d{7,}/,slug+" contains an unformatted number");
     assert.ok(!text.includes(String.fromCharCode(8212)),slug+" contains an em dash");
     assert.doesNotMatch(text,/replace none|underpowered|\bconfigs\b|\bGM(?:['’]s)?\b/i,slug+" contains legacy copy");
     await capture(slug);
@@ -151,6 +159,10 @@ try {
   await open("plan");
   assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth),390);
   await page.locator("#budget-allocation").screenshot({path:new URL("budget-phone.png",out).pathname});
+  for (const slug of ["luck","demand","leak","players","comps","model","evidence"]) {
+    await open(slug);
+    assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth),390,slug+" phone width");
+  }
   assert.deepEqual(errors,[]);
   console.log("PASS: exact Gold KPIs, nine views, history and deep links, guest filters, audio preferences, and judge captures.");
 } catch(error){

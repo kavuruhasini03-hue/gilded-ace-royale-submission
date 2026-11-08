@@ -20,7 +20,8 @@ def main():
     def databricks(*command, capture=False):
         return subprocess.run(["databricks", *command, "-p", args.profile],
                               cwd=ROOT, check=True, text=True,
-                              stdout=subprocess.PIPE if capture else None).stdout
+                              stdout=subprocess.PIPE if capture else None,
+                              stderr=subprocess.STDOUT if capture else None).stdout
 
     run_id = args.run_id
     if run_id is None:

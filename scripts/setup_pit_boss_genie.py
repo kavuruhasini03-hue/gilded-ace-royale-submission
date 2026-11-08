@@ -42,7 +42,7 @@ QUESTIONS = [
  ("What is funded in the July budget and how much stays in reserve?",
   f"""SELECT 100000 AS july_budget_usd,SUM(cash_cost_usd) AS spent_usd,
       100000-SUM(cash_cost_usd) AS reserve_usd,
-      CONCAT_WS(', ',SORT_ARRAY(COLLECT_SET(IF(action_type_id<>'A-HOLD',target_label,NULL)))) AS funded_targets
+      CONCAT_WS(', ',SORT_ARRAY(COLLECT_SET(IF(action_type_id<>'A-HOLD',CONCAT(action_name, ': ', target_label),NULL)))) AS funded_actions
       FROM {SCHEMA}gold_action_plan WHERE selected AND horizon_days=30"""),
 ]
 TABLES = ("gold_machine_verdict", "gold_machine_day", "gold_zone_gaming_hour", "gold_floor_day",
@@ -71,7 +71,7 @@ def main():
                 "Hold is SUM(house_win_usd) divided by SUM(coin_in_usd), never an average of ratios. Theo means expected house win.",
                 "Exclude off-floor rows. Machine-day queries require active and non-null location_id. Keep tracked play separate from floor meters.",
                 "A payout anomaly is a lead to inspect, never wrongdoing. A negative house-win surprise means the house won less and guests were paid more than expected for the same wagers. For M-1158, say payouts were higher than expected. Expected net value is the estimated value of information after cost, not expected recovered cash. Do not target heavy losers.",
-                "Use the trusted SQL for the example questions. The bottom-ten ranks are fixed for January through June. Describe LINEUP as reviewing the mix of games, LUCK as payout variation, and INSPECT as a check. Summarize verdict counts and show all ten rows. July decisions are a fixed 30-day snapshot.",
+                "Use the trusted SQL for the example questions. The bottom-ten ranks are fixed for January through June. Describe LINEUP as reviewing the mix of games, LUCK as payout variation, and INSPECT as a check. Summarize verdict counts and show all ten rows. July decisions are a fixed 30-day snapshot. Name all funded actions from Gold, including Back Forty signage, the M-1158 payout check and the M-1184 move. The sign test compares Back Forty with the rest of the floor. Judge the move against same-setting Center Pit peers because Back Forty is exposed to signage.",
                 "The walkway was closed on gaming dates March 3 through April 6 and reopened April 7. Compare entries per covered sensor hour. Describe the measured change only. Do not call it significant or claim that the closure caused the full decline.",
                 "The May 1 schedule moved from 12.50 to 5.85 points per face-value dollar. The query shows observed full-week ratios, not those schedule values, and excludes the mixed week. In the answer, report both the schedule and the observed ratios. These are points spent to redeem rewards, never points earned or awarded.",
             ]}],

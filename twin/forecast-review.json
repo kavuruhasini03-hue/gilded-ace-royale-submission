@@ -7,12 +7,20 @@
     "trend": {
       "mae": 68584.75165666557,
       "mape": 5.193084043538191
+    },
+    "Constant baseline": {
+      "mae": 203431.01288888892,
+      "mape": 14.84569163783353
+    },
+    "Seasonal (weekday mean) baseline": {
+      "mae": 40715.0337179487,
+      "mape": 3.010446811429111
     }
   },
   "holdout": {
     "Constant baseline": {
-      "mae": 218258.09692622945,
-      "mape": 16.42508682947673
+      "mae": 218258.0969262295,
+      "mape": 16.425086829476733
     },
     "Current ridge": {
       "mae": 51128.961404669935,
@@ -21,43 +29,54 @@
     "Ridge with a trend": {
       "mae": 66519.66415699545,
       "mape": 4.999451292303027
+    },
+    "Seasonal (weekday mean) baseline": {
+      "mae": 68698.55169827493,
+      "mape": 5.020705539478325
     }
   },
   "bias": {
     "Mon": {
-      "Constant baseline": 208469.9619444442,
-      "Current ridge": 19820.06077838097,
-      "Ridge with a trend": 51899.10727110572
+      "Constant baseline": -208469.96194444443,
+      "Current ridge": -19820.06077838097,
+      "Ridge with a trend": -51899.10727110572,
+      "Seasonal (weekday mean) baseline": -35689.23169934641
     },
     "Tue": {
-      "Constant baseline": 310024.4008333331,
-      "Current ridge": 14090.32234727258,
-      "Ridge with a trend": 45097.666452957244
+      "Constant baseline": -310024.4008333333,
+      "Current ridge": -14090.32234727258,
+      "Ridge with a trend": -45097.666452957244,
+      "Seasonal (weekday mean) baseline": -38047.299999999974
     },
     "Wed": {
-      "Constant baseline": 241586.31333333306,
-      "Current ridge": -15109.473634768918,
-      "Ridge with a trend": 16514.167400510865
+      "Constant baseline": -241586.3133333333,
+      "Current ridge": 15109.473634768918,
+      "Ridge with a trend": -16514.167400510865,
+      "Seasonal (weekday mean) baseline": -6648.306944444368
     },
     "Thu": {
-      "Constant baseline": 117681.02305555524,
-      "Current ridge": -1951.0602304986678,
-      "Ridge with a trend": 31483.821051185096
+      "Constant baseline": -117681.02305555547,
+      "Current ridge": 1951.0602304986678,
+      "Ridge with a trend": -31483.821051185096,
+      "Seasonal (weekday mean) baseline": -23742.42516339868
     },
     "Fri": {
-      "Constant baseline": -214511.91583333362,
-      "Current ridge": 39447.622370738405,
-      "Ridge with a trend": 71606.86082749994
+      "Constant baseline": 214511.9158333334,
+      "Current ridge": -39447.622370738405,
+      "Ridge with a trend": -71606.86082749994,
+      "Seasonal (weekday mean) baseline": -56306.23627450982
     },
     "Sat": {
-      "Constant baseline": -386538.3158333336,
-      "Current ridge": 32279.20472368016,
-      "Ridge with a trend": 64438.44318044108
+      "Constant baseline": 386538.3158333334,
+      "Current ridge": -32279.20472368016,
+      "Ridge with a trend": -64438.44318044108,
+      "Seasonal (weekday mean) baseline": -49137.81862745088
     },
     "Sun": {
-      "Constant baseline": -19295.949166666975,
-      "Current ridge": 44805.46844916995,
-      "Ridge with a trend": 76964.70690593141
+      "Constant baseline": 19295.94916666674,
+      "Current ridge": -44805.46844916995,
+      "Ridge with a trend": -76964.70690593141,
+      "Seasonal (weekday mean) baseline": -61664.08235294113
     }
   },
   "origin_flag_differences": 7,

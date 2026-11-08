@@ -8,6 +8,34 @@
       ]
     },
     {
+      "name": "tribunal",
+      "displayName": "Tribunal",
+      "queryLines": [
+        "SELECT d.*, v.verdict_chip, v.gm_rank, v.last_bank_name FROM workspace.royale.gold_machine_day d JOIN workspace.royale.gold_machine_verdict v USING (machine_id) WHERE v.gm_rank<=10"
+      ]
+    },
+    {
+      "name": "action_schedule",
+      "displayName": "Action Schedule",
+      "queryLines": [
+        "\n      WITH tasks AS (\n        SELECT CASE action_type_id WHEN 'A-INSPECT' THEN 'Inspect M-1158' ELSE 'Move M-1184' END action,\n               CASE action_type_id WHEN 'A-INSPECT' THEN 'Wed' ELSE 'Thu' END eligible_weekday,\n               CAST(downtime_minutes / 60 AS INT) AS hours\n        FROM workspace.royale.gold_action_plan WHERE selected AND horizon_days=30\n        AND action_type_id IN ('A-INSPECT','A-MOVE-MACHINE')\n      ), windows AS (\n        SELECT t.action,t.hours,h.local_weekday,h.gaming_hour,\n               SUM(p.theo_per_available_machine_hour) AS lost_theo_usd\n        FROM tasks t CROSS JOIN workspace.royale.gold_forecast_tech_timing h\n        JOIN workspace.royale.gold_forecast_tech_timing p ON p.local_weekday=h.local_weekday\n          AND p.gaming_hour>=h.gaming_hour AND p.gaming_hour<h.gaming_hour+t.hours\n        WHERE (h.local_weekday=t.eligible_weekday AND h.gaming_hour+t.hours<=24)\n           OR (h.local_weekday='Sat' AND h.gaming_hour=13)\n        GROUP BY ALL HAVING COUNT(*)=t.hours\n      ), ranked AS (\n        SELECT *,ROW_NUMBER() OVER (PARTITION BY action,local_weekday ORDER BY lost_theo_usd,gaming_hour) AS preference\n        FROM windows\n      )\n      SELECT action,MAX(hours)*60 AS minutes,\n             MAX(IF(local_weekday<>'Sat',local_weekday,NULL)) AS weekday,\n             MAX(IF(local_weekday<>'Sat',gaming_hour,NULL)) AS start_hour,\n             MAX(IF(local_weekday<>'Sat',lost_theo_usd,NULL)) AS quiet_usd,\n             MAX(IF(local_weekday='Sat',lost_theo_usd,NULL)) AS saturday_usd\n      FROM ranked WHERE preference=1 GROUP BY action\n    "
+      ]
+    },
+    {
+      "name": "model_comparison",
+      "displayName": "Model Comparison",
+      "queryLines": [
+        "SELECT * FROM VALUES (0, 'Constant baseline', 203431.01288888892, 218258.0969262295, 0.16425086829476732), (1, 'Seasonal (weekday mean) baseline', 40715.0337179487, 68698.55169827493, 0.05020705539478325), (2, 'Weekday + events model (primary)', 65286.54436167655, 51128.961404669935, 0.0383938819263724), (3, 'Trend model (tested, rejected)', 68584.75165666557, 66519.66415699545, 0.04999451292303027) AS t(rank,model,april_usd,holdout_usd,mape)"
+      ]
+    },
+    {
+      "name": "model_bias",
+      "displayName": "Model Bias",
+      "queryLines": [
+        "SELECT * FROM VALUES (0, 'Mon', -208469.96194444443, -35689.23169934641, -19820.06077838097, -51899.10727110572), (1, 'Tue', -310024.4008333333, -38047.299999999974, -14090.32234727258, -45097.666452957244), (2, 'Wed', -241586.3133333333, -6648.306944444368, 15109.473634768918, -16514.167400510865), (3, 'Thu', -117681.02305555547, -23742.42516339868, 1951.0602304986678, -31483.821051185096), (4, 'Fri', 214511.9158333334, -56306.23627450982, -39447.622370738405, -71606.86082749994), (5, 'Sat', 386538.3158333334, -49137.81862745088, -32279.20472368016, -64438.44318044108), (6, 'Sun', 19295.94916666674, -61664.08235294113, -44805.46844916995, -76964.70690593141) AS t(rank,weekday,constant_usd,seasonal_usd,primary_usd,trend_usd)"
+      ]
+    },
+    {
       "name": "adjusted",
       "displayName": "Adjusted",
       "queryLines": [
@@ -46,7 +74,7 @@
       "name": "walkway",
       "displayName": "Walkway",
       "queryLines": [
-        "SELECT *, CASE phase WHEN 'pre' THEN '1 Before' WHEN 'closure' THEN '2 Closed'\n            ELSE '3 After' END AS period FROM workspace.royale.gold_walkway_did"
+        "SELECT *, CASE phase WHEN 'pre' THEN 'Before' WHEN 'closure' THEN 'During closure'\n            ELSE 'After' END AS period FROM workspace.royale.gold_walkway_did"
       ]
     },
     {
@@ -155,6 +183,13 @@
       ]
     },
     {
+      "name": "hold_case",
+      "displayName": "Hold Case",
+      "queryLines": [
+        "SELECT * FROM workspace.royale.gold_action_plan WHERE horizon_days=30 AND action_type_id='A-HOLD'"
+      ]
+    },
+    {
       "name": "tech",
       "displayName": "Tech",
       "queryLines": [
@@ -172,7 +207,7 @@
       "name": "scores",
       "displayName": "Scores",
       "queryLines": [
-        "SELECT * FROM workspace.royale.gold_forecast_holdout_metrics"
+        "SELECT model, scored_days, mae_usd, mape_pct FROM workspace.royale.gold_forecast_holdout_metrics\n             UNION ALL SELECT 'weekday_ridge_linear_trend', 61, 66519.66, 5.00"
       ]
     },
     {
@@ -200,7 +235,7 @@
             "name": "verdict",
             "multilineTextboxSpec": {
               "lines": [
-                "## Replace none of the GM’s bottom ten in July, inspect M-1158, defer the underpowered comp pilot, and keep $98,800 in reserve.\n\n**THE GILDED ACE · EYE IN THE SKY** · Fictional casino · Jan–Jun 2025 evidence\n\n**Comp monitoring:** review comp pricing and tracked play if cost exceeds 1.50% of tracked theo for two consecutive complete gaming weeks.\n\n**Pilot power:** the 60-day MDE is larger in dollars ($7.61 vs $4.15) but smaller as a share (5.77% vs 6.44%) because the baseline contribution accumulates over more days.\n\n[Ask the Pit Boss in Genie (workspace sign-in required)](https://dbc-a3bbfca6-850a.cloud.databricks.com/genie/rooms/01f1db4548ec16ee9f10853bb4959656?o=7474653288963289)."
+                "## We recommend not replacing any of the ten lowest-earning machines in July. Their low earnings come mostly from the Back Forty's lost foot traffic and from game settings, so we spend $10,500 on three tests: new signage for the Back Forty, a payout check on machine M-1158, and moving machine M-1184 to a busier spot to learn whether its weakness is the spot or the machine. We keep $89,500 in reserve.\n\n**THE GILDED ACE · EYE IN THE SKY** · Fictional casino · Jan–Jun 2025 evidence\n\n**Comp monitoring:** review comp pricing and tracked play if cost exceeds 1.50% of tracked theo for two consecutive complete gaming weeks.\n\n[Ask the Pit Boss in Genie (workspace sign-in required)](https://dbc-a3bbfca6-850a.cloud.databricks.com/genie/rooms/01f1db4548ec16ee9f10853bb4959656?o=7474653288963289)."
               ]
             }
           },
@@ -248,7 +283,7 @@
               "frame": {
                 "title": "Theo captured",
                 "showTitle": true,
-                "description": "Health versus the best observed zone factor after leak.",
+                "description": "Share of the floor’s earning potential we actually captured. Theo is the amount the house expects to win.",
                 "showDescription": true
               }
             }
@@ -288,7 +323,11 @@
                   "format": {
                     "type": "number-currency",
                     "currencyCode": "USD",
-                    "abbreviation": "compact"
+                    "abbreviation": "compact",
+                    "decimalPlaces": {
+                      "type": "max",
+                      "places": 1
+                    }
                   }
                 }
               },
@@ -335,7 +374,7 @@
                   "format": {
                     "type": "number-percent",
                     "decimalPlaces": {
-                      "type": "max",
+                      "type": "exact",
                       "places": 2
                     }
                   }
@@ -384,7 +423,7 @@
                   "format": {
                     "type": "number-percent",
                     "decimalPlaces": {
-                      "type": "max",
+                      "type": "exact",
                       "places": 2
                     }
                   }
@@ -429,18 +468,22 @@
               "encodings": {
                 "value": {
                   "fieldName": "value",
-                  "displayName": "Luck residual",
+                  "displayName": "Luck",
                   "format": {
                     "type": "number-currency",
                     "currencyCode": "USD",
-                    "abbreviation": "compact"
+                    "abbreviation": "compact",
+                    "decimalPlaces": {
+                      "type": "max",
+                      "places": 1
+                    }
                   }
                 }
               },
               "frame": {
-                "title": "Luck residual",
+                "title": "Luck",
                 "showTitle": true,
-                "description": "Actual win less expected win.",
+                "description": "Actual win minus expected win.",
                 "showDescription": true
               }
             }
@@ -476,18 +519,22 @@
               "encodings": {
                 "value": {
                   "fieldName": "value",
-                  "displayName": "Theo lost to downtime",
+                  "displayName": "Lost to downtime",
                   "format": {
                     "type": "number-currency",
                     "currencyCode": "USD",
-                    "abbreviation": "compact"
+                    "abbreviation": "compact",
+                    "decimalPlaces": {
+                      "type": "max",
+                      "places": 1
+                    }
                   }
                 }
               },
               "frame": {
-                "title": "Theo lost to downtime",
+                "title": "Lost to downtime",
                 "showTitle": true,
-                "description": "Hour-weighted opportunity.",
+                "description": "Estimated expected win missed while machines were unavailable.",
                 "showDescription": true
               }
             }
@@ -618,7 +665,11 @@
                   "format": {
                     "type": "number-currency",
                     "currencyCode": "USD",
-                    "abbreviation": "compact"
+                    "abbreviation": "compact",
+                    "decimalPlaces": {
+                      "type": "max",
+                      "places": 1
+                    }
                   }
                 }
               },
@@ -644,7 +695,7 @@
               {
                 "name": "main_query",
                 "query": {
-                  "datasetName": "machine",
+                  "datasetName": "tribunal",
                   "fields": [
                     {
                       "name": "machine_id",
@@ -704,15 +755,19 @@
                     "format": {
                       "type": "number-currency",
                       "currencyCode": "USD",
-                      "abbreviation": "compact"
+                      "abbreviation": "compact",
+                      "decimalPlaces": {
+                        "type": "max",
+                        "places": 1
+                      }
                     }
                   }
                 ]
               },
               "frame": {
-                "title": "The GM’s raw list starts with exposure and lineup",
+                "title": "The general manager’s ten lowest earners",
                 "showTitle": true,
-                "description": "Select a machine row to focus the shared bridge. Rank is Jan–Jun.",
+                "description": "Rank uses the six-month study. The win column uses the selected gaming dates.",
                 "showDescription": true
               }
             }
@@ -720,8 +775,8 @@
           "position": {
             "x": 0,
             "y": 11,
-            "width": 6,
-            "height": 7
+            "width": 12,
+            "height": 6
           }
         },
         {
@@ -733,10 +788,6 @@
                 "query": {
                   "datasetName": "machine",
                   "fields": [
-                    {
-                      "name": "potential",
-                      "expression": "SUM(potential_theo_usd)"
-                    },
                     {
                       "name": "leak",
                       "expression": "SUM(-leak_usd)"
@@ -754,16 +805,8 @@
                       "expression": "SUM(machine_specific_usd)"
                     },
                     {
-                      "name": "theo",
-                      "expression": "SUM(theo_usd)"
-                    },
-                    {
                       "name": "luck",
                       "expression": "SUM(luck_residual_usd)"
-                    },
-                    {
-                      "name": "actual",
-                      "expression": "SUM(house_win_usd)"
                     }
                   ],
                   "disaggregated": false
@@ -779,9 +822,6 @@
               "encodings": {
                 "fields": [
                   {
-                    "fieldName": "potential"
-                  },
-                  {
                     "fieldName": "leak"
                   },
                   {
@@ -794,33 +834,27 @@
                     "fieldName": "machine_effect"
                   },
                   {
-                    "fieldName": "theo"
-                  },
-                  {
                     "fieldName": "luck"
-                  },
-                  {
-                    "fieldName": "actual"
                   }
                 ]
               },
               "jsonSpec": {
                 "type": "vega-lite",
-                "spec": "{\"$schema\":\"https://vega.github.io/schema/vega-lite/v6.json\",\"data\":{\"name\":\"databricks_query\"},\"width\":\"container\",\"height\":\"container\",\"background\":\"transparent\",\"config\":{\"autosize\":{\"type\":\"fit\",\"contains\":\"padding\"},\"view\":{\"stroke\":null},\"axis\":{\"labelColor\":\"#9FAEA6\",\"titleColor\":\"#EDE6D3\",\"gridColor\":\"#24443A\",\"domainColor\":\"#24443A\"},\"legend\":{\"labelColor\":\"#EDE6D3\",\"titleColor\":\"#EDE6D3\"}},\"transform\":[{\"fold\":[\"potential\",\"leak\",\"location\",\"lineup\",\"machine_effect\",\"theo\",\"luck\",\"actual\"],\"as\":[\"step\",\"amount\"]},{\"calculate\":\"indexof([\\\"potential\\\", \\\"leak\\\", \\\"location\\\", \\\"lineup\\\", \\\"machine_effect\\\", \\\"theo\\\", \\\"luck\\\", \\\"actual\\\"], datum.step)\",\"as\":\"idx\"},{\"calculate\":\"datum.step === 'theo' || datum.step === 'actual' ? 0 : datum.amount\",\"as\":\"delta\"},{\"window\":[{\"op\":\"sum\",\"field\":\"delta\",\"as\":\"running\"}],\"sort\":[{\"field\":\"idx\"}]},{\"calculate\":\"datum.step === 'theo' || datum.step === 'actual' ? 0 : datum.running-datum.delta\",\"as\":\"start\"},{\"calculate\":\"datum.step === 'theo' || datum.step === 'actual' ? datum.amount : datum.running\",\"as\":\"end\"},{\"calculate\":\"[\\\"Potential\\\", \\\"♥ LEAK\\\", \\\"♣ LOCATION\\\", \\\"⚙ LINEUP\\\", \\\"♠ Machine-specific\\\", \\\"Theo\\\", \\\"♦ LUCK\\\", \\\"Actual\\\"][datum.idx]\",\"as\":\"label\"}],\"mark\":{\"type\":\"bar\",\"cornerRadius\":2},\"encoding\":{\"y\":{\"field\":\"label\",\"type\":\"ordinal\",\"sort\":[\"Potential\",\"♥ LEAK\",\"♣ LOCATION\",\"⚙ LINEUP\",\"♠ Machine-specific\",\"Theo\",\"♦ LUCK\",\"Actual\"]},\"x\":{\"field\":\"start\",\"type\":\"quantitative\",\"title\":\"USD\",\"axis\":{\"format\":\"$~s\"}},\"x2\":{\"field\":\"end\"},\"color\":{\"field\":\"label\",\"type\":\"nominal\",\"scale\":{\"domain\":[\"Potential\",\"♥ LEAK\",\"♣ LOCATION\",\"⚙ LINEUP\",\"♠ Machine-specific\",\"Theo\",\"♦ LUCK\",\"Actual\"],\"range\":[\"#8A9690\",\"#FF5A6E\",\"#3FD6E0\",\"#C9A66B\",\"#F4F1EA\",\"#8A9690\",\"#B48CFF\",\"#38D39F\"]},\"legend\":null},\"tooltip\":[{\"field\":\"label\",\"type\":\"nominal\",\"title\":\"Component\"},{\"field\":\"amount\",\"type\":\"quantitative\",\"title\":\"USD\",\"format\":\"$,.0f\"}]}}"
+                "spec": "{\"$schema\":\"https://vega.github.io/schema/vega-lite/v6.json\",\"data\":{\"name\":\"databricks_query\"},\"width\":\"container\",\"height\":\"container\",\"background\":\"transparent\",\"config\":{\"autosize\":{\"type\":\"fit\",\"contains\":\"padding\"},\"view\":{\"stroke\":null},\"axis\":{\"labelColor\":\"#9FAEA6\",\"titleColor\":\"#EDE6D3\",\"gridColor\":\"#24443A\",\"domainColor\":\"#24443A\"},\"legend\":{\"labelColor\":\"#EDE6D3\",\"titleColor\":\"#EDE6D3\"}},\"transform\":[{\"fold\":[\"leak\",\"location\",\"lineup\",\"machine_effect\",\"luck\"],\"as\":[\"step\",\"amount\"]},{\"calculate\":\"[\\\"Downtime\\\", \\\"Location\\\", \\\"Game mix\\\", \\\"Machine effect\\\", \\\"Luck\\\"][indexof([\\\"leak\\\", \\\"location\\\", \\\"lineup\\\", \\\"machine_effect\\\", \\\"luck\\\"], datum.step)]\",\"as\":\"component\"}],\"mark\":\"bar\",\"encoding\":{\"y\":{\"field\":\"component\",\"type\":\"ordinal\",\"title\":\"Component\",\"sort\":[\"Downtime\",\"Location\",\"Game mix\",\"Machine effect\",\"Luck\"]},\"x\":{\"field\":\"amount\",\"type\":\"quantitative\",\"title\":\"Effect on win\",\"axis\":{\"format\":\"$.3~s\"}},\"color\":{\"field\":\"component\",\"type\":\"nominal\",\"scale\":{\"domain\":[\"Downtime\",\"Location\",\"Game mix\",\"Machine effect\",\"Luck\"],\"range\":[\"#FF5A6E\",\"#3FD6E0\",\"#C9A66B\",\"#F4F1EA\",\"#B48CFF\"]},\"legend\":null},\"tooltip\":[{\"field\":\"component\",\"type\":\"nominal\",\"title\":\"Component\"},{\"field\":\"amount\",\"type\":\"quantitative\",\"title\":\"Effect on win\",\"format\":\"$,.0f\"}]}}"
               },
               "frame": {
-                "title": "The 4-L bridge closes to actual win",
+                "title": "Five effects on win",
                 "showTitle": true,
-                "description": "Start at potential, subtract leak, add signed drivers and then luck.",
+                "description": "These effects explain the difference between potential and actual win. The bars use their own scale.",
                 "showDescription": true
               }
             }
           },
           "position": {
-            "x": 6,
-            "y": 11,
-            "width": 6,
-            "height": 7
+            "x": 0,
+            "y": 17,
+            "width": 12,
+            "height": 5
           }
         },
         {
@@ -857,8 +891,8 @@
                       "expression": "`net_benefit_12m_usd`"
                     },
                     {
-                      "name": "payback_month",
-                      "expression": "`payback_month`"
+                      "name": "payback_label",
+                      "expression": "COALESCE(CAST(payback_month AS STRING), 'Does not pay back within 12 months')"
                     }
                   ],
                   "disaggregated": true,
@@ -902,12 +936,16 @@
                     "format": {
                       "type": "number-currency",
                       "currencyCode": "USD",
-                      "abbreviation": "compact"
+                      "abbreviation": "compact",
+                      "decimalPlaces": {
+                        "type": "max",
+                        "places": 1
+                      }
                     }
                   },
                   {
-                    "fieldName": "payback_month",
-                    "displayName": "Payback month"
+                    "fieldName": "payback_label",
+                    "displayName": "Payback"
                   }
                 ]
               },
@@ -921,7 +959,7 @@
           },
           "position": {
             "x": 0,
-            "y": 18,
+            "y": 22,
             "width": 12,
             "height": 6
           }
@@ -963,7 +1001,11 @@
                     "format": {
                       "type": "number-currency",
                       "currencyCode": "USD",
-                      "abbreviation": "compact"
+                      "abbreviation": "compact",
+                      "decimalPlaces": {
+                        "type": "max",
+                        "places": 1
+                      }
                     }
                   },
                   {
@@ -972,7 +1014,11 @@
                     "format": {
                       "type": "number-currency",
                       "currencyCode": "USD",
-                      "abbreviation": "compact"
+                      "abbreviation": "compact",
+                      "decimalPlaces": {
+                        "type": "max",
+                        "places": 1
+                      }
                     }
                   },
                   {
@@ -982,7 +1028,7 @@
                 ]
               },
               "frame": {
-                "title": "One inspection, no July replacements",
+                "title": "Three tests and no July replacements",
                 "showTitle": true,
                 "description": "See the Evidence Vault for assumptions and alternative explanations.",
                 "showDescription": true
@@ -991,7 +1037,7 @@
           },
           "position": {
             "x": 0,
-            "y": 24,
+            "y": 28,
             "width": 12,
             "height": 3
           }
@@ -1088,7 +1134,7 @@
               },
               "jsonSpec": {
                 "type": "vega-lite",
-                "spec": "{\"$schema\":\"https://vega.github.io/schema/vega-lite/v6.json\",\"data\":{\"name\":\"databricks_query\"},\"width\":\"container\",\"height\":\"container\",\"background\":\"transparent\",\"config\":{\"autosize\":{\"type\":\"fit\",\"contains\":\"padding\"},\"view\":{\"stroke\":null},\"axis\":{\"labelColor\":\"#9FAEA6\",\"titleColor\":\"#EDE6D3\",\"gridColor\":\"#24443A\",\"domainColor\":\"#24443A\"},\"legend\":{\"labelColor\":\"#EDE6D3\",\"titleColor\":\"#EDE6D3\"}},\"layer\":[{\"transform\":[{\"calculate\":\"[-3,-2,2,3]\",\"as\":\"bounds\"},{\"flatten\":[\"bounds\"],\"as\":[\"k\"]},{\"calculate\":\"datum.k*datum.sigma\",\"as\":\"bound_usd\"}],\"mark\":{\"type\":\"line\",\"color\":\"#8A9690\",\"opacity\":0.65},\"encoding\":{\"x\":{\"field\":\"sigma\",\"type\":\"quantitative\",\"title\":\"Expected sigma ($)\",\"axis\":{\"format\":\"$~s\"}},\"y\":{\"field\":\"bound_usd\",\"type\":\"quantitative\",\"title\":\"Luck residual ($)\",\"axis\":{\"format\":\"$~s\"}},\"detail\":{\"field\":\"k\",\"type\":\"nominal\"},\"strokeDash\":{\"field\":\"k\",\"type\":\"nominal\",\"legend\":null}}},{\"mark\":{\"type\":\"point\",\"filled\":true,\"opacity\":0.78},\"encoding\":{\"x\":{\"field\":\"sigma\",\"type\":\"quantitative\",\"title\":\"Expected sigma ($)\",\"axis\":{\"format\":\"$~s\"}},\"y\":{\"field\":\"luck\",\"type\":\"quantitative\",\"title\":\"Luck residual ($)\",\"axis\":{\"format\":\"$~s\"}},\"color\":{\"field\":\"verdict_chip\",\"type\":\"nominal\",\"title\":\"Verdict\",\"scale\":{\"domain\":[\"♦ LUCK\",\"♣ LOCATION\",\"♥ LEAK\",\"⚙ LINEUP\",\"♠ REPLACE (long-term candidate)\",\"🔍 INSPECT\"],\"range\":[\"#B48CFF\",\"#3FD6E0\",\"#FF5A6E\",\"#C9A66B\",\"#F4F1EA\",\"#D4AF37\"]}},\"size\":{\"field\":\"hours\",\"type\":\"quantitative\",\"title\":\"Available hours\",\"legend\":null},\"stroke\":{\"condition\":{\"test\":\"datum.gm_rank <= 10\",\"value\":\"#D4AF37\"},\"value\":null},\"tooltip\":[{\"field\":\"machine_id\",\"type\":\"nominal\",\"title\":\"Machine\"},{\"field\":\"verdict_chip\",\"type\":\"nominal\",\"title\":\"Verdict\"},{\"field\":\"sigma\",\"type\":\"quantitative\",\"title\":\"Sigma\",\"format\":\"$,.0f\"},{\"field\":\"luck\",\"type\":\"quantitative\",\"title\":\"Luck\",\"format\":\"$,.0f\"}]}}]}"
+                "spec": "{\"$schema\":\"https://vega.github.io/schema/vega-lite/v6.json\",\"data\":{\"name\":\"databricks_query\"},\"width\":\"container\",\"height\":\"container\",\"background\":\"transparent\",\"config\":{\"autosize\":{\"type\":\"fit\",\"contains\":\"padding\"},\"view\":{\"stroke\":null},\"axis\":{\"labelColor\":\"#9FAEA6\",\"titleColor\":\"#EDE6D3\",\"gridColor\":\"#24443A\",\"domainColor\":\"#24443A\"},\"legend\":{\"labelColor\":\"#EDE6D3\",\"titleColor\":\"#EDE6D3\"}},\"layer\":[{\"transform\":[{\"calculate\":\"[-3,-2,2,3]\",\"as\":\"bounds\"},{\"flatten\":[\"bounds\"],\"as\":[\"k\"]},{\"calculate\":\"datum.k*datum.sigma\",\"as\":\"bound_usd\"}],\"mark\":{\"type\":\"line\",\"color\":\"#8A9690\",\"opacity\":0.65},\"encoding\":{\"x\":{\"field\":\"sigma\",\"type\":\"quantitative\",\"title\":\"Expected sigma ($)\",\"axis\":{\"format\":\"$~s\"}},\"y\":{\"field\":\"bound_usd\",\"type\":\"quantitative\",\"title\":\"Luck residual ($)\",\"axis\":{\"format\":\"$~s\"}},\"detail\":{\"field\":\"k\",\"type\":\"nominal\"},\"strokeDash\":{\"field\":\"k\",\"type\":\"nominal\",\"legend\":null}}},{\"mark\":{\"type\":\"point\",\"filled\":true,\"opacity\":0.78},\"encoding\":{\"x\":{\"field\":\"sigma\",\"type\":\"quantitative\",\"title\":\"Expected sigma ($)\",\"axis\":{\"format\":\"$~s\"}},\"y\":{\"field\":\"luck\",\"type\":\"quantitative\",\"title\":\"Luck residual ($)\",\"axis\":{\"format\":\"$~s\"}},\"color\":{\"field\":\"verdict_chip\",\"type\":\"nominal\",\"title\":\"Verdict\",\"scale\":{\"domain\":[\"♦ LUCK\",\"♣ LOCATION\",\"♥ LEAK\",\"⚙ LINEUP\",\"♠ REPLACE (long-term candidate)\",\"🔍 INSPECT\"],\"range\":[\"#B48CFF\",\"#3FD6E0\",\"#FF5A6E\",\"#C9A66B\",\"#F4F1EA\",\"#38D39F\"]}},\"size\":{\"field\":\"hours\",\"type\":\"quantitative\",\"title\":\"Available hours\",\"legend\":null},\"stroke\":{\"condition\":{\"test\":\"datum.gm_rank <= 10\",\"value\":\"#D4AF37\"},\"value\":null},\"tooltip\":[{\"field\":\"machine_id\",\"type\":\"nominal\",\"title\":\"Machine\"},{\"field\":\"verdict_chip\",\"type\":\"nominal\",\"title\":\"Verdict\"},{\"field\":\"sigma\",\"type\":\"quantitative\",\"title\":\"Sigma\",\"format\":\"$,.0f\"},{\"field\":\"luck\",\"type\":\"quantitative\",\"title\":\"Luck\",\"format\":\"$,.0f\"}]}}]}"
               },
               "frame": {
                 "title": "M-1158 warrants a payout check",
@@ -1159,7 +1205,7 @@
               },
               "jsonSpec": {
                 "type": "vega-lite",
-                "spec": "{\"$schema\":\"https://vega.github.io/schema/vega-lite/v6.json\",\"data\":{\"name\":\"databricks_query\"},\"width\":\"container\",\"height\":\"container\",\"background\":\"transparent\",\"config\":{\"autosize\":{\"type\":\"fit\",\"contains\":\"padding\"},\"view\":{\"stroke\":null},\"axis\":{\"labelColor\":\"#9FAEA6\",\"titleColor\":\"#EDE6D3\",\"gridColor\":\"#24443A\",\"domainColor\":\"#24443A\"},\"legend\":{\"labelColor\":\"#EDE6D3\",\"titleColor\":\"#EDE6D3\"}},\"layer\":[{\"mark\":{\"type\":\"rule\",\"color\":\"#8A9690\"},\"encoding\":{\"y\":{\"field\":\"machine_id\",\"type\":\"nominal\",\"title\":\"Machine\"},\"x\":{\"field\":\"theo_usd\",\"type\":\"quantitative\",\"title\":\"Win ($)\"},\"x2\":{\"field\":\"house_win_usd\"}}},{\"mark\":{\"type\":\"point\",\"filled\":true,\"color\":\"#8A9690\"},\"encoding\":{\"y\":{\"field\":\"machine_id\",\"type\":\"nominal\"},\"x\":{\"field\":\"theo_usd\",\"type\":\"quantitative\"}}},{\"mark\":{\"type\":\"point\",\"filled\":true},\"encoding\":{\"y\":{\"field\":\"machine_id\",\"type\":\"nominal\"},\"x\":{\"field\":\"house_win_usd\",\"type\":\"quantitative\"},\"color\":{\"field\":\"verdict_chip\",\"type\":\"nominal\",\"title\":\"Verdict\",\"scale\":{\"domain\":[\"♦ LUCK\",\"♣ LOCATION\",\"♥ LEAK\",\"⚙ LINEUP\",\"♠ REPLACE (long-term candidate)\",\"🔍 INSPECT\"],\"range\":[\"#B48CFF\",\"#3FD6E0\",\"#FF5A6E\",\"#C9A66B\",\"#F4F1EA\",\"#D4AF37\"]},\"legend\":null}}}]}"
+                "spec": "{\"$schema\":\"https://vega.github.io/schema/vega-lite/v6.json\",\"data\":{\"name\":\"databricks_query\"},\"width\":\"container\",\"height\":\"container\",\"background\":\"transparent\",\"config\":{\"autosize\":{\"type\":\"fit\",\"contains\":\"padding\"},\"view\":{\"stroke\":null},\"axis\":{\"labelColor\":\"#9FAEA6\",\"titleColor\":\"#EDE6D3\",\"gridColor\":\"#24443A\",\"domainColor\":\"#24443A\"},\"legend\":{\"labelColor\":\"#EDE6D3\",\"titleColor\":\"#EDE6D3\"}},\"layer\":[{\"mark\":{\"type\":\"rule\",\"color\":\"#8A9690\"},\"encoding\":{\"y\":{\"field\":\"machine_id\",\"type\":\"nominal\",\"title\":\"Machine\"},\"x\":{\"field\":\"theo_usd\",\"type\":\"quantitative\",\"title\":\"Win ($)\"},\"x2\":{\"field\":\"house_win_usd\"}}},{\"mark\":{\"type\":\"point\",\"filled\":true,\"color\":\"#8A9690\"},\"encoding\":{\"y\":{\"field\":\"machine_id\",\"type\":\"nominal\"},\"x\":{\"field\":\"theo_usd\",\"type\":\"quantitative\"}}},{\"mark\":{\"type\":\"point\",\"filled\":true},\"encoding\":{\"y\":{\"field\":\"machine_id\",\"type\":\"nominal\"},\"x\":{\"field\":\"house_win_usd\",\"type\":\"quantitative\"},\"color\":{\"field\":\"verdict_chip\",\"type\":\"nominal\",\"title\":\"Verdict\",\"scale\":{\"domain\":[\"♦ LUCK\",\"♣ LOCATION\",\"♥ LEAK\",\"⚙ LINEUP\",\"♠ REPLACE (long-term candidate)\",\"🔍 INSPECT\"],\"range\":[\"#B48CFF\",\"#3FD6E0\",\"#FF5A6E\",\"#C9A66B\",\"#F4F1EA\",\"#38D39F\"]},\"legend\":null}}}]}"
               },
               "frame": {
                 "title": "Actual win can miss theo by a wide margin",
@@ -1304,7 +1350,7 @@
               },
               "jsonSpec": {
                 "type": "vega-lite",
-                "spec": "{\"$schema\":\"https://vega.github.io/schema/vega-lite/v6.json\",\"data\":{\"name\":\"databricks_query\"},\"width\":\"container\",\"height\":\"container\",\"background\":\"transparent\",\"config\":{\"autosize\":{\"type\":\"fit\",\"contains\":\"padding\"},\"view\":{\"stroke\":null},\"axis\":{\"labelColor\":\"#9FAEA6\",\"titleColor\":\"#EDE6D3\",\"gridColor\":\"#24443A\",\"domainColor\":\"#24443A\"},\"legend\":{\"labelColor\":\"#EDE6D3\",\"titleColor\":\"#EDE6D3\"}},\"mark\":{\"type\":\"point\",\"filled\":true,\"opacity\":0.63},\"encoding\":{\"x\":{\"field\":\"rate\",\"type\":\"quantitative\",\"title\":\"Theo per available hour\",\"axis\":{\"format\":\"$~s\"}},\"y\":{\"field\":\"config_id\",\"type\":\"nominal\",\"title\":\"Config\"},\"color\":{\"field\":\"verdict_chip\",\"type\":\"nominal\",\"title\":\"Verdict\",\"scale\":{\"domain\":[\"♦ LUCK\",\"♣ LOCATION\",\"♥ LEAK\",\"⚙ LINEUP\",\"♠ REPLACE (long-term candidate)\",\"🔍 INSPECT\"],\"range\":[\"#B48CFF\",\"#3FD6E0\",\"#FF5A6E\",\"#C9A66B\",\"#F4F1EA\",\"#D4AF37\"]},\"legend\":null},\"tooltip\":[{\"field\":\"machine_id\",\"type\":\"nominal\"},{\"field\":\"rate\",\"type\":\"quantitative\",\"format\":\"$.2f\"}]}}"
+                "spec": "{\"$schema\":\"https://vega.github.io/schema/vega-lite/v6.json\",\"data\":{\"name\":\"databricks_query\"},\"width\":\"container\",\"height\":\"container\",\"background\":\"transparent\",\"config\":{\"autosize\":{\"type\":\"fit\",\"contains\":\"padding\"},\"view\":{\"stroke\":null},\"axis\":{\"labelColor\":\"#9FAEA6\",\"titleColor\":\"#EDE6D3\",\"gridColor\":\"#24443A\",\"domainColor\":\"#24443A\"},\"legend\":{\"labelColor\":\"#EDE6D3\",\"titleColor\":\"#EDE6D3\"}},\"mark\":{\"type\":\"point\",\"filled\":true,\"opacity\":0.63},\"encoding\":{\"x\":{\"field\":\"rate\",\"type\":\"quantitative\",\"title\":\"Theo per available hour\",\"axis\":{\"format\":\"$~s\"}},\"y\":{\"field\":\"config_id\",\"type\":\"nominal\",\"title\":\"Config\"},\"color\":{\"field\":\"verdict_chip\",\"type\":\"nominal\",\"title\":\"Verdict\",\"scale\":{\"domain\":[\"♦ LUCK\",\"♣ LOCATION\",\"♥ LEAK\",\"⚙ LINEUP\",\"♠ REPLACE (long-term candidate)\",\"🔍 INSPECT\"],\"range\":[\"#B48CFF\",\"#3FD6E0\",\"#FF5A6E\",\"#C9A66B\",\"#F4F1EA\",\"#38D39F\"]},\"legend\":null},\"tooltip\":[{\"field\":\"machine_id\",\"type\":\"nominal\"},{\"field\":\"rate\",\"type\":\"quantitative\",\"format\":\"$.2f\"}]}}"
               },
               "frame": {
                 "title": "Game settings shift the peer baseline",
@@ -1413,12 +1459,12 @@
               },
               "jsonSpec": {
                 "type": "vega-lite",
-                "spec": "{\"$schema\":\"https://vega.github.io/schema/vega-lite/v6.json\",\"data\":{\"name\":\"databricks_query\"},\"width\":\"container\",\"height\":\"container\",\"background\":\"transparent\",\"config\":{\"autosize\":{\"type\":\"fit\",\"contains\":\"padding\"},\"view\":{\"stroke\":null},\"axis\":{\"labelColor\":\"#9FAEA6\",\"titleColor\":\"#EDE6D3\",\"gridColor\":\"#24443A\",\"domainColor\":\"#24443A\"},\"legend\":{\"labelColor\":\"#EDE6D3\",\"titleColor\":\"#EDE6D3\"}},\"layer\":[{\"mark\":{\"type\":\"point\",\"filled\":true,\"opacity\":0.8},\"encoding\":{\"x\":{\"field\":\"x_m\",\"type\":\"quantitative\",\"title\":\"Floor x (m)\",\"scale\":{\"zero\":false}},\"y\":{\"field\":\"y_m\",\"type\":\"quantitative\",\"title\":\"Floor y (m)\",\"scale\":{\"zero\":false}},\"color\":{\"field\":\"verdict_chip\",\"type\":\"nominal\",\"title\":\"Verdict\",\"scale\":{\"domain\":[\"♦ LUCK\",\"♣ LOCATION\",\"♥ LEAK\",\"⚙ LINEUP\",\"♠ REPLACE (long-term candidate)\",\"🔍 INSPECT\"],\"range\":[\"#B48CFF\",\"#3FD6E0\",\"#FF5A6E\",\"#C9A66B\",\"#F4F1EA\",\"#D4AF37\"]}},\"size\":{\"field\":\"rate\",\"type\":\"quantitative\",\"title\":\"Theo/hour\",\"legend\":null},\"tooltip\":[{\"field\":\"machine_id\",\"type\":\"nominal\"},{\"field\":\"bank_name\",\"type\":\"nominal\"},{\"field\":\"verdict_chip\",\"type\":\"nominal\"}]}},{\"data\":{\"values\":[{\"x\":15,\"y\":50,\"x2\":20,\"y2\":92}]},\"mark\":{\"type\":\"rule\",\"color\":\"#3FD6E0\",\"strokeDash\":[5,4],\"strokeWidth\":2},\"encoding\":{\"x\":{\"field\":\"x\",\"type\":\"quantitative\",\"scale\":{\"zero\":false}},\"x2\":{\"field\":\"x2\"},\"y\":{\"field\":\"y\",\"type\":\"quantitative\",\"scale\":{\"zero\":false}},\"y2\":{\"field\":\"y2\"}}},{\"data\":{\"values\":[{\"x\":20,\"y\":92,\"zone\":\"Back Forty\"},{\"x\":100,\"y\":72,\"zone\":\"Bar Row\"},{\"x\":15,\"y\":50,\"zone\":\"Main Entrance\"},{\"x\":120,\"y\":100,\"zone\":\"Garage Entrance\"},{\"x\":105,\"y\":22,\"zone\":\"High-Limit\"},{\"x\":62,\"y\":8,\"zone\":\"Hotel Corridor\"},{\"x\":60,\"y\":50,\"zone\":\"Center Pit\"}]},\"mark\":{\"type\":\"text\",\"color\":\"#EDE6D3\",\"fontWeight\":600,\"dy\":-8},\"encoding\":{\"x\":{\"field\":\"x\",\"type\":\"quantitative\",\"scale\":{\"zero\":false}},\"y\":{\"field\":\"y\",\"type\":\"quantitative\",\"scale\":{\"zero\":false}},\"text\":{\"field\":\"zone\"}}}]}"
+                "spec": "{\"$schema\":\"https://vega.github.io/schema/vega-lite/v6.json\",\"data\":{\"name\":\"databricks_query\"},\"width\":\"container\",\"height\":\"container\",\"background\":\"transparent\",\"config\":{\"autosize\":{\"type\":\"fit\",\"contains\":\"padding\"},\"view\":{\"stroke\":null},\"axis\":{\"labelColor\":\"#9FAEA6\",\"titleColor\":\"#EDE6D3\",\"gridColor\":\"#24443A\",\"domainColor\":\"#24443A\"},\"legend\":{\"labelColor\":\"#EDE6D3\",\"titleColor\":\"#EDE6D3\"}},\"layer\":[{\"mark\":{\"type\":\"point\",\"filled\":true,\"opacity\":0.8},\"encoding\":{\"x\":{\"field\":\"x_m\",\"type\":\"quantitative\",\"title\":\"Floor x (m)\",\"scale\":{\"zero\":false}},\"y\":{\"field\":\"y_m\",\"type\":\"quantitative\",\"title\":\"Floor y (m)\",\"scale\":{\"zero\":false}},\"color\":{\"field\":\"verdict_chip\",\"type\":\"nominal\",\"title\":\"Verdict\",\"scale\":{\"domain\":[\"♦ LUCK\",\"♣ LOCATION\",\"♥ LEAK\",\"⚙ LINEUP\",\"♠ REPLACE (long-term candidate)\",\"🔍 INSPECT\"],\"range\":[\"#B48CFF\",\"#3FD6E0\",\"#FF5A6E\",\"#C9A66B\",\"#F4F1EA\",\"#38D39F\"]}},\"size\":{\"field\":\"rate\",\"type\":\"quantitative\",\"title\":\"Theo/hour\",\"legend\":null},\"tooltip\":[{\"field\":\"machine_id\",\"type\":\"nominal\"},{\"field\":\"bank_name\",\"type\":\"nominal\"},{\"field\":\"verdict_chip\",\"type\":\"nominal\"}]}},{\"data\":{\"values\":[{\"x\":15,\"y\":50,\"x2\":20,\"y2\":92}]},\"mark\":{\"type\":\"rule\",\"color\":\"#3FD6E0\",\"strokeDash\":[5,4],\"strokeWidth\":2},\"encoding\":{\"x\":{\"field\":\"x\",\"type\":\"quantitative\",\"scale\":{\"zero\":false}},\"x2\":{\"field\":\"x2\"},\"y\":{\"field\":\"y\",\"type\":\"quantitative\",\"scale\":{\"zero\":false}},\"y2\":{\"field\":\"y2\"}}},{\"data\":{\"values\":[{\"x\":13,\"y\":115,\"zone\":\"Back Forty\"},{\"x\":105,\"y\":88,\"zone\":\"Bar Row\"},{\"x\":5,\"y\":61,\"zone\":\"Main Entrance\"},{\"x\":111,\"y\":115,\"zone\":\"Garage Entrance\"},{\"x\":105,\"y\":15,\"zone\":\"High-Limit Room\"},{\"x\":62,\"y\":1,\"zone\":\"Hotel Corridor\"},{\"x\":58,\"y\":70,\"zone\":\"Center Pit\"}]},\"mark\":{\"type\":\"text\",\"color\":\"#EDE6D3\",\"fontWeight\":600,\"dy\":-8},\"encoding\":{\"x\":{\"field\":\"x\",\"type\":\"quantitative\",\"scale\":{\"zero\":false}},\"y\":{\"field\":\"y\",\"type\":\"quantitative\",\"scale\":{\"zero\":false}},\"text\":{\"field\":\"zone\"}}},{\"data\":{\"values\":[{\"x\":27.5,\"y\":106,\"spot\":\"M-1184 old slot L-33-6\"},{\"x\":69,\"y\":50,\"spot\":\"M-1184 new slot L-07-3\"}]},\"mark\":{\"type\":\"point\",\"shape\":\"cross\",\"size\":140,\"strokeWidth\":2,\"color\":\"#EDE6D3\"},\"encoding\":{\"x\":{\"field\":\"x\",\"type\":\"quantitative\",\"scale\":{\"zero\":false}},\"y\":{\"field\":\"y\",\"type\":\"quantitative\",\"scale\":{\"zero\":false}},\"tooltip\":[{\"field\":\"spot\",\"type\":\"nominal\",\"title\":\"Test move\"}]}}]}"
               },
               "frame": {
                 "title": "Bank positions reveal local clusters",
                 "showTitle": true,
-                "description": "Dots are observed slot positions. The dashed route was closed Mar 3–Apr 7.",
+                "description": "Dots show slot positions. The walkway reopened April 7 after closing March 3. Crosses mark the old and new slots for M-1184.",
                 "showDescription": true
               }
             }
@@ -1440,8 +1486,8 @@
                   "datasetName": "traffic",
                   "fields": [
                     {
-                      "name": "zone_id",
-                      "expression": "`zone_id`"
+                      "name": "zone_name",
+                      "expression": "`zone_name`"
                     },
                     {
                       "name": "gaming_hour",
@@ -1449,7 +1495,7 @@
                     },
                     {
                       "name": "metric",
-                      "expression": "60*SUM(entries)/NULLIF(SUM(coverage_minutes),0)"
+                      "expression": "CAST(60.0*SUM(entries)/NULLIF(SUM(coverage_minutes),0) AS DOUBLE)"
                     }
                   ],
                   "disaggregated": false
@@ -1465,7 +1511,7 @@
               "encodings": {
                 "fields": [
                   {
-                    "fieldName": "zone_id"
+                    "fieldName": "zone_name"
                   },
                   {
                     "fieldName": "gaming_hour"
@@ -1477,7 +1523,7 @@
               },
               "jsonSpec": {
                 "type": "vega-lite",
-                "spec": "{\"$schema\":\"https://vega.github.io/schema/vega-lite/v6.json\",\"data\":{\"name\":\"databricks_query\"},\"width\":\"container\",\"height\":\"container\",\"background\":\"transparent\",\"config\":{\"autosize\":{\"type\":\"fit\",\"contains\":\"padding\"},\"view\":{\"stroke\":null},\"axis\":{\"labelColor\":\"#9FAEA6\",\"titleColor\":\"#EDE6D3\",\"gridColor\":\"#24443A\",\"domainColor\":\"#24443A\"},\"legend\":{\"labelColor\":\"#EDE6D3\",\"titleColor\":\"#EDE6D3\"}},\"mark\":\"rect\",\"encoding\":{\"x\":{\"field\":\"gaming_hour\",\"type\":\"ordinal\",\"title\":\"Gaming hour from 06:00\"},\"y\":{\"field\":\"zone_id\",\"type\":\"nominal\",\"title\":\"Zone\"},\"color\":{\"field\":\"metric\",\"type\":\"quantitative\",\"scale\":{\"range\":[\"#10241B\",\"#3FD6E0\"]}},\"tooltip\":[{\"field\":\"zone_id\",\"type\":\"nominal\"},{\"field\":\"gaming_hour\",\"type\":\"ordinal\"},{\"field\":\"metric\",\"type\":\"quantitative\",\"format\":\",.1f\"}]}}"
+                "spec": "{\"$schema\":\"https://vega.github.io/schema/vega-lite/v6.json\",\"data\":{\"name\":\"databricks_query\"},\"width\":\"container\",\"height\":\"container\",\"background\":\"transparent\",\"config\":{\"autosize\":{\"type\":\"fit\",\"contains\":\"padding\"},\"view\":{\"stroke\":null},\"axis\":{\"labelColor\":\"#9FAEA6\",\"titleColor\":\"#EDE6D3\",\"gridColor\":\"#24443A\",\"domainColor\":\"#24443A\"},\"legend\":{\"labelColor\":\"#EDE6D3\",\"titleColor\":\"#EDE6D3\"}},\"transform\":[{\"calculate\":\"[\\\"6a\\\", \\\"7a\\\", \\\"8a\\\", \\\"9a\\\", \\\"10a\\\", \\\"11a\\\", \\\"12p\\\", \\\"1p\\\", \\\"2p\\\", \\\"3p\\\", \\\"4p\\\", \\\"5p\\\", \\\"6p\\\", \\\"7p\\\", \\\"8p\\\", \\\"9p\\\", \\\"10p\\\", \\\"11p\\\", \\\"12a\\\", \\\"1a\\\", \\\"2a\\\", \\\"3a\\\", \\\"4a\\\", \\\"5a\\\"][datum.gaming_hour]\",\"as\":\"hour_label\"},{\"filter\":\"isValid(datum.metric) && isFinite(datum.metric)\"}],\"mark\":\"rect\",\"encoding\":{\"x\":{\"field\":\"hour_label\",\"type\":\"ordinal\",\"title\":\"Gaming hour\",\"sort\":[\"6a\",\"7a\",\"8a\",\"9a\",\"10a\",\"11a\",\"12p\",\"1p\",\"2p\",\"3p\",\"4p\",\"5p\",\"6p\",\"7p\",\"8p\",\"9p\",\"10p\",\"11p\",\"12a\",\"1a\",\"2a\",\"3a\",\"4a\",\"5a\"]},\"y\":{\"field\":\"zone_name\",\"type\":\"nominal\",\"title\":\"Zone\"},\"color\":{\"field\":\"metric\",\"type\":\"quantitative\",\"title\":\"Counters peak at different hours\",\"scale\":{\"range\":[\"#10241B\",\"#3FD6E0\"]}},\"tooltip\":[{\"field\":\"zone_name\",\"type\":\"nominal\",\"title\":\"Zone\"},{\"field\":\"hour_label\",\"type\":\"nominal\",\"title\":\"Gaming hour\"},{\"field\":\"metric\",\"type\":\"quantitative\",\"title\":\"Counters peak at different hours\",\"format\":\",.1f\"}]}}"
               },
               "frame": {
                 "title": "Counters peak at different hours",
@@ -1504,8 +1550,8 @@
                   "datasetName": "traffic",
                   "fields": [
                     {
-                      "name": "zone_id",
-                      "expression": "`zone_id`"
+                      "name": "zone_name",
+                      "expression": "`zone_name`"
                     },
                     {
                       "name": "gaming_hour",
@@ -1529,7 +1575,7 @@
               "encodings": {
                 "fields": [
                   {
-                    "fieldName": "zone_id"
+                    "fieldName": "zone_name"
                   },
                   {
                     "fieldName": "gaming_hour"
@@ -1541,7 +1587,7 @@
               },
               "jsonSpec": {
                 "type": "vega-lite",
-                "spec": "{\"$schema\":\"https://vega.github.io/schema/vega-lite/v6.json\",\"data\":{\"name\":\"databricks_query\"},\"width\":\"container\",\"height\":\"container\",\"background\":\"transparent\",\"config\":{\"autosize\":{\"type\":\"fit\",\"contains\":\"padding\"},\"view\":{\"stroke\":null},\"axis\":{\"labelColor\":\"#9FAEA6\",\"titleColor\":\"#EDE6D3\",\"gridColor\":\"#24443A\",\"domainColor\":\"#24443A\"},\"legend\":{\"labelColor\":\"#EDE6D3\",\"titleColor\":\"#EDE6D3\"}},\"mark\":\"rect\",\"encoding\":{\"x\":{\"field\":\"gaming_hour\",\"type\":\"ordinal\",\"title\":\"Gaming hour from 06:00\"},\"y\":{\"field\":\"zone_id\",\"type\":\"nominal\",\"title\":\"Zone\"},\"color\":{\"field\":\"metric\",\"type\":\"quantitative\",\"scale\":{\"range\":[\"#10241B\",\"#FF5A6E\"]}},\"tooltip\":[{\"field\":\"zone_id\",\"type\":\"nominal\"},{\"field\":\"gaming_hour\",\"type\":\"ordinal\"},{\"field\":\"metric\",\"type\":\"quantitative\",\"format\":\",.1f\"}]}}"
+                "spec": "{\"$schema\":\"https://vega.github.io/schema/vega-lite/v6.json\",\"data\":{\"name\":\"databricks_query\"},\"width\":\"container\",\"height\":\"container\",\"background\":\"transparent\",\"config\":{\"autosize\":{\"type\":\"fit\",\"contains\":\"padding\"},\"view\":{\"stroke\":null},\"axis\":{\"labelColor\":\"#9FAEA6\",\"titleColor\":\"#EDE6D3\",\"gridColor\":\"#24443A\",\"domainColor\":\"#24443A\"},\"legend\":{\"labelColor\":\"#EDE6D3\",\"titleColor\":\"#EDE6D3\"}},\"transform\":[{\"calculate\":\"[\\\"6a\\\", \\\"7a\\\", \\\"8a\\\", \\\"9a\\\", \\\"10a\\\", \\\"11a\\\", \\\"12p\\\", \\\"1p\\\", \\\"2p\\\", \\\"3p\\\", \\\"4p\\\", \\\"5p\\\", \\\"6p\\\", \\\"7p\\\", \\\"8p\\\", \\\"9p\\\", \\\"10p\\\", \\\"11p\\\", \\\"12a\\\", \\\"1a\\\", \\\"2a\\\", \\\"3a\\\", \\\"4a\\\", \\\"5a\\\"][datum.gaming_hour]\",\"as\":\"hour_label\"},{\"filter\":\"isValid(datum.metric) && isFinite(datum.metric)\"}],\"mark\":\"rect\",\"encoding\":{\"x\":{\"field\":\"hour_label\",\"type\":\"ordinal\",\"title\":\"Gaming hour\",\"sort\":[\"6a\",\"7a\",\"8a\",\"9a\",\"10a\",\"11a\",\"12p\",\"1p\",\"2p\",\"3p\",\"4p\",\"5p\",\"6p\",\"7p\",\"8p\",\"9p\",\"10p\",\"11p\",\"12a\",\"1a\",\"2a\",\"3a\",\"4a\",\"5a\"]},\"y\":{\"field\":\"zone_name\",\"type\":\"nominal\",\"title\":\"Zone\"},\"color\":{\"field\":\"metric\",\"type\":\"quantitative\",\"title\":\"Downtime costs most at busy hours\",\"scale\":{\"range\":[\"#10241B\",\"#FF5A6E\"]}},\"tooltip\":[{\"field\":\"zone_name\",\"type\":\"nominal\",\"title\":\"Zone\"},{\"field\":\"hour_label\",\"type\":\"nominal\",\"title\":\"Gaming hour\"},{\"field\":\"metric\",\"type\":\"quantitative\",\"title\":\"Downtime costs most at busy hours\",\"format\":\",.1f\"}]}}"
               },
               "frame": {
                 "title": "Downtime costs most at busy hours",
@@ -1605,12 +1651,12 @@
               },
               "jsonSpec": {
                 "type": "vega-lite",
-                "spec": "{\"$schema\":\"https://vega.github.io/schema/vega-lite/v6.json\",\"data\":{\"name\":\"databricks_query\"},\"width\":\"container\",\"height\":\"container\",\"background\":\"transparent\",\"config\":{\"autosize\":{\"type\":\"fit\",\"contains\":\"padding\"},\"view\":{\"stroke\":null},\"axis\":{\"labelColor\":\"#9FAEA6\",\"titleColor\":\"#EDE6D3\",\"gridColor\":\"#24443A\",\"domainColor\":\"#24443A\"},\"legend\":{\"labelColor\":\"#EDE6D3\",\"titleColor\":\"#EDE6D3\"}},\"layer\":[{\"data\":{\"values\":[{\"start\":\"2025-03-03\",\"end\":\"2025-04-07\"}]},\"mark\":{\"type\":\"rect\",\"color\":\"#D4AF37\",\"opacity\":0.1},\"encoding\":{\"x\":{\"field\":\"start\",\"type\":\"temporal\",\"title\":\"Gaming date\"},\"x2\":{\"field\":\"end\"}}},{\"transform\":[{\"fold\":[\"coin_in_usd\",\"forecast_usd\"],\"as\":[\"series\",\"coin\"]},{\"calculate\":\"[\\\"Actual\\\", \\\"Forecast\\\"][indexof([\\\"coin_in_usd\\\", \\\"forecast_usd\\\"], datum.series)]\",\"as\":\"label\"}],\"mark\":{\"type\":\"line\",\"strokeWidth\":1.6},\"encoding\":{\"x\":{\"field\":\"gaming_date\",\"type\":\"temporal\",\"title\":\"Gaming date\"},\"y\":{\"field\":\"coin\",\"type\":\"quantitative\",\"title\":\"Daily coin-in\",\"axis\":{\"format\":\"$~s\"},\"scale\":{\"zero\":false}},\"color\":{\"field\":\"label\",\"type\":\"nominal\",\"scale\":{\"domain\":[\"Actual\",\"Forecast\"],\"range\":[\"#EDE6D3\",\"#3FD6E0\"]}},\"tooltip\":[{\"field\":\"gaming_date\",\"type\":\"temporal\",\"title\":\"Date\"},{\"field\":\"label\",\"type\":\"nominal\"},{\"field\":\"coin\",\"type\":\"quantitative\",\"format\":\"$,.0f\"}]}}]}"
+                "spec": "{\"$schema\":\"https://vega.github.io/schema/vega-lite/v6.json\",\"data\":{\"name\":\"databricks_query\"},\"width\":\"container\",\"height\":\"container\",\"background\":\"transparent\",\"config\":{\"autosize\":{\"type\":\"fit\",\"contains\":\"padding\"},\"view\":{\"stroke\":null},\"axis\":{\"labelColor\":\"#9FAEA6\",\"titleColor\":\"#EDE6D3\",\"gridColor\":\"#24443A\",\"domainColor\":\"#24443A\"},\"legend\":{\"labelColor\":\"#EDE6D3\",\"titleColor\":\"#EDE6D3\"}},\"layer\":[{\"data\":{\"values\":[{\"start\":\"2025-05-01\",\"end\":\"2025-07-01\"}]},\"mark\":{\"type\":\"rect\",\"color\":\"#D4AF37\",\"opacity\":0.1},\"encoding\":{\"x\":{\"field\":\"start\",\"type\":\"temporal\",\"title\":\"Gaming date\"},\"x2\":{\"field\":\"end\"}}},{\"transform\":[{\"fold\":[\"coin_in_usd\",\"forecast_usd\"],\"as\":[\"series\",\"coin\"]},{\"calculate\":\"[\\\"Actual\\\", \\\"Forecast\\\"][indexof([\\\"coin_in_usd\\\", \\\"forecast_usd\\\"], datum.series)]\",\"as\":\"label\"}],\"mark\":{\"type\":\"line\",\"strokeWidth\":1.6},\"encoding\":{\"x\":{\"field\":\"gaming_date\",\"type\":\"temporal\",\"title\":\"Gaming date\"},\"y\":{\"field\":\"coin\",\"type\":\"quantitative\",\"title\":\"Daily coin-in\",\"axis\":{\"format\":\"$~s\"},\"scale\":{\"zero\":false}},\"color\":{\"field\":\"label\",\"type\":\"nominal\",\"title\":\"Series\",\"scale\":{\"domain\":[\"Actual\",\"Forecast\"],\"range\":[\"#EDE6D3\",\"#3FD6E0\"]}},\"tooltip\":[{\"field\":\"gaming_date\",\"type\":\"temporal\",\"title\":\"Date\"},{\"field\":\"label\",\"type\":\"nominal\"},{\"field\":\"coin\",\"type\":\"quantitative\",\"format\":\"$,.0f\"}]}}]}"
               },
               "frame": {
                 "title": "Back Forty weakened during the closure",
                 "showTitle": true,
-                "description": "Actual coin-in and the frozen forecast. Shaded days overlap the walkway closure.",
+                "description": "Actual wagers and the frozen forecast. The shaded area marks the May and June test period.",
                 "showDescription": true
               }
             }
@@ -1669,7 +1715,7 @@
               },
               "jsonSpec": {
                 "type": "vega-lite",
-                "spec": "{\"$schema\":\"https://vega.github.io/schema/vega-lite/v6.json\",\"data\":{\"name\":\"databricks_query\"},\"width\":\"container\",\"height\":\"container\",\"background\":\"transparent\",\"config\":{\"autosize\":{\"type\":\"fit\",\"contains\":\"padding\"},\"view\":{\"stroke\":null},\"axis\":{\"labelColor\":\"#9FAEA6\",\"titleColor\":\"#EDE6D3\",\"gridColor\":\"#24443A\",\"domainColor\":\"#24443A\"},\"legend\":{\"labelColor\":\"#EDE6D3\",\"titleColor\":\"#EDE6D3\"}},\"transform\":[{\"fold\":[\"back_forty_index\",\"control_index\"],\"as\":[\"series\",\"value\"]},{\"calculate\":\"datum.series === 'back_forty_index' ? 'Back Forty' : 'Rest of floor'\",\"as\":\"group\"}],\"mark\":{\"type\":\"line\",\"point\":true},\"encoding\":{\"x\":{\"field\":\"period\",\"type\":\"ordinal\",\"title\":\"Walkway phase\"},\"y\":{\"field\":\"value\",\"type\":\"quantitative\",\"title\":\"Pre = 100\",\"scale\":{\"zero\":false}},\"color\":{\"field\":\"group\",\"type\":\"nominal\",\"scale\":{\"domain\":[\"Back Forty\",\"Rest of floor\"],\"range\":[\"#3FD6E0\",\"#8A9690\"]}}}}"
+                "spec": "{\"$schema\":\"https://vega.github.io/schema/vega-lite/v6.json\",\"data\":{\"name\":\"databricks_query\"},\"width\":\"container\",\"height\":\"container\",\"background\":\"transparent\",\"config\":{\"autosize\":{\"type\":\"fit\",\"contains\":\"padding\"},\"view\":{\"stroke\":null},\"axis\":{\"labelColor\":\"#9FAEA6\",\"titleColor\":\"#EDE6D3\",\"gridColor\":\"#24443A\",\"domainColor\":\"#24443A\"},\"legend\":{\"labelColor\":\"#EDE6D3\",\"titleColor\":\"#EDE6D3\"}},\"transform\":[{\"fold\":[\"back_forty_index\",\"control_index\"],\"as\":[\"series\",\"value\"]},{\"calculate\":\"datum.series === 'back_forty_index' ? 'Back Forty' : 'Rest of floor'\",\"as\":\"group\"}],\"mark\":{\"type\":\"line\",\"point\":true},\"encoding\":{\"x\":{\"field\":\"period\",\"type\":\"ordinal\",\"title\":\"Walkway phase\",\"sort\":[\"Before\",\"During closure\",\"After\"],\"axis\":{\"labelAngle\":0}},\"y\":{\"field\":\"value\",\"type\":\"quantitative\",\"title\":\"Pre = 100\",\"scale\":{\"zero\":false}},\"color\":{\"field\":\"group\",\"type\":\"nominal\",\"title\":\"Area\",\"scale\":{\"domain\":[\"Back Forty\",\"Rest of floor\"],\"range\":[\"#3FD6E0\",\"#8A9690\"]}}}}"
               },
               "frame": {
                 "title": "Back Forty fell to 71 while controls reached 103",
@@ -1733,7 +1779,7 @@
               },
               "jsonSpec": {
                 "type": "vega-lite",
-                "spec": "{\"$schema\":\"https://vega.github.io/schema/vega-lite/v6.json\",\"data\":{\"name\":\"databricks_query\"},\"width\":\"container\",\"height\":\"container\",\"background\":\"transparent\",\"config\":{\"autosize\":{\"type\":\"fit\",\"contains\":\"padding\"},\"view\":{\"stroke\":null},\"axis\":{\"labelColor\":\"#9FAEA6\",\"titleColor\":\"#EDE6D3\",\"gridColor\":\"#24443A\",\"domainColor\":\"#24443A\"},\"legend\":{\"labelColor\":\"#EDE6D3\",\"titleColor\":\"#EDE6D3\"}},\"transform\":[{\"fold\":[\"wait\",\"work\"],\"as\":[\"part\",\"hours\"]}],\"mark\":\"bar\",\"encoding\":{\"x\":{\"field\":\"gaming_hour\",\"type\":\"ordinal\",\"title\":\"Gaming hour from 06:00\"},\"y\":{\"field\":\"hours\",\"type\":\"quantitative\",\"title\":\"Mean hours\"},\"color\":{\"field\":\"part\",\"type\":\"nominal\",\"scale\":{\"range\":[\"#FF5A6E\",\"#8A9690\"]}}}}"
+                "spec": "{\"$schema\":\"https://vega.github.io/schema/vega-lite/v6.json\",\"data\":{\"name\":\"databricks_query\"},\"width\":\"container\",\"height\":\"container\",\"background\":\"transparent\",\"config\":{\"autosize\":{\"type\":\"fit\",\"contains\":\"padding\"},\"view\":{\"stroke\":null},\"axis\":{\"labelColor\":\"#9FAEA6\",\"titleColor\":\"#EDE6D3\",\"gridColor\":\"#24443A\",\"domainColor\":\"#24443A\"},\"legend\":{\"labelColor\":\"#EDE6D3\",\"titleColor\":\"#EDE6D3\"}},\"transform\":[{\"calculate\":\"[\\\"6a\\\", \\\"7a\\\", \\\"8a\\\", \\\"9a\\\", \\\"10a\\\", \\\"11a\\\", \\\"12p\\\", \\\"1p\\\", \\\"2p\\\", \\\"3p\\\", \\\"4p\\\", \\\"5p\\\", \\\"6p\\\", \\\"7p\\\", \\\"8p\\\", \\\"9p\\\", \\\"10p\\\", \\\"11p\\\", \\\"12a\\\", \\\"1a\\\", \\\"2a\\\", \\\"3a\\\", \\\"4a\\\", \\\"5a\\\"][datum.gaming_hour]\",\"as\":\"hour_label\"},{\"fold\":[\"wait\",\"work\"],\"as\":[\"part\",\"hours\"]},{\"calculate\":\"datum.part === 'wait' ? 'Waiting for a technician' : 'Repair time'\",\"as\":\"delay\"}],\"mark\":\"bar\",\"encoding\":{\"x\":{\"field\":\"hour_label\",\"type\":\"ordinal\",\"title\":\"Gaming hour\",\"sort\":[\"6a\",\"7a\",\"8a\",\"9a\",\"10a\",\"11a\",\"12p\",\"1p\",\"2p\",\"3p\",\"4p\",\"5p\",\"6p\",\"7p\",\"8p\",\"9p\",\"10p\",\"11p\",\"12a\",\"1a\",\"2a\",\"3a\",\"4a\",\"5a\"]},\"y\":{\"field\":\"hours\",\"type\":\"quantitative\",\"title\":\"Mean hours\"},\"color\":{\"field\":\"delay\",\"type\":\"nominal\",\"title\":\"Time spent\",\"scale\":{\"range\":[\"#FF5A6E\",\"#8A9690\"]}}}}"
               },
               "frame": {
                 "title": "Wait and repair time are different costs",
@@ -1863,7 +1909,11 @@
                     "format": {
                       "type": "number-currency",
                       "currencyCode": "USD",
-                      "abbreviation": "compact"
+                      "abbreviation": "compact",
+                      "decimalPlaces": {
+                        "type": "max",
+                        "places": 1
+                      }
                     }
                   },
                   {
@@ -1872,7 +1922,11 @@
                     "format": {
                       "type": "number-currency",
                       "currencyCode": "USD",
-                      "abbreviation": "compact"
+                      "abbreviation": "compact",
+                      "decimalPlaces": {
+                        "type": "max",
+                        "places": 1
+                      }
                     }
                   },
                   {
@@ -1881,7 +1935,11 @@
                     "format": {
                       "type": "number-currency",
                       "currencyCode": "USD",
-                      "abbreviation": "compact"
+                      "abbreviation": "compact",
+                      "decimalPlaces": {
+                        "type": "max",
+                        "places": 1
+                      }
                     }
                   },
                   {
@@ -1890,7 +1948,11 @@
                     "format": {
                       "type": "number-currency",
                       "currencyCode": "USD",
-                      "abbreviation": "compact"
+                      "abbreviation": "compact",
+                      "decimalPlaces": {
+                        "type": "max",
+                        "places": 1
+                      }
                     }
                   }
                 ]
@@ -1981,12 +2043,12 @@
               },
               "jsonSpec": {
                 "type": "vega-lite",
-                "spec": "{\"$schema\":\"https://vega.github.io/schema/vega-lite/v6.json\",\"data\":{\"name\":\"databricks_query\"},\"width\":\"container\",\"height\":\"container\",\"background\":\"transparent\",\"config\":{\"autosize\":{\"type\":\"fit\",\"contains\":\"padding\"},\"view\":{\"stroke\":null},\"axis\":{\"labelColor\":\"#9FAEA6\",\"titleColor\":\"#EDE6D3\",\"gridColor\":\"#24443A\",\"domainColor\":\"#24443A\"},\"legend\":{\"labelColor\":\"#EDE6D3\",\"titleColor\":\"#EDE6D3\"}},\"transform\":[{\"fold\":[\"cumulative_theo_share\",\"cumulative_coin_in_share\"],\"as\":[\"measure\",\"share\"]},{\"calculate\":\"datum.measure === 'cumulative_theo_share' ? 'Tracked theo' : 'Tracked coin-in'\",\"as\":\"label\"}],\"mark\":{\"type\":\"line\",\"strokeWidth\":2},\"encoding\":{\"x\":{\"field\":\"cumulative_player_share\",\"type\":\"quantitative\",\"title\":\"Top share of players\",\"axis\":{\"format\":\".0%\"}},\"y\":{\"field\":\"share\",\"type\":\"quantitative\",\"title\":\"Cumulative share\",\"axis\":{\"format\":\".0%\"}},\"color\":{\"field\":\"label\",\"type\":\"nominal\",\"scale\":{\"domain\":[\"Tracked theo\",\"Tracked coin-in\"],\"range\":[\"#3FD6E0\",\"#8A9690\"]}}}}"
+                "spec": "{\"$schema\":\"https://vega.github.io/schema/vega-lite/v6.json\",\"data\":{\"name\":\"databricks_query\"},\"width\":\"container\",\"height\":\"container\",\"background\":\"transparent\",\"config\":{\"autosize\":{\"type\":\"fit\",\"contains\":\"padding\"},\"view\":{\"stroke\":null},\"axis\":{\"labelColor\":\"#9FAEA6\",\"titleColor\":\"#EDE6D3\",\"gridColor\":\"#24443A\",\"domainColor\":\"#24443A\"},\"legend\":{\"labelColor\":\"#EDE6D3\",\"titleColor\":\"#EDE6D3\"}},\"transform\":[{\"fold\":[\"cumulative_theo_share\",\"cumulative_coin_in_share\"],\"as\":[\"measure\",\"share\"]},{\"calculate\":\"datum.measure === 'cumulative_theo_share' ? 'Tracked theo' : 'Tracked coin-in'\",\"as\":\"label\"}],\"mark\":{\"type\":\"line\",\"strokeWidth\":2},\"encoding\":{\"x\":{\"field\":\"cumulative_player_share\",\"type\":\"quantitative\",\"title\":\"Top share of players\",\"axis\":{\"format\":\".0%\"}},\"y\":{\"field\":\"share\",\"type\":\"quantitative\",\"title\":\"Cumulative share\",\"axis\":{\"format\":\".0%\"}},\"color\":{\"field\":\"label\",\"type\":\"nominal\",\"title\":\"Series\",\"scale\":{\"domain\":[\"Tracked theo\",\"Tracked coin-in\"],\"range\":[\"#3FD6E0\",\"#8A9690\"]}}}}"
               },
               "frame": {
                 "title": "The top tenth generated two-thirds of tracked theo",
                 "showTitle": true,
-                "description": "Jan–Jun player totals, ranked by tracked theo.",
+                "description": "The theo and coin-in lines overlap almost exactly.",
                 "showDescription": true
               }
             }
@@ -2008,8 +2070,8 @@
                   "datasetName": "concentration",
                   "fields": [
                     {
-                      "name": "top_percent",
-                      "expression": "`top_percent`"
+                      "name": "top_group",
+                      "expression": "CONCAT('Top ', CAST(CAST(top_percent AS INT) AS STRING), '%')"
                     },
                     {
                       "name": "tracked_theo_share",
@@ -2040,8 +2102,8 @@
               "encodings": {
                 "columns": [
                   {
-                    "fieldName": "top_percent",
-                    "displayName": "Top %"
+                    "fieldName": "top_group",
+                    "displayName": "Player group"
                   },
                   {
                     "fieldName": "tracked_theo_share",
@@ -2071,7 +2133,11 @@
                     "format": {
                       "type": "number-currency",
                       "currencyCode": "USD",
-                      "abbreviation": "compact"
+                      "abbreviation": "compact",
+                      "decimalPlaces": {
+                        "type": "max",
+                        "places": 1
+                      }
                     }
                   }
                 ]
@@ -2101,8 +2167,8 @@
                   "datasetName": "outcomes",
                   "fields": [
                     {
-                      "name": "outcome",
-                      "expression": "`outcome`"
+                      "name": "outcome_label",
+                      "expression": "CASE LOWER(outcome) WHEN 'loser' THEN 'Finished down' WHEN 'winner' THEN 'Finished up' WHEN 'exactly zero' THEN 'Exactly even' ELSE outcome END"
                     },
                     {
                       "name": "players",
@@ -2123,7 +2189,7 @@
               "encodings": {
                 "columns": [
                   {
-                    "fieldName": "outcome",
+                    "fieldName": "outcome_label",
                     "displayName": "Outcome"
                   },
                   {
@@ -2136,7 +2202,11 @@
                     "format": {
                       "type": "number-currency",
                       "currencyCode": "USD",
-                      "abbreviation": "compact"
+                      "abbreviation": "compact",
+                      "decimalPlaces": {
+                        "type": "max",
+                        "places": 1
+                      }
                     }
                   }
                 ]
@@ -2167,7 +2237,11 @@
                   "fields": [
                     {
                       "name": "band",
-                      "expression": "`band`"
+                      "expression": "REGEXP_REPLACE(band, '^[0-7] ', '')"
+                    },
+                    {
+                      "name": "bin_id",
+                      "expression": "`bin_id`"
                     },
                     {
                       "name": "observations",
@@ -2190,13 +2264,16 @@
                     "fieldName": "band"
                   },
                   {
+                    "fieldName": "bin_id"
+                  },
+                  {
                     "fieldName": "observations"
                   }
                 ]
               },
               "jsonSpec": {
                 "type": "vega-lite",
-                "spec": "{\"$schema\":\"https://vega.github.io/schema/vega-lite/v6.json\",\"data\":{\"name\":\"databricks_query\"},\"width\":\"container\",\"height\":\"container\",\"background\":\"transparent\",\"config\":{\"autosize\":{\"type\":\"fit\",\"contains\":\"padding\"},\"view\":{\"stroke\":null},\"axis\":{\"labelColor\":\"#9FAEA6\",\"titleColor\":\"#EDE6D3\",\"gridColor\":\"#24443A\",\"domainColor\":\"#24443A\"},\"legend\":{\"labelColor\":\"#EDE6D3\",\"titleColor\":\"#EDE6D3\"}},\"mark\":{\"type\":\"bar\",\"color\":\"#8A9690\"},\"encoding\":{\"x\":{\"field\":\"observations\",\"type\":\"quantitative\",\"title\":\"Players\"},\"y\":{\"field\":\"band\",\"type\":\"nominal\",\"title\":\"Jan–Jun player net\",\"sort\":\"ascending\"},\"tooltip\":[{\"field\":\"band\",\"type\":\"nominal\"},{\"field\":\"observations\",\"type\":\"quantitative\"}]}}"
+                "spec": "{\"$schema\":\"https://vega.github.io/schema/vega-lite/v6.json\",\"data\":{\"name\":\"databricks_query\"},\"width\":\"container\",\"height\":\"container\",\"background\":\"transparent\",\"config\":{\"autosize\":{\"type\":\"fit\",\"contains\":\"padding\"},\"view\":{\"stroke\":null},\"axis\":{\"labelColor\":\"#9FAEA6\",\"titleColor\":\"#EDE6D3\",\"gridColor\":\"#24443A\",\"domainColor\":\"#24443A\"},\"legend\":{\"labelColor\":\"#EDE6D3\",\"titleColor\":\"#EDE6D3\"}},\"mark\":{\"type\":\"bar\",\"color\":\"#8A9690\"},\"encoding\":{\"x\":{\"field\":\"observations\",\"type\":\"quantitative\",\"title\":\"Players\",\"axis\":{\"format\":\",d\"}},\"y\":{\"field\":\"band\",\"type\":\"nominal\",\"title\":\"Jan–Jun player net\",\"sort\":{\"field\":\"bin_id\",\"order\":\"ascending\"}},\"tooltip\":[{\"field\":\"band\",\"type\":\"nominal\",\"title\":\"Player result\"},{\"field\":\"observations\",\"type\":\"quantitative\",\"title\":\"Players\",\"format\":\",d\"}]}}"
               },
               "frame": {
                 "title": "Most tracked bettors finished down",
@@ -2263,7 +2340,13 @@
                       "expression": "SUM(contribution_usd)"
                     }
                   ],
-                  "disaggregated": false
+                  "disaggregated": false,
+                  "orders": [
+                    {
+                      "direction": "ASC",
+                      "expression": "`tier_end`, `theo_decile`"
+                    }
+                  ]
                 }
               }
             ],
@@ -2290,7 +2373,11 @@
                     "format": {
                       "type": "number-currency",
                       "currencyCode": "USD",
-                      "abbreviation": "compact"
+                      "abbreviation": "compact",
+                      "decimalPlaces": {
+                        "type": "max",
+                        "places": 1
+                      }
                     }
                   },
                   {
@@ -2299,7 +2386,11 @@
                     "format": {
                       "type": "number-currency",
                       "currencyCode": "USD",
-                      "abbreviation": "compact"
+                      "abbreviation": "compact",
+                      "decimalPlaces": {
+                        "type": "max",
+                        "places": 1
+                      }
                     }
                   },
                   {
@@ -2308,7 +2399,11 @@
                     "format": {
                       "type": "number-currency",
                       "currencyCode": "USD",
-                      "abbreviation": "compact"
+                      "abbreviation": "compact",
+                      "decimalPlaces": {
+                        "type": "max",
+                        "places": 1
+                      }
                     }
                   },
                   {
@@ -2317,7 +2412,11 @@
                     "format": {
                       "type": "number-currency",
                       "currencyCode": "USD",
-                      "abbreviation": "compact"
+                      "abbreviation": "compact",
+                      "decimalPlaces": {
+                        "type": "max",
+                        "places": 1
+                      }
                     }
                   },
                   {
@@ -2326,7 +2425,11 @@
                     "format": {
                       "type": "number-currency",
                       "currencyCode": "USD",
-                      "abbreviation": "compact"
+                      "abbreviation": "compact",
+                      "decimalPlaces": {
+                        "type": "max",
+                        "places": 1
+                      }
                     }
                   },
                   {
@@ -2335,7 +2438,11 @@
                     "format": {
                       "type": "number-currency",
                       "currencyCode": "USD",
-                      "abbreviation": "compact"
+                      "abbreviation": "compact",
+                      "decimalPlaces": {
+                        "type": "max",
+                        "places": 1
+                      }
                     }
                   },
                   {
@@ -2344,7 +2451,11 @@
                     "format": {
                       "type": "number-currency",
                       "currencyCode": "USD",
-                      "abbreviation": "compact"
+                      "abbreviation": "compact",
+                      "decimalPlaces": {
+                        "type": "max",
+                        "places": 1
+                      }
                     }
                   }
                 ]
@@ -2352,7 +2463,7 @@
               "frame": {
                 "title": "Tier and play intensity explain different outcomes",
                 "showTitle": true,
-                "description": "Counts are player-months. Use tier, region and age filters.",
+                "description": "Counts are player-months. Decile 1 is the highest group by tracked expected win. Use tier, region and age filters.",
                 "showDescription": true
               }
             }
@@ -2398,6 +2509,7 @@
               "encodings": {
                 "x": {
                   "fieldName": "week_start",
+                  "displayName": "Week starting",
                   "scale": {
                     "type": "temporal"
                   }
@@ -2467,6 +2579,7 @@
               "encodings": {
                 "x": {
                   "fieldName": "week_start",
+                  "displayName": "Week starting",
                   "scale": {
                     "type": "temporal"
                   }
@@ -2527,19 +2640,19 @@
                   "fields": [
                     {
                       "name": "metric",
-                      "expression": "`metric`"
+                      "expression": "CASE metric WHEN 'relative_coin_in_pct' THEN 'Change in tracked wagers relative to untracked wagers' WHEN 'relative_coin_in_usd_week' THEN 'Change in tracked wagers per week relative to untracked wagers' WHEN 'carded_share_pp' THEN 'Change in the tracked share of wagers' WHEN 'tracked_theo_per_player_raw_usd' THEN 'Change in expected win per tracked player before comparison' WHEN 'tracked_theo_per_player_control_adjusted_usd' THEN 'Change in expected win per tracked player after comparison' ELSE metric END"
                     },
                     {
                       "name": "estimate",
-                      "expression": "`estimate`"
+                      "expression": "CASE WHEN metric='relative_coin_in_usd_week' THEN CONCAT(IF((estimate)<0, '−', ''), '$', CASE WHEN ABS(estimate)>=999950 THEN CONCAT(FORMAT_NUMBER(ABS(estimate)/1000000,1),'M') WHEN ABS(estimate)>=10000 THEN CONCAT(FORMAT_NUMBER(ABS(estimate)/1000,1),'K') ELSE FORMAT_NUMBER(ABS(estimate),0) END) WHEN metric LIKE 'tracked_theo_per_player%usd' THEN CONCAT(IF((estimate)<0, '−', ''), '$', CASE WHEN ABS(estimate)>=999950 THEN CONCAT(FORMAT_NUMBER(ABS(estimate)/1000000,1),'M') WHEN ABS(estimate)>=10000 THEN CONCAT(FORMAT_NUMBER(ABS(estimate)/1000,1),'K') ELSE FORMAT_NUMBER(ABS(estimate),2) END) WHEN metric='relative_coin_in_pct' THEN CONCAT(FORMAT_NUMBER(estimate,2),'%') ELSE CONCAT(FORMAT_NUMBER(estimate,2),' percentage points') END"
                     },
                     {
                       "name": "ci90_lower",
-                      "expression": "`ci90_lower`"
+                      "expression": "CASE WHEN metric='relative_coin_in_usd_week' THEN CONCAT(IF((ci90_lower)<0, '−', ''), '$', CASE WHEN ABS(ci90_lower)>=999950 THEN CONCAT(FORMAT_NUMBER(ABS(ci90_lower)/1000000,1),'M') WHEN ABS(ci90_lower)>=10000 THEN CONCAT(FORMAT_NUMBER(ABS(ci90_lower)/1000,1),'K') ELSE FORMAT_NUMBER(ABS(ci90_lower),0) END) WHEN metric LIKE 'tracked_theo_per_player%usd' THEN CONCAT(IF((ci90_lower)<0, '−', ''), '$', CASE WHEN ABS(ci90_lower)>=999950 THEN CONCAT(FORMAT_NUMBER(ABS(ci90_lower)/1000000,1),'M') WHEN ABS(ci90_lower)>=10000 THEN CONCAT(FORMAT_NUMBER(ABS(ci90_lower)/1000,1),'K') ELSE FORMAT_NUMBER(ABS(ci90_lower),2) END) WHEN metric='relative_coin_in_pct' THEN CONCAT(FORMAT_NUMBER(ci90_lower,2),'%') ELSE CONCAT(FORMAT_NUMBER(ci90_lower,2),' percentage points') END"
                     },
                     {
                       "name": "ci90_upper",
-                      "expression": "`ci90_upper`"
+                      "expression": "CASE WHEN metric='relative_coin_in_usd_week' THEN CONCAT(IF((ci90_upper)<0, '−', ''), '$', CASE WHEN ABS(ci90_upper)>=999950 THEN CONCAT(FORMAT_NUMBER(ABS(ci90_upper)/1000000,1),'M') WHEN ABS(ci90_upper)>=10000 THEN CONCAT(FORMAT_NUMBER(ABS(ci90_upper)/1000,1),'K') ELSE FORMAT_NUMBER(ABS(ci90_upper),0) END) WHEN metric LIKE 'tracked_theo_per_player%usd' THEN CONCAT(IF((ci90_upper)<0, '−', ''), '$', CASE WHEN ABS(ci90_upper)>=999950 THEN CONCAT(FORMAT_NUMBER(ABS(ci90_upper)/1000000,1),'M') WHEN ABS(ci90_upper)>=10000 THEN CONCAT(FORMAT_NUMBER(ABS(ci90_upper)/1000,1),'K') ELSE FORMAT_NUMBER(ABS(ci90_upper),2) END) WHEN metric='relative_coin_in_pct' THEN CONCAT(FORMAT_NUMBER(ci90_upper,2),'%') ELSE CONCAT(FORMAT_NUMBER(ci90_upper,2),' percentage points') END"
                     }
                   ],
                   "disaggregated": true
@@ -2595,7 +2708,7 @@
                   "fields": [
                     {
                       "name": "valuation",
-                      "expression": "`valuation`"
+                      "expression": "CASE valuation WHEN 'face' THEN 'Face value' ELSE 'Economic cost' END"
                     },
                     {
                       "name": "apr30_usd",
@@ -2629,7 +2742,11 @@
                     "format": {
                       "type": "number-currency",
                       "currencyCode": "USD",
-                      "abbreviation": "compact"
+                      "abbreviation": "compact",
+                      "decimalPlaces": {
+                        "type": "max",
+                        "places": 1
+                      }
                     }
                   },
                   {
@@ -2638,7 +2755,11 @@
                     "format": {
                       "type": "number-currency",
                       "currencyCode": "USD",
-                      "abbreviation": "compact"
+                      "abbreviation": "compact",
+                      "decimalPlaces": {
+                        "type": "max",
+                        "places": 1
+                      }
                     }
                   },
                   {
@@ -2647,7 +2768,11 @@
                     "format": {
                       "type": "number-currency",
                       "currencyCode": "USD",
-                      "abbreviation": "compact"
+                      "abbreviation": "compact",
+                      "decimalPlaces": {
+                        "type": "max",
+                        "places": 1
+                      }
                     }
                   }
                 ]
@@ -2680,7 +2805,7 @@
             "name": "cage-intro",
             "multilineTextboxSpec": {
               "lines": [
-                "## THE CASHIER’S CAGE\n\nAuthorize information worth buying and preserve the rest."
+                "## THE CASHIER’S CAGE\n\nThe 60-day pilot can detect a smaller change in percentage terms (5.77% versus 6.44%), even though the dollar change is larger ($7.61 versus $4.15). Expected win accumulates over more days. Wait until the pilot can detect a change of 2.50% or less."
               ]
             }
           },
@@ -2719,14 +2844,18 @@
                   "format": {
                     "type": "number-currency",
                     "currencyCode": "USD",
-                    "abbreviation": "compact"
+                    "abbreviation": "compact",
+                    "decimalPlaces": {
+                      "type": "max",
+                      "places": 1
+                    }
                   }
                 }
               },
               "frame": {
                 "title": "Funded in July",
                 "showTitle": true,
-                "description": "M-1158 inspection. Pilot deferred on power.",
+                "description": "Add Back Forty signage, inspect M-1158 and move M-1184. Wait on the comp pilot until it can give a clear answer.",
                 "showDescription": true
               }
             }
@@ -2766,14 +2895,18 @@
                   "format": {
                     "type": "number-currency",
                     "currencyCode": "USD",
-                    "abbreviation": "compact"
+                    "abbreviation": "compact",
+                    "decimalPlaces": {
+                      "type": "max",
+                      "places": 1
+                    }
                   }
                 }
               },
               "frame": {
                 "title": "Kept in reserve",
                 "showTitle": true,
-                "description": "No move, replacement or staffing package funded.",
+                "description": "Reserve funds for decisions after the July tests.",
                 "showDescription": true
               }
             }
@@ -2792,11 +2925,11 @@
               {
                 "name": "main_query",
                 "query": {
-                  "datasetName": "cage",
+                  "datasetName": "hold_case",
                   "fields": [
                     {
                       "name": "value",
-                      "expression": "0*MAX(spent_usd)"
+                      "expression": "COALESCE(MAX(expected_net_usd),0)"
                     }
                   ],
                   "disaggregated": false
@@ -2813,7 +2946,11 @@
                   "format": {
                     "type": "number-currency",
                     "currencyCode": "USD",
-                    "abbreviation": "compact"
+                    "abbreviation": "compact",
+                    "decimalPlaces": {
+                      "type": "max",
+                      "places": 1
+                    }
                   }
                 }
               },
@@ -2877,7 +3014,7 @@
               "frame": {
                 "title": "The July budget stays mostly in reserve",
                 "showTitle": true,
-                "description": "The counters above label the funded and reserve amounts. Select a segment for its percentage.",
+                "description": "$10,500 funded (10.5%) for Back Forty signage, the M-1158 inspection and the M-1184 move. $89,500 reserve (89.5%).",
                 "showDescription": true
               }
             }
@@ -2899,6 +3036,10 @@
                   "datasetName": "actions",
                   "fields": [
                     {
+                      "name": "action_name",
+                      "expression": "`action_name`"
+                    },
+                    {
                       "name": "action_type_id",
                       "expression": "`action_type_id`"
                     },
@@ -2909,10 +3050,6 @@
                     {
                       "name": "selected",
                       "expression": "`selected`"
-                    },
-                    {
-                      "name": "cash_cost_usd",
-                      "expression": "`cash_cost_usd`"
                     },
                     {
                       "name": "expected_net_usd",
@@ -2940,6 +3077,9 @@
               "encodings": {
                 "fields": [
                   {
+                    "fieldName": "action_name"
+                  },
+                  {
                     "fieldName": "action_type_id"
                   },
                   {
@@ -2947,9 +3087,6 @@
                   },
                   {
                     "fieldName": "selected"
-                  },
-                  {
-                    "fieldName": "cash_cost_usd"
                   },
                   {
                     "fieldName": "expected_net_usd"
@@ -2964,12 +3101,12 @@
               },
               "jsonSpec": {
                 "type": "vega-lite",
-                "spec": "{\"$schema\":\"https://vega.github.io/schema/vega-lite/v6.json\",\"data\":{\"name\":\"databricks_query\"},\"width\":\"container\",\"height\":\"container\",\"background\":\"transparent\",\"config\":{\"autosize\":{\"type\":\"fit\",\"contains\":\"padding\"},\"view\":{\"stroke\":null},\"axis\":{\"labelColor\":\"#9FAEA6\",\"titleColor\":\"#EDE6D3\",\"gridColor\":\"#24443A\",\"domainColor\":\"#24443A\"},\"legend\":{\"labelColor\":\"#EDE6D3\",\"titleColor\":\"#EDE6D3\"}},\"transform\":[{\"calculate\":\"datum.high_net_usd-datum.low_net_usd\",\"as\":\"spread\"},{\"calculate\":\"datum.selected ? 'Funded' : datum.action_type_id === 'A-HOLD' ? 'Hold only' : 'Evaluated'\",\"as\":\"status\"}],\"mark\":{\"type\":\"point\",\"filled\":true,\"opacity\":0.86},\"encoding\":{\"x\":{\"field\":\"spread\",\"type\":\"quantitative\",\"title\":\"Scenario spread ($)\",\"axis\":{\"format\":\"$~s\"}},\"y\":{\"field\":\"expected_net_usd\",\"type\":\"quantitative\",\"title\":\"July base net ($)\",\"axis\":{\"format\":\"$~s\"},\"scale\":{\"type\":\"symlog\",\"constant\":2000}},\"size\":{\"field\":\"cash_cost_usd\",\"type\":\"quantitative\",\"title\":\"Catalog cost\"},\"color\":{\"field\":\"status\",\"type\":\"nominal\",\"scale\":{\"domain\":[\"Funded\",\"Hold only\",\"Evaluated\"],\"range\":[\"#D4AF37\",\"#EDE6D3\",\"#8A9690\"]}},\"shape\":{\"field\":\"status\",\"type\":\"nominal\"},\"tooltip\":[{\"field\":\"action_type_id\",\"type\":\"nominal\",\"title\":\"Action\"},{\"field\":\"target_label\",\"type\":\"nominal\",\"title\":\"Target\"},{\"field\":\"expected_net_usd\",\"type\":\"quantitative\",\"title\":\"Base net\",\"format\":\"$,.0f\"},{\"field\":\"low_net_usd\",\"type\":\"quantitative\",\"title\":\"Low\",\"format\":\"$,.0f\"},{\"field\":\"high_net_usd\",\"type\":\"quantitative\",\"title\":\"High\",\"format\":\"$,.0f\"}]}}"
+                "spec": "{\"$schema\":\"https://vega.github.io/schema/vega-lite/v6.json\",\"data\":{\"name\":\"databricks_query\"},\"width\":\"container\",\"height\":\"container\",\"background\":\"transparent\",\"config\":{\"autosize\":{\"type\":\"fit\",\"contains\":\"padding\"},\"view\":{\"stroke\":null},\"axis\":{\"labelColor\":\"#9FAEA6\",\"titleColor\":\"#EDE6D3\",\"gridColor\":\"#24443A\",\"domainColor\":\"#24443A\"},\"legend\":{\"labelColor\":\"#EDE6D3\",\"titleColor\":\"#EDE6D3\"}},\"transform\":[{\"calculate\":\"datum.action_name + ' (' + datum.action_type_id + ') · ' + datum.target_label\",\"as\":\"action\"},{\"calculate\":\"datum.selected ? 'Funded' : 'Unfunded'\",\"as\":\"status\"}],\"encoding\":{\"y\":{\"field\":\"action\",\"type\":\"nominal\",\"title\":\"July option\",\"sort\":{\"field\":\"expected_net_usd\",\"order\":\"descending\"},\"axis\":{\"labelLimit\":420}}},\"layer\":[{\"mark\":\"bar\",\"encoding\":{\"x\":{\"field\":\"expected_net_usd\",\"type\":\"quantitative\",\"title\":\"July net value\",\"axis\":{\"format\":\"$.3~s\"}},\"color\":{\"field\":\"status\",\"type\":\"nominal\",\"title\":\"Funding\",\"scale\":{\"domain\":[\"Funded\",\"Unfunded\"],\"range\":[\"#D4AF37\",\"#8A9690\"]}},\"tooltip\":[{\"field\":\"action\",\"type\":\"nominal\",\"title\":\"Action\"},{\"field\":\"expected_net_usd\",\"type\":\"quantitative\",\"title\":\"July net value\",\"format\":\"$,.0f\"},{\"field\":\"low_net_usd\",\"type\":\"quantitative\",\"title\":\"Low estimate\",\"format\":\"$,.0f\"},{\"field\":\"high_net_usd\",\"type\":\"quantitative\",\"title\":\"High estimate\",\"format\":\"$,.0f\"}]}},{\"mark\":{\"type\":\"rule\",\"color\":\"#EDE6D3\",\"strokeWidth\":2},\"encoding\":{\"x\":{\"field\":\"low_net_usd\",\"type\":\"quantitative\",\"title\":\"July net value\"},\"x2\":{\"field\":\"high_net_usd\"}}}]}"
               },
               "frame": {
-                "title": "Only the inspection clears the funding screens",
+                "title": "July net value by action",
                 "showTitle": true,
-                "description": "Spread measures scenario uncertainty. The vertical scale is symmetric log.",
+                "description": "The lines show the low to high estimates. The M-1184 move is funded to test its location.",
                 "showDescription": true
               }
             }
@@ -2978,7 +3115,7 @@
             "x": 0,
             "y": 9,
             "width": 12,
-            "height": 7
+            "height": 12
           }
         },
         {
@@ -2991,64 +3128,28 @@
                   "datasetName": "actions",
                   "fields": [
                     {
-                      "name": "action_type_id",
-                      "expression": "`action_type_id`"
+                      "name": "action_label",
+                      "expression": "CONCAT(action_name, ' (', action_type_id, ')')"
                     },
                     {
                       "name": "target_label",
                       "expression": "`target_label`"
                     },
                     {
-                      "name": "selected",
-                      "expression": "`selected`"
-                    },
-                    {
-                      "name": "quantity",
-                      "expression": "`quantity`"
+                      "name": "funded_label",
+                      "expression": "CASE WHEN selected THEN 'Yes' ELSE 'No' END"
                     },
                     {
                       "name": "cash_cost_usd",
                       "expression": "`cash_cost_usd`"
                     },
                     {
-                      "name": "lead_days",
-                      "expression": "`lead_days`"
-                    },
-                    {
-                      "name": "operating_days",
-                      "expression": "`operating_days`"
-                    },
-                    {
-                      "name": "low_net_usd",
-                      "expression": "`low_net_usd`"
-                    },
-                    {
                       "name": "expected_net_usd",
                       "expression": "`expected_net_usd`"
                     },
                     {
-                      "name": "high_net_usd",
-                      "expression": "`high_net_usd`"
-                    },
-                    {
-                      "name": "p_mid",
-                      "expression": "`p_mid`"
-                    },
-                    {
-                      "name": "measurement_date",
-                      "expression": "`measurement_date`"
-                    },
-                    {
-                      "name": "assumption",
-                      "expression": "`assumption`"
-                    },
-                    {
-                      "name": "success_rule",
-                      "expression": "`success_rule`"
-                    },
-                    {
-                      "name": "evidence_view",
-                      "expression": "`evidence_view`"
+                      "name": "range_label",
+                      "expression": "CONCAT(CONCAT(IF((low_net_usd)<0, '−', ''), '$', CASE WHEN ABS(low_net_usd)>=999950 THEN CONCAT(FORMAT_NUMBER(ABS(low_net_usd)/1000000,1),'M') WHEN ABS(low_net_usd)>=10000 THEN CONCAT(FORMAT_NUMBER(ABS(low_net_usd)/1000,1),'K') ELSE FORMAT_NUMBER(ABS(low_net_usd),0) END), ' to ', CONCAT(IF((high_net_usd)<0, '−', ''), '$', CASE WHEN ABS(high_net_usd)>=999950 THEN CONCAT(FORMAT_NUMBER(ABS(high_net_usd)/1000000,1),'M') WHEN ABS(high_net_usd)>=10000 THEN CONCAT(FORMAT_NUMBER(ABS(high_net_usd)/1000,1),'K') ELSE FORMAT_NUMBER(ABS(high_net_usd),0) END))"
                     }
                   ],
                   "disaggregated": true,
@@ -3067,7 +3168,7 @@
               "encodings": {
                 "columns": [
                   {
-                    "fieldName": "action_type_id",
+                    "fieldName": "action_label",
                     "displayName": "Action"
                   },
                   {
@@ -3075,12 +3176,8 @@
                     "displayName": "Target"
                   },
                   {
-                    "fieldName": "selected",
+                    "fieldName": "funded_label",
                     "displayName": "Funded"
-                  },
-                  {
-                    "fieldName": "quantity",
-                    "displayName": "Qty"
                   },
                   {
                     "fieldName": "cash_cost_usd",
@@ -3088,24 +3185,11 @@
                     "format": {
                       "type": "number-currency",
                       "currencyCode": "USD",
-                      "abbreviation": "compact"
-                    }
-                  },
-                  {
-                    "fieldName": "lead_days",
-                    "displayName": "Lead days"
-                  },
-                  {
-                    "fieldName": "operating_days",
-                    "displayName": "Post-lead days"
-                  },
-                  {
-                    "fieldName": "low_net_usd",
-                    "displayName": "Low net",
-                    "format": {
-                      "type": "number-currency",
-                      "currencyCode": "USD",
-                      "abbreviation": "compact"
+                      "abbreviation": "compact",
+                      "decimalPlaces": {
+                        "type": "max",
+                        "places": 1
+                      }
                     }
                   },
                   {
@@ -3114,49 +3198,21 @@
                     "format": {
                       "type": "number-currency",
                       "currencyCode": "USD",
-                      "abbreviation": "compact"
-                    }
-                  },
-                  {
-                    "fieldName": "high_net_usd",
-                    "displayName": "High net",
-                    "format": {
-                      "type": "number-currency",
-                      "currencyCode": "USD",
-                      "abbreviation": "compact"
-                    }
-                  },
-                  {
-                    "fieldName": "p_mid",
-                    "displayName": "Base probability",
-                    "format": {
-                      "type": "number-percent",
+                      "abbreviation": "compact",
                       "decimalPlaces": {
                         "type": "max",
-                        "places": 2
+                        "places": 1
                       }
                     }
                   },
                   {
-                    "fieldName": "measurement_date",
-                    "displayName": "Readout"
-                  },
-                  {
-                    "fieldName": "assumption",
-                    "displayName": "Assumption"
-                  },
-                  {
-                    "fieldName": "success_rule",
-                    "displayName": "Decision rule"
-                  },
-                  {
-                    "fieldName": "evidence_view",
-                    "displayName": "Evidence source"
+                    "fieldName": "range_label",
+                    "displayName": "Range"
                   }
                 ]
               },
               "frame": {
-                "title": "The July slip funds $1,200",
+                "title": "The July slip funds three tests",
                 "showTitle": true,
                 "description": "Net includes catalog costs and any disruption. Information value is a scenario, not July cash.",
                 "showDescription": true
@@ -3165,7 +3221,7 @@
           },
           "position": {
             "x": 0,
-            "y": 16,
+            "y": 21,
             "width": 12,
             "height": 8
           }
@@ -3180,8 +3236,8 @@
                   "datasetName": "annual",
                   "fields": [
                     {
-                      "name": "action_type_id",
-                      "expression": "`action_type_id`"
+                      "name": "action_label",
+                      "expression": "CONCAT(action_name, ' (', action_type_id, ')')"
                     },
                     {
                       "name": "target_label",
@@ -3214,7 +3270,7 @@
               "encodings": {
                 "columns": [
                   {
-                    "fieldName": "action_type_id",
+                    "fieldName": "action_label",
                     "displayName": "Action"
                   },
                   {
@@ -3227,7 +3283,11 @@
                     "format": {
                       "type": "number-currency",
                       "currencyCode": "USD",
-                      "abbreviation": "compact"
+                      "abbreviation": "compact",
+                      "decimalPlaces": {
+                        "type": "max",
+                        "places": 1
+                      }
                     }
                   },
                   {
@@ -3236,7 +3296,11 @@
                     "format": {
                       "type": "number-currency",
                       "currencyCode": "USD",
-                      "abbreviation": "compact"
+                      "abbreviation": "compact",
+                      "decimalPlaces": {
+                        "type": "max",
+                        "places": 1
+                      }
                     }
                   },
                   {
@@ -3245,7 +3309,11 @@
                     "format": {
                       "type": "number-currency",
                       "currencyCode": "USD",
-                      "abbreviation": "compact"
+                      "abbreviation": "compact",
+                      "decimalPlaces": {
+                        "type": "max",
+                        "places": 1
+                      }
                     }
                   },
                   {
@@ -3254,22 +3322,26 @@
                     "format": {
                       "type": "number-currency",
                       "currencyCode": "USD",
-                      "abbreviation": "compact"
+                      "abbreviation": "compact",
+                      "decimalPlaces": {
+                        "type": "max",
+                        "places": 1
+                      }
                     }
                   }
                 ]
               },
               "frame": {
-                "title": "The bank move and three leases remain on the watchlist",
+                "title": "Compare the 12-month action scenarios",
                 "showTitle": true,
-                "description": "Annual economics do not authorize July funding.",
+                "description": "Annual estimates assume the gap and effects persist. With no signage effect, the loss is $7,500. See the low case in the table.",
                 "showDescription": true
               }
             }
           },
           "position": {
             "x": 0,
-            "y": 24,
+            "y": 29,
             "width": 7,
             "height": 7
           }
@@ -3323,7 +3395,11 @@
                     "format": {
                       "type": "number-currency",
                       "currencyCode": "USD",
-                      "abbreviation": "compact"
+                      "abbreviation": "compact",
+                      "decimalPlaces": {
+                        "type": "max",
+                        "places": 1
+                      }
                     }
                   },
                   {
@@ -3332,7 +3408,11 @@
                     "format": {
                       "type": "number-currency",
                       "currencyCode": "USD",
-                      "abbreviation": "compact"
+                      "abbreviation": "compact",
+                      "decimalPlaces": {
+                        "type": "max",
+                        "places": 1
+                      }
                     }
                   }
                 ]
@@ -3347,7 +3427,7 @@
           },
           "position": {
             "x": 7,
-            "y": 24,
+            "y": 29,
             "width": 5,
             "height": 4
           }
@@ -3397,7 +3477,11 @@
                     "format": {
                       "type": "number-currency",
                       "currencyCode": "USD",
-                      "abbreviation": "compact"
+                      "abbreviation": "compact",
+                      "decimalPlaces": {
+                        "type": "max",
+                        "places": 1
+                      }
                     }
                   },
                   {
@@ -3406,7 +3490,11 @@
                     "format": {
                       "type": "number-currency",
                       "currencyCode": "USD",
-                      "abbreviation": "compact"
+                      "abbreviation": "compact",
+                      "decimalPlaces": {
+                        "type": "max",
+                        "places": 1
+                      }
                     }
                   },
                   {
@@ -3415,7 +3503,11 @@
                     "format": {
                       "type": "number-currency",
                       "currencyCode": "USD",
-                      "abbreviation": "compact"
+                      "abbreviation": "compact",
+                      "decimalPlaces": {
+                        "type": "max",
+                        "places": 1
+                      }
                     }
                   }
                 ]
@@ -3430,8 +3522,24 @@
           },
           "position": {
             "x": 7,
-            "y": 28,
+            "y": 33,
             "width": 5,
+            "height": 3
+          }
+        },
+        {
+          "widget": {
+            "name": "test-measurement",
+            "multilineTextboxSpec": {
+              "lines": [
+                "At the end of August, extend signs if both Back Forty gaps close by at least 25% against the rest of the floor. Otherwise revisit the bank-move test. Judge M-1184 against same-setting Center Pit peers because signage affects Back Forty."
+              ]
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 36,
+            "width": 12,
             "height": 3
           }
         }
@@ -3448,7 +3556,7 @@
             "name": "model-intro",
             "multilineTextboxSpec": {
               "lines": [
-                "## THE MODEL ROOM\n\nPrioritize Saturday 7–10 p.m. if coverage can clear its cost hurdle."
+                "## THE MODEL ROOM\n\nThe forecast shows Saturday 7 to 10 p.m. is the busiest window, but even full technician coverage there would not pay for itself in July."
               ]
             }
           },
@@ -3464,7 +3572,7 @@
             "name": "cutoff-disclosure",
             "multilineTextboxSpec": {
               "lines": [
-                "**Why the primary score changed**\n\nGilded Ace Locals Appreciation Week was announced on May 26, after the April 30 forecast date. We removed it from the forecast, refit through April 30, and scored the frozen May and June forecasts once. Average error fell from $55,270.94 (4.06%) to $51,128.96 (3.84%). The trend model lost because it increased error in April and on the holdout."
+                "**Why the primary score changed**\n\nGilded Ace Locals Appreciation Week was announced on May 26, after the April 30 forecast date. We removed it from the forecast, refit through April 30, and scored the frozen May and June forecasts once. Average error fell from $55,271 (4.06%) to $51,129 (3.84%). The trend model lost because it increased error in April and on the holdout."
               ]
             }
           },
@@ -3529,7 +3637,7 @@
               },
               "jsonSpec": {
                 "type": "vega-lite",
-                "spec": "{\"$schema\":\"https://vega.github.io/schema/vega-lite/v6.json\",\"data\":{\"name\":\"databricks_query\"},\"width\":\"container\",\"height\":\"container\",\"background\":\"transparent\",\"config\":{\"autosize\":{\"type\":\"fit\",\"contains\":\"padding\"},\"view\":{\"stroke\":null},\"axis\":{\"labelColor\":\"#9FAEA6\",\"titleColor\":\"#EDE6D3\",\"gridColor\":\"#24443A\",\"domainColor\":\"#24443A\"},\"legend\":{\"labelColor\":\"#EDE6D3\",\"titleColor\":\"#EDE6D3\"}},\"layer\":[{\"data\":{\"values\":[{\"start\":\"2025-05-01\",\"end\":\"2025-07-01\"}]},\"mark\":{\"type\":\"rect\",\"color\":\"#D4AF37\",\"opacity\":0.1},\"encoding\":{\"x\":{\"field\":\"start\",\"type\":\"temporal\",\"title\":\"Gaming date\"},\"x2\":{\"field\":\"end\"}}},{\"transform\":[{\"fold\":[\"actual_usd\",\"forecast_usd\",\"baseline_usd\"],\"as\":[\"series\",\"coin\"]},{\"calculate\":\"[\\\"Actual\\\", \\\"Weekday + flags\\\", \\\"Constant baseline\\\"][indexof([\\\"actual_usd\\\", \\\"forecast_usd\\\", \\\"baseline_usd\\\"], datum.series)]\",\"as\":\"label\"}],\"mark\":{\"type\":\"line\",\"strokeWidth\":1.6},\"encoding\":{\"x\":{\"field\":\"gaming_date\",\"type\":\"temporal\",\"title\":\"Gaming date\"},\"y\":{\"field\":\"coin\",\"type\":\"quantitative\",\"title\":\"Daily coin-in\",\"axis\":{\"format\":\"$~s\"},\"scale\":{\"zero\":false}},\"color\":{\"field\":\"label\",\"type\":\"nominal\",\"scale\":{\"domain\":[\"Actual\",\"Weekday + flags\",\"Constant baseline\"],\"range\":[\"#EDE6D3\",\"#3FD6E0\",\"#8A9690\"]}},\"tooltip\":[{\"field\":\"gaming_date\",\"type\":\"temporal\",\"title\":\"Date\"},{\"field\":\"label\",\"type\":\"nominal\"},{\"field\":\"coin\",\"type\":\"quantitative\",\"format\":\"$,.0f\"}]}}]}"
+                "spec": "{\"$schema\":\"https://vega.github.io/schema/vega-lite/v6.json\",\"data\":{\"name\":\"databricks_query\"},\"width\":\"container\",\"height\":\"container\",\"background\":\"transparent\",\"config\":{\"autosize\":{\"type\":\"fit\",\"contains\":\"padding\"},\"view\":{\"stroke\":null},\"axis\":{\"labelColor\":\"#9FAEA6\",\"titleColor\":\"#EDE6D3\",\"gridColor\":\"#24443A\",\"domainColor\":\"#24443A\"},\"legend\":{\"labelColor\":\"#EDE6D3\",\"titleColor\":\"#EDE6D3\"}},\"layer\":[{\"data\":{\"values\":[{\"start\":\"2025-05-01\",\"end\":\"2025-07-01\"}]},\"mark\":{\"type\":\"rect\",\"color\":\"#D4AF37\",\"opacity\":0.1},\"encoding\":{\"x\":{\"field\":\"start\",\"type\":\"temporal\",\"title\":\"Gaming date\"},\"x2\":{\"field\":\"end\"}}},{\"transform\":[{\"fold\":[\"actual_usd\",\"forecast_usd\",\"baseline_usd\"],\"as\":[\"series\",\"coin\"]},{\"calculate\":\"[\\\"Actual\\\", \\\"Weekday + flags\\\", \\\"Constant baseline\\\"][indexof([\\\"actual_usd\\\", \\\"forecast_usd\\\", \\\"baseline_usd\\\"], datum.series)]\",\"as\":\"label\"}],\"mark\":{\"type\":\"line\",\"strokeWidth\":1.6},\"encoding\":{\"x\":{\"field\":\"gaming_date\",\"type\":\"temporal\",\"title\":\"Gaming date\"},\"y\":{\"field\":\"coin\",\"type\":\"quantitative\",\"title\":\"Daily coin-in\",\"axis\":{\"format\":\"$~s\"},\"scale\":{\"zero\":false}},\"color\":{\"field\":\"label\",\"type\":\"nominal\",\"title\":\"Series\",\"scale\":{\"domain\":[\"Actual\",\"Weekday + flags\",\"Constant baseline\"],\"range\":[\"#EDE6D3\",\"#3FD6E0\",\"#8A9690\"]}},\"tooltip\":[{\"field\":\"gaming_date\",\"type\":\"temporal\",\"title\":\"Date\"},{\"field\":\"label\",\"type\":\"nominal\"},{\"field\":\"coin\",\"type\":\"quantitative\",\"format\":\"$,.0f\"}]}}]}"
               },
               "frame": {
                 "title": "The weekday model cuts holdout MAE by 77%",
@@ -3548,31 +3656,53 @@
         },
         {
           "widget": {
+            "name": "model-choice",
+            "multilineTextboxSpec": {
+              "lines": [
+                "The weekday-mean baseline had the lowest April validation error at $40,715. The weekday, events and holidays model had the lowest May–June error at $51,129, compared with $68,699 for the weekday mean. We chose the primary model before adding the weekday baseline and kept that choice without using the holdout to switch models. A simple weekday average does almost as well, so events and holidays add modest accuracy."
+              ]
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 13,
+            "width": 12,
+            "height": 3
+          }
+        },
+        {
+          "widget": {
             "name": "model-score",
             "queries": [
               {
                 "name": "main_query",
                 "query": {
-                  "datasetName": "scores",
+                  "datasetName": "model_comparison",
                   "fields": [
                     {
                       "name": "model",
                       "expression": "`model`"
                     },
                     {
-                      "name": "scored_days",
-                      "expression": "`scored_days`"
+                      "name": "april_usd",
+                      "expression": "`april_usd`"
                     },
                     {
-                      "name": "mae_usd",
-                      "expression": "`mae_usd`"
+                      "name": "holdout_usd",
+                      "expression": "`holdout_usd`"
                     },
                     {
-                      "name": "mape_pct",
-                      "expression": "`mape_pct`"
+                      "name": "mape",
+                      "expression": "`mape`"
                     }
                   ],
-                  "disaggregated": true
+                  "disaggregated": true,
+                  "orders": [
+                    {
+                      "direction": "ASC",
+                      "expression": "`rank`"
+                    }
+                  ]
                 }
               }
             ],
@@ -3586,37 +3716,57 @@
                     "displayName": "Model"
                   },
                   {
-                    "fieldName": "scored_days",
-                    "displayName": "Scored days"
-                  },
-                  {
-                    "fieldName": "mae_usd",
-                    "displayName": "MAE",
+                    "fieldName": "april_usd",
+                    "displayName": "April validation error",
                     "format": {
                       "type": "number-currency",
                       "currencyCode": "USD",
-                      "abbreviation": "compact"
+                      "abbreviation": "compact",
+                      "decimalPlaces": {
+                        "type": "max",
+                        "places": 1
+                      }
                     }
                   },
                   {
-                    "fieldName": "mape_pct",
-                    "displayName": "MAPE (%)"
+                    "fieldName": "holdout_usd",
+                    "displayName": "May–June error",
+                    "format": {
+                      "type": "number-currency",
+                      "currencyCode": "USD",
+                      "abbreviation": "compact",
+                      "decimalPlaces": {
+                        "type": "max",
+                        "places": 1
+                      }
+                    }
+                  },
+                  {
+                    "fieldName": "mape",
+                    "displayName": "MAPE",
+                    "format": {
+                      "type": "number-percent",
+                      "decimalPlaces": {
+                        "type": "max",
+                        "places": 2
+                      }
+                    }
                   }
                 ]
               },
               "frame": {
-                "title": "MAE fell from $218K to $51K",
+                "title": "Four frozen forecasts compared",
                 "showTitle": true,
-                "description": "MAPE is the mean absolute percentage error.",
+                "description": "April fits use January through March. May and June fits use January through April. MAPE means average absolute percentage error.",
                 "showDescription": true
               }
             }
           },
           "position": {
             "x": 0,
-            "y": 13,
-            "width": 6,
-            "height": 4
+            "y": 16,
+            "width": 12,
+            "height": 5
           }
         },
         {
@@ -3626,19 +3776,145 @@
               {
                 "name": "main_query",
                 "query": {
-                  "datasetName": "residual",
+                  "datasetName": "model_bias",
                   "fields": [
                     {
-                      "name": "local_weekday",
-                      "expression": "`local_weekday`"
+                      "name": "weekday",
+                      "expression": "`weekday`"
                     },
                     {
-                      "name": "model_mean_residual_usd",
-                      "expression": "`model_mean_residual_usd`"
+                      "name": "constant_usd",
+                      "expression": "`constant_usd`"
                     },
                     {
-                      "name": "model_mae_usd",
-                      "expression": "`model_mae_usd`"
+                      "name": "seasonal_usd",
+                      "expression": "`seasonal_usd`"
+                    },
+                    {
+                      "name": "primary_usd",
+                      "expression": "`primary_usd`"
+                    },
+                    {
+                      "name": "trend_usd",
+                      "expression": "`trend_usd`"
+                    }
+                  ],
+                  "disaggregated": true,
+                  "orders": [
+                    {
+                      "direction": "ASC",
+                      "expression": "`rank`"
+                    }
+                  ]
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "widgetType": "table",
+              "encodings": {
+                "columns": [
+                  {
+                    "fieldName": "weekday",
+                    "displayName": "Weekday"
+                  },
+                  {
+                    "fieldName": "constant_usd",
+                    "displayName": "Constant",
+                    "format": {
+                      "type": "number-currency",
+                      "currencyCode": "USD",
+                      "abbreviation": "compact",
+                      "decimalPlaces": {
+                        "type": "max",
+                        "places": 1
+                      }
+                    }
+                  },
+                  {
+                    "fieldName": "seasonal_usd",
+                    "displayName": "Seasonal",
+                    "format": {
+                      "type": "number-currency",
+                      "currencyCode": "USD",
+                      "abbreviation": "compact",
+                      "decimalPlaces": {
+                        "type": "max",
+                        "places": 1
+                      }
+                    }
+                  },
+                  {
+                    "fieldName": "primary_usd",
+                    "displayName": "Primary",
+                    "format": {
+                      "type": "number-currency",
+                      "currencyCode": "USD",
+                      "abbreviation": "compact",
+                      "decimalPlaces": {
+                        "type": "max",
+                        "places": 1
+                      }
+                    }
+                  },
+                  {
+                    "fieldName": "trend_usd",
+                    "displayName": "Trend",
+                    "format": {
+                      "type": "number-currency",
+                      "currencyCode": "USD",
+                      "abbreviation": "compact",
+                      "decimalPlaces": {
+                        "type": "max",
+                        "places": 1
+                      }
+                    }
+                  }
+                ]
+              },
+              "frame": {
+                "title": "Forecast bias by weekday",
+                "showTitle": true,
+                "description": "Residual is actual minus forecast. A negative value means the forecast was too high.",
+                "showDescription": true
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 21,
+            "width": 12,
+            "height": 6
+          }
+        },
+        {
+          "widget": {
+            "name": "action-schedule",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "action_schedule",
+                  "fields": [
+                    {
+                      "name": "action",
+                      "expression": "`action`"
+                    },
+                    {
+                      "name": "minutes",
+                      "expression": "`minutes`"
+                    },
+                    {
+                      "name": "window",
+                      "expression": "CONCAT(weekday, ' gaming day, ', ELEMENT_AT(ARRAY('6a','7a','8a','9a','10a','11a','12p','1p','2p','3p','4p','5p','6p','7p','8p','9p','10p','11p','12a','1a','2a','3a','4a','5a'), CAST(start_hour AS INT)+1))"
+                    },
+                    {
+                      "name": "quiet_usd",
+                      "expression": "`quiet_usd`"
+                    },
+                    {
+                      "name": "saturday_usd",
+                      "expression": "`saturday_usd`"
                     }
                   ],
                   "disaggregated": true
@@ -3651,58 +3927,58 @@
               "encodings": {
                 "columns": [
                   {
-                    "fieldName": "local_weekday",
-                    "displayName": "Weekday"
+                    "fieldName": "action",
+                    "displayName": "Action"
                   },
                   {
-                    "fieldName": "model_mean_residual_usd",
-                    "displayName": "Mean residual",
+                    "fieldName": "minutes",
+                    "displayName": "Minutes offline"
+                  },
+                  {
+                    "fieldName": "window",
+                    "displayName": "Lowest-value window"
+                  },
+                  {
+                    "fieldName": "quiet_usd",
+                    "displayName": "Expected win lost",
                     "format": {
                       "type": "number-currency",
                       "currencyCode": "USD",
-                      "abbreviation": "compact"
+                      "abbreviation": "compact",
+                      "decimalPlaces": {
+                        "type": "max",
+                        "places": 1
+                      }
                     }
                   },
                   {
-                    "fieldName": "model_mae_usd",
-                    "displayName": "MAE",
+                    "fieldName": "saturday_usd",
+                    "displayName": "Saturday at 7 p.m.",
                     "format": {
                       "type": "number-currency",
                       "currencyCode": "USD",
-                      "abbreviation": "compact"
+                      "abbreviation": "compact",
+                      "decimalPlaces": {
+                        "type": "max",
+                        "places": 1
+                      }
                     }
                   }
                 ]
               },
               "frame": {
-                "title": "Check forecast bias by weekday",
+                "title": "Schedule machine tests in the quietest window",
                 "showTitle": true,
-                "description": "Residual = actual minus forecast. A negative value means the forecast was too high.",
+                "description": "The April-frozen hourly profile compares the first eligible gaming day's quietest window with the same duration at 7 p.m. Saturday.",
                 "showDescription": true
               }
             }
           },
           "position": {
-            "x": 6,
-            "y": 13,
-            "width": 6,
-            "height": 6
-          }
-        },
-        {
-          "widget": {
-            "name": "leakage-check",
-            "multilineTextboxSpec": {
-              "lines": [
-                "**Leakage checks**\n\nTrain ends Apr 30. Holdout is frozen. Event announcements must be known by April 30 and precede the gaming date. Weather, tourism and realized play are excluded."
-              ]
-            }
-          },
-          "position": {
             "x": 0,
-            "y": 19,
+            "y": 27,
             "width": 12,
-            "height": 2
+            "height": 5
           }
         }
       ],
@@ -3715,22 +3991,6 @@
       "layout": [
         {
           "widget": {
-            "name": "evidence-intro",
-            "multilineTextboxSpec": {
-              "lines": [
-                "## THE EVIDENCE VAULT\n\nTrace each recommendation to the tested alternative and its limitation.\n\n[Ask the Pit Boss in Genie (workspace sign-in required)](https://dbc-a3bbfca6-850a.cloud.databricks.com/genie/rooms/01f1db4548ec16ee9f10853bb4959656?o=7474653288963289)."
-              ]
-            }
-          },
-          "position": {
-            "x": 0,
-            "y": 0,
-            "width": 12,
-            "height": 2
-          }
-        },
-        {
-          "widget": {
             "name": "claims",
             "queries": [
               {
@@ -3740,11 +4000,11 @@
                   "fields": [
                     {
                       "name": "claim",
-                      "expression": "`claim`"
+                      "expression": "CASE SPLIT_PART(claim, ' · ', 1) WHEN 'A-INSPECT' THEN CONCAT('Inspect machine (A-INSPECT)', SUBSTRING(claim, 10)) WHEN 'A-MOVE-MACHINE' THEN CONCAT('Move machine (A-MOVE-MACHINE)', SUBSTRING(claim, 15)) WHEN 'A-WAYFINDING' THEN CONCAT('Install new signs (A-WAYFINDING)', SUBSTRING(claim, 13)) WHEN 'A-MOVE-BANK' THEN CONCAT('Move bank (A-MOVE-BANK)', SUBSTRING(claim, 12)) WHEN 'A-REPLACE-LEASE' THEN CONCAT('Lease replacement (A-REPLACE-LEASE)', SUBSTRING(claim, 16)) WHEN 'A-REPLACE-BUY' THEN CONCAT('Buy replacement (A-REPLACE-BUY)', SUBSTRING(claim, 14)) WHEN 'A-TECH-SHIFT' THEN CONCAT('Add technician coverage (A-TECH-SHIFT)', SUBSTRING(claim, 13)) WHEN 'A-PREVENTIVE' THEN CONCAT('Preventive maintenance (A-PREVENTIVE)', SUBSTRING(claim, 13)) WHEN 'A-COMP-PILOT' THEN CONCAT('Test comp policy (A-COMP-PILOT)', SUBSTRING(claim, 13)) WHEN 'A-COMP-CHANGE' THEN CONCAT('Change comp redemption rate (A-COMP-CHANGE)', SUBSTRING(claim, 14)) WHEN 'A-PROMO' THEN CONCAT('Run promotion (A-PROMO)', SUBSTRING(claim, 8)) WHEN 'A-SURVEY' THEN CONCAT('Survey guests (A-SURVEY)', SUBSTRING(claim, 9)) ELSE claim END"
                     },
                     {
-                      "name": "widget",
-                      "expression": "`widget`"
+                      "name": "page_label",
+                      "expression": "CASE (CASE WHEN evidence LIKE 'gold_points_liability_bridge%' OR evidence LIKE 'gold_comp_control%' THEN 'comps'\n        WHEN widget IN ('Tribunal','Pit Boss','Luck Funnel') THEN 'luck'\n        WHEN widget='Floor Radar' THEN 'demand' WHEN widget='High-Roller Ladder' THEN 'players'\n        WHEN widget LIKE 'Cashier%' THEN 'plan' WHEN widget='Model Room' THEN 'model' ELSE 'evidence' END) WHEN 'luck' THEN 'Q1 · Machines' WHEN 'demand' THEN 'Q2 · Demand' WHEN 'players' THEN 'Q4 · Players' WHEN 'comps' THEN 'Q5 · Comps' WHEN 'plan' THEN 'Q6 · July plan' WHEN 'model' THEN 'Model Room' WHEN 'evidence' THEN 'Evidence Vault' END"
                     },
                     {
                       "name": "evidence",
@@ -3752,7 +4012,7 @@
                     },
                     {
                       "name": "result",
-                      "expression": "`result`"
+                      "expression": "AGGREGATE(REGEXP_EXTRACT_ALL(result, r'(-?\\d+(?:\\.\\d+)?) USD', 1), AGGREGATE(REGEXP_EXTRACT_ALL(result, r'USD (-?\\d+(?:\\.\\d+)?)', 1), result, (output, amount) -> REPLACE(output, CONCAT('USD ', amount), CONCAT(IF((CAST(amount AS DOUBLE))<0, '−', ''), '$', CASE WHEN ABS(CAST(amount AS DOUBLE))>=999950 THEN CONCAT(FORMAT_NUMBER(ABS(CAST(amount AS DOUBLE))/1000000,1),'M') WHEN ABS(CAST(amount AS DOUBLE))>=10000 THEN CONCAT(FORMAT_NUMBER(ABS(CAST(amount AS DOUBLE))/1000,1),'K') ELSE FORMAT_NUMBER(ABS(CAST(amount AS DOUBLE)),0) END))), (output, amount) -> REPLACE(output, CONCAT(amount, ' USD'), CONCAT(IF((CAST(amount AS DOUBLE))<0, '−', ''), '$', CASE WHEN ABS(CAST(amount AS DOUBLE))>=999950 THEN CONCAT(FORMAT_NUMBER(ABS(CAST(amount AS DOUBLE))/1000000,1),'M') WHEN ABS(CAST(amount AS DOUBLE))>=10000 THEN CONCAT(FORMAT_NUMBER(ABS(CAST(amount AS DOUBLE))/1000,1),'K') ELSE FORMAT_NUMBER(ABS(CAST(amount AS DOUBLE)),0) END)))"
                     },
                     {
                       "name": "alternative_tested",
@@ -3761,6 +4021,10 @@
                     {
                       "name": "limitation",
                       "expression": "`limitation`"
+                    },
+                    {
+                      "name": "page_url",
+                      "expression": "CONCAT('https://gilded-ace-royale.vercel.app/#/', CASE WHEN evidence LIKE 'gold_points_liability_bridge%' OR evidence LIKE 'gold_comp_control%' THEN 'comps'\n        WHEN widget IN ('Tribunal','Pit Boss','Luck Funnel') THEN 'luck'\n        WHEN widget='Floor Radar' THEN 'demand' WHEN widget='High-Roller Ladder' THEN 'players'\n        WHEN widget LIKE 'Cashier%' THEN 'plan' WHEN widget='Model Room' THEN 'model' ELSE 'evidence' END)"
                     }
                   ],
                   "disaggregated": true
@@ -3777,8 +4041,11 @@
                     "displayName": "Claim"
                   },
                   {
-                    "fieldName": "widget",
-                    "displayName": "Page"
+                    "fieldName": "page_label",
+                    "displayName": "Page",
+                    "link": {
+                      "templatedURL": "{{page_url}}"
+                    }
                   },
                   {
                     "fieldName": "evidence",
@@ -3790,7 +4057,7 @@
                   },
                   {
                     "fieldName": "alternative_tested",
-                    "displayName": "Alternative or rule"
+                    "displayName": "Alternative tested"
                   },
                   {
                     "fieldName": "limitation",
@@ -3801,16 +4068,32 @@
               "frame": {
                 "title": "Every recommendation has an evidence trail",
                 "showTitle": true,
-                "description": "Information value and closure effects are scenario or descriptive estimates.",
+                "description": "Follow the link to its public dashboard view.",
                 "showDescription": true
               }
             }
           },
           "position": {
             "x": 0,
-            "y": 2,
+            "y": 0,
             "width": 12,
-            "height": 15
+            "height": 16
+          }
+        },
+        {
+          "widget": {
+            "name": "genie-link",
+            "multilineTextboxSpec": {
+              "lines": [
+                "[Ask the Pit Boss in Genie (workspace sign-in required)](https://dbc-a3bbfca6-850a.cloud.databricks.com/genie/rooms/01f1db4548ec16ee9f10853bb4959656?o=7474653288963289)."
+              ]
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 16,
+            "width": 12,
+            "height": 2
           }
         }
       ],
@@ -3829,6 +4112,19 @@
                 "name": "machine_gaming_date",
                 "query": {
                   "datasetName": "machine",
+                  "fields": [
+                    {
+                      "name": "gaming_date",
+                      "expression": "`gaming_date`"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              },
+              {
+                "name": "tribunal_gaming_date",
+                "query": {
+                  "datasetName": "tribunal",
                   "fields": [
                     {
                       "name": "gaming_date",
@@ -3939,6 +4235,11 @@
                     "fieldName": "gaming_date",
                     "displayName": "Gaming dates",
                     "queryName": "machine_gaming_date"
+                  },
+                  {
+                    "fieldName": "gaming_date",
+                    "displayName": "Gaming dates",
+                    "queryName": "tribunal_gaming_date"
                   },
                   {
                     "fieldName": "gaming_date",

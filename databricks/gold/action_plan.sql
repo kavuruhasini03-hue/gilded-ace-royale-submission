@@ -20,13 +20,13 @@ WITH quiet AS (
     SELECT GREATEST(0, MAX(matched_theo_gap_usd)) AS observed_theo_gap
     FROM workspace.royale.gold_event_demand WHERE event_type = 'property_promotion'
 ), moves AS (
-    SELECT a.action_type_id, 'M-1184' AS target_id, 'M-1184 · Back Forty' AS target_label,
+    SELECT a.action_type_id, 'M-1184' AS target_id, 'M-1184 to Center Pit · Bank 07 (L-07-3)' AS target_label,
            a.horizon_days, 1 AS quantity, a.cost_per_unit_usd AS cash_cost_usd,
            a.downtime_minutes / 60.0 * q.quiet_theo_per_hour AS disruption_theo_usd,
            0 AS low_uplift_usd, 0.25 * GREATEST(0, -v.location_usd) * a.operating_days / p.observed_days AS mid_uplift_usd,
            0.50 * GREATEST(0, -v.location_usd) * a.operating_days / p.observed_days AS high_uplift_usd,
-           'Recapture 0% / 25% / 50% of the location gap. Receiving-slot and displacement checks required.' AS assumption,
-           'Test peer-adjusted theo per available hour before committing to a move.' AS success_rule
+           'Recapture 0% / 25% / 50% of the location gap. Slot L-07-3 was vacant in the July 3 placement records. Center Pit had 168.7 entries per covered hour versus 22.8 in Back Forty. Three machines with the same settings are within 16 metres.' AS assumption,
+           'Compare expected win per available hour over 28 days with same-setting peers in Center Pit. Use the machine’s own pre-move rate as context. Back Forty is exposed to signage, so it is not a control. At the end of August, keep the machine and reassess Bank 40 if it reaches its new peers. Review replacement if a clear gap persists. Keep measuring if the result is inconclusive.' AS success_rule
     FROM workspace.royale.gold_action_cost a CROSS JOIN quiet q CROSS JOIN period p CROSS JOIN verdict v
     WHERE a.action_type_id='A-MOVE-MACHINE' AND v.machine_id='M-1184'
     UNION ALL
@@ -75,7 +75,7 @@ WITH quiet AS (
     SELECT a.action_type_id, 'Z-B40', 'Back Forty', a.horizon_days, 1, a.cost_per_unit_usd, 0,
            0, 0.25*w.daily_theo_gap*a.operating_days, 0.50*w.daily_theo_gap*a.operating_days,
            'Recover 0% / 25% / 50% of descriptive post-closure gap. Annual case assumes the gap and effect persist.',
-           'Track exposure-adjusted traffic and theo against other zones. Verify the causal gap before scaling.'
+           'Compare July 11 through July 30 with the 20 gaming days before installation, using the rest of the floor as a control. Compare entries per covered sensor-hour and expected win per installed machine-day. At the end of August, keep and extend if both measures close at least 25% of their pre-test gap versus the rest of the floor. Otherwise revisit the bank-move test.'
     FROM workspace.royale.gold_action_cost a CROSS JOIN wayfinding w WHERE a.action_type_id='A-WAYFINDING'
     UNION ALL
     SELECT a.action_type_id, 'M-1158', 'M-1158 · payout check', a.horizon_days, 1, a.cost_per_unit_usd,
@@ -106,8 +106,19 @@ WITH quiet AS (
 )
 SELECT c.*, a.name AS action_name, a.lead_days, a.operating_days, a.downtime_minutes,
        a.quantity_limit, a.incompatibility_group,
-       COALESCE(v.power_eligible AND v.expected_voi_net_usd-c.disruption_theo_usd>0,FALSE) AS selected,
-       v.p_low, v.p_mid, v.p_high, v.value_mid_usd AS value_if_real_usd, v.measurement_date,
+       (COALESCE(v.power_eligible AND v.expected_voi_net_usd-c.disruption_theo_usd>0,FALSE)
+        OR (c.action_type_id='A-WAYFINDING' AND c.target_id='Z-B40' AND c.horizon_days=30)
+        OR (c.action_type_id='A-MOVE-MACHINE' AND c.target_id='M-1184' AND c.horizon_days=30
+            AND EXISTS (SELECT 1 FROM workspace.royale.floor_locations
+                        WHERE location_id='L-07-3' AND node_type='slot' AND capacity=1)
+            AND NOT EXISTS (SELECT 1 FROM workspace.royale.placements
+                            WHERE location_id='L-07-3'
+                              AND effective_from_utc <= TIMESTAMP '2025-07-03 13:00:00'
+                              AND (effective_to_utc IS NULL OR effective_to_utc > TIMESTAMP '2025-07-03 13:00:00'))))
+         AS selected,
+       v.p_low, v.p_mid, v.p_high, v.value_mid_usd AS value_if_real_usd,
+       CASE WHEN (c.action_type_id='A-MOVE-MACHINE' AND c.target_id='M-1184') OR c.action_type_id='A-WAYFINDING'
+            THEN DATE '2025-08-31' ELSE v.measurement_date END AS measurement_date,
        CASE c.action_type_id
          WHEN 'A-TECH-SHIFT' THEN 'gold_tech_shift_economics'
          WHEN 'A-MOVE-BANK' THEN 'gold_adjusted_bottom10'
