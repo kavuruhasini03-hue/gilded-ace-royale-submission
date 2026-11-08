@@ -50,10 +50,15 @@ try {
   await page.evaluate(()=>document.fonts.ready);
   const gold=JSON.parse(await readFile(new URL("../embed/.gold-export.json",import.meta.url),"utf8"));
   await open("verdict");
-  assert.deepEqual(await page.locator(".house-verdict p").allTextContents(),[
-    "We recommend not replacing any of the ten lowest-earning machines in July. Their low earnings come mostly from the Back Forty's lost foot traffic and from game settings, so we spend $10,500 on three tests: new signage for the Back Forty, a payout check on machine M-1158, and moving machine M-1184 to a busier spot to learn whether its weakness is the spot or the machine. We keep $89,500 in reserve.",
-    "Nine of the ten machines are in the Back Forty, an area that lost foot traffic when its entrance walkway was closed for renovation from March 3 to April 7. Most of their shortfall comes from their location and from game settings that keep less of each bet by design, not from faulty machines."
-  ]);
+  assert.deepEqual(await page.locator(".house-verdict p").allTextContents(),['We recommend not replacing any of the ten lowest-earning machines in July. Nine of them are in the Back Forty, which lost foot traffic when its entrance walkway closed for renovation from March 3 to April 7, and most of their shortfall comes from that location and from game settings that keep less of each bet by design, not from faulty machines. So we spend $10,500 on three tests: new signage for the Back Forty, a payout check on machine M-1158, and moving machine M-1184 to a busier spot to learn whether its weakness is the spot or the machine. We keep $89,500 in reserve.']);
+  assert.equal(await page.locator(".verdict-tag").innerText(),"THE HOUSE CALLS IT · OUR RECOMMENDATION");
+  assert.equal(await page.locator(".kpi").count(),4);
+  assert.equal(await page.locator("#tribunal tbody tr").count(),10);
+  assert.equal(await page.locator(".finding").count(),3);
+  assert.equal(await page.getByText("What to do next",{exact:true}).count(),0);
+  assert.equal(await page.getByText("Fund three tests and keep $89,500 in reserve.",{exact:true}).count(),0);
+  assert.equal(await page.locator(".pit-boss-answers[open]").count(),0);
+  await page.getByText("Ask the Pit Boss",{exact:true}).click();
   const prepared=page.locator(".pit-boss-answers").getByText("How much should we spend in July?",{exact:true});
   await prepared.click();
   assert.match(await page.locator(".pit-boss-answers details[open]").innerText(),/\$10,500.*\$89,500/);
@@ -63,13 +68,14 @@ try {
     for(const [key,value] of Object.entries(expected)){
       if(["start","end"].includes(key)) continue;
       const name=key.replaceAll("_","-");
+      if(!["coin","hold","luck","leak"].includes(name)) continue;
       const digits=["coin","luck","leak","cash_kept"].includes(key)?2:8;
       const actual=await page.locator('[data-kpi="'+name+'"]').getAttribute("data-value");
       assert.equal(actual,Number(value).toFixed(digits),name+" in "+expected.start+" to "+expected.end);
     }
   }
   await dates("2025-01-01","2025-06-30");
-  for (const [name,label] of Object.entries({coin:"$248.9M",hold:"9.50%","theo-hold":"9.46%",luck:"$92.8K",leak:"$98.1K"}))
+  for (const [name,label] of Object.entries({coin:"$248.9M",hold:"9.50%",luck:"$92.8K",leak:"$98.1K"}))
     assert.equal(await page.locator('[data-kpi="'+name+'"]').textContent(),label);
   await page.getByRole("button",{name:"Pull the lever"}).click();
   const dealt=page.locator("#deal-status [data-machine]");
@@ -119,6 +125,7 @@ try {
   assert.match(await page.locator("#forecast-review").innerText(),/51\.1K/);
   await capture("judge-04-model");
   await open("plan");
+  assert.equal(await page.locator("#august-decisions li").count(),4);
   const allocation=page.locator(".budget-allocation");
   await allocation.focus();
   assert.equal(await allocation.evaluate(el=>el===document.activeElement),true);
@@ -142,7 +149,7 @@ try {
   await capture("judge-04-evidence");
   for(const slug of ["verdict","luck","demand","leak","players","comps","plan","model","evidence"]){
     await open(slug);
-    assert.equal(await page.locator("main h2").count(),1,slug);
+    assert.equal(await page.locator("main h2").count(),slug==="verdict"?0:1,slug);
     assert.equal(await page.getByText("No rows match these filters.",{exact:true}).count(),0,slug);
     assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth),1440,slug);
     const text=await page.locator("body").innerText();
@@ -155,7 +162,7 @@ try {
   await page.setViewportSize({width:390,height:844});
   await open("verdict");
   assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth),390);
-  await capture("mobile",false);
+  await capture("verdict-phone");
   await open("plan");
   assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth),390);
   await page.locator("#budget-allocation").screenshot({path:new URL("budget-phone.png",out).pathname});

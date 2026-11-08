@@ -1,7 +1,5 @@
 # Final public source file list
 
-[Public source repository](https://github.com/kavuruhasini03-hue/gilded-ace-royale-submission)
-
 This snapshot contains 166 files, including the three-action July plan, the four-model comparison, Genie setup, the Evidence Vault and final public screenshots.
 
 The snapshot excludes challenge data, generated exports, local settings, browser profiles, and credentials.

@@ -102,9 +102,7 @@ def build():
     source.pop("kpi_expected")
     review_path = ROOT / "twin/forecast-review.json"
     review = json.loads(review_path.read_text()) if review_path.exists() else None
-    insights_path = ROOT / "docs/STRATEGIC_INSIGHTS.md"
-    insights = insights_path.read_text().strip().split("\n\n")[1:] if insights_path.exists() else []
-    payload = json.dumps({"datasets": source, "pages": pages, "review": review, "insights": insights}, ensure_ascii=False, separators=(",", ":")).replace(chr(8212), ". ").encode()
+    payload = json.dumps({"datasets": source, "pages": pages, "review": review}, ensure_ascii=False, separators=(",", ":")).replace(chr(8212), ". ").encode()
 
     html = (ROOT / "twin/index.html").read_text()
     for marker, value in [("/* STYLE */", (ROOT / "twin/style.css").read_text()),

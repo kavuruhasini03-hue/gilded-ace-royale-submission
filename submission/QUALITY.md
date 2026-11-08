@@ -1,7 +1,5 @@
 # Phase 8 verification
 
-[Public source repository](https://github.com/kavuruhasini03-hue/gilded-ace-royale-submission)
-
 - **Pass. Downloaded data.** All 62 checksums and sizes and all 31 row-count and format comparisons passed.
 - **Pass. Gold reconciliation.** Gold floor totals matched property totals to the cent. Tracked totals matched the carded machine meters. The floor and individual machine dollar bridges closed in all three SQL test ranges. The checks reported zero failures.
 - **Pass. Ratios.** The SQL audit found 20 uses of `AVG`. The only average of ratios is mean absolute percentage error, which gives each forecast day equal weight by definition. The other averages describe daily levels, weekday reference levels, weekly wagers, player outcomes, or model errors. Hold, comp reinvestment, occupancy, and similar business rates divide totals.

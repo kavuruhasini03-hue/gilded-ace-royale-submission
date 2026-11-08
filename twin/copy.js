@@ -1,5 +1,5 @@
 const views = [
-  ["verdict", "Verdict", "Fund three tests and keep $89,500 in reserve.", "Theoretical win, or theo, is what the house expects to win given the wagers and game settings. Start with that expectation before reacting to actual payouts."],
+  ["verdict", "Verdict"],
   ["luck", "Q1 · Machines", "The lowest earners rarely need replacing.", "A poor result can reflect downtime, location, the games on offer, the machine itself, or ordinary payout swings."],
   ["demand", "Q2 · Demand", "Back Forty stayed weaker after the walkway reopened.", "Compare wagers per gaming day and see how the weekday mix, events, the closure, and other changes contributed."],
   ["leak", "Q3 · Downtime", "Downtime cost about $98,000 in expected win over six months.", "A gaming day starts at 06:00 and ends at 06:00 the next morning. Use the date range to see where downtime cost the most."],
@@ -20,8 +20,8 @@ const copy = {
   "comp-kpi":["Comp reinvestment","This divides the floor’s comp cost by expected win from tracked players for the selected dates."],
   "sigma-kpi":["Payout surprise score","This shows how far actual win was from expected win in units of typical variation. Scores between −2 and 2 are common."],
   "cash-kept":["July budget held in reserve","This is the cash left after the approved July tests."],
-  tribunal:["The original bottom ten mostly need a closer look","The ranks use January through June. The win column uses the selected dates. Select a machine to see its operating hours."],
-  bridge:["Five effects on win","The bars show how downtime, location, game mix, the individual machine, and luck changed win. They use their own scale."],
+  tribunal:["The general manager’s ten lowest earners","The ranks use January through June. The win column uses the selected dates. Select a machine to see its operating hours."],
+  bridge:["Five effects on win","Combined for the machines in the table. The bars show downtime, location, game mix, machine effects, and luck."],
   adjusted:["Three machines could pay back over 12 months","These candidates clear the long-term test. None pays for itself in July."],
   "cage-overview":["Three tests fit the July budget","The evidence view shows why the other options did not make the July plan."],
   "luck-funnel":["M-1158 warrants a payout check","Each dot is a machine. The lines show typical payout swings at different levels of play. A result beyond those lines deserves investigation."],

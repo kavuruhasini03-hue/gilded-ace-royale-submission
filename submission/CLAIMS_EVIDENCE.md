@@ -1,7 +1,5 @@
 # Claims and evidence
 
-[Public source repository](https://github.com/kavuruhasini03-hue/gilded-ace-royale-submission)
-
 Generated from `workspace.royale.gold_claims_evidence`.
 
 ## A-COMP-CHANGE · Change comp redemption rate floor-wide

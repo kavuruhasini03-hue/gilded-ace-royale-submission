@@ -20,7 +20,7 @@ const moveSpots = [{x:27.5,y:106,label:"Old spot · L-33-6"},{x:69,y:50,label:"N
 const colors = ["#e3b850","#6fb6ff","#c79bff","#ff5f57","#ffa24c","#fbf6e9","#5fd39a"];
 const suitColor = label => ({"♦":colors[6],"♣":colors[1],"♥":colors[4],"⚙":colors[2],"♠":colors[0],"🔍":colors[6]})[Array.from(label || "")[0]] ?? colors[5];
 const filters = {start:"2025-01-01",end:"2025-06-30",zone:"",bank:"",tier:"",region:"",age:""};
-let data, pages, review, insights, active = 0, selectedMachine = "", evidenceMachine = "";
+let data, pages, review, active = 0, selectedMachine = "", evidenceMachine = "";
 const dateIn = value => value && value.slice(0,10) >= filters.start && value.slice(0,10) <= filters.end;
 const machineIn = row => dateIn(row.gaming_date) && (!filters.zone || row.zone_name === filters.zone)
   && (!filters.bank || row.bank_name === filters.bank) && (!selectedMachine || row.machine_id === selectedMachine);
@@ -190,7 +190,11 @@ const machineGroups = rows => groups(rows,["machine_id","verdict_chip"],{varianc
   theo:"theo_usd",win:"house_win_usd",hours:"available_hours",effect:"machine_specific_usd"});
 function charts(name,title,rows) {
   switch(name) {
-    case "bridge": return rows.length ? shortfallChart(title,rows) : table([],[]);
+    case "bridge": {
+      const machines = new Set(datasets.tribunal(rows).map(row=>row.machine_id));
+      const combined = rows.filter(row=>machines.has(row.machine_id));
+      return combined.length ? shortfallChart(title,combined) : table([],[]);
+    }
     case "luck-funnel": return scatter(title,machineGroups(rows).map(r=>({...r,sigma:Math.sqrt(r.variance)})),["sigma","Typical payout variation ($)",currency],["luck","Actual win minus expected win ($)",currency],{funnel:true});
     case "actual-theo": {
       const shortlist=new Set(stable("comparison").map(r=>r.machine_id));
@@ -263,7 +267,7 @@ function charts(name,title,rows) {
   }
 }
 const layout = {
-  verdict:["health","coin","hold","theo-hold","luck","leak","comp-kpi","sigma-kpi","cash-kept","tribunal","bridge","adjusted"],
+  verdict:["coin","hold","luck","leak","tribunal","bridge"],
   luck:["luck-funnel","actual-theo","mean-reversion","peers"],
   demand:["monthly-demand","demand-bridge","slot-map","demand-timeline","traffic-heat","walkway-did","lasting-gap","zone-drivers","high-limit"],
   leak:["downtime-total","downtime-month","downtime-hour","downtime-maker","fault-hour","leak-heat"],
@@ -335,10 +339,10 @@ function pitBossAnswers() {
     ["What did downtime cost?", "Across the six-month study, unavailable machines cost an estimated "+usd.format(sum(stable("floor"),"leak_usd"))+" in expected house win.",
       "leak","Open the downtime view"],
   ];
-  return '<aside class="card pit-boss-answers" aria-labelledby="pit-boss-heading"><h3 id="pit-boss-heading">Ask the Pit Boss</h3>'
+  return '<details class="card pit-boss-answers"><summary>Ask the Pit Boss</summary>'
     +'<p class="muted">Choose a question. These prepared answers use the Gold export for the full study and the July decision.</p>'
     +answers.map(([question,answer,route,link])=>'<details><summary>'+escape(question)+'</summary><p>'+escape(answer)
-      +' <a href="#/'+route+'">'+escape(link)+'</a></p></details>').join("")+'</aside>';
+      +' <a href="#/'+route+'">'+escape(link)+'</a></p></details>').join("")+'</details>';
 }
 function budgetAllocation() {
   const spent=sum(stable("actions").filter(row=>row.selected),"cash_cost_usd");
@@ -515,6 +519,19 @@ function dealMachine() {
     +'</button> '+escape(row.bank_name)+' · '+escape(row.verdict_chip);
 }
 
+function verdictFindings() {
+  return '<section class="card finding"><h3>Back Forty lost foot traffic</h3><p>The walkway closure reduced exposure for nine of the ten lowest earners.</p><a href="#/demand">See the demand evidence</a></section>'
+    +'<section class="card finding"><h3>M-1158 warrants a payout check</h3><p>Its payout gap stands out after accounting for how many machines we checked.</p><button type="button" class="link" data-evidence="M-1158">See the M-1158 evidence</button></section>'
+    +'<section class="card finding"><h3>A move tests M-1184’s location</h3><p>Center Pit peers provide a comparison before deciding whether to replace the machine.</p><button type="button" class="link" data-evidence="L-07-3">See the M-1184 evidence</button></section>';
+}
+function augustDecisions() {
+  return '<section class="card wide" id="august-decisions"><h3>What we decide in August</h3><ul>'
+    +'<li><strong>Back Forty signage.</strong> Extend it if at least 25% of both the traffic gap and the expected-win gap closes.</li>'
+    +'<li><strong>M-1184.</strong> If it catches up with its Center Pit peers, reconsider the Bank 40 move. Otherwise, review replacement.</li>'
+    +'<li><strong>M-1158.</strong> Spend more only if the inspection confirms a fixable problem.</li>'
+    +'<li><strong>Comps.</strong> Review if cost exceeds 1.50% of tracked theo for two consecutive complete weeks.</li>'
+    +'</ul></section>';
+}
 function render() {
   const [slug, tab, title, description] = views[active];
   $("tabs").querySelectorAll("a").forEach((link,i)=>i===active?link.setAttribute("aria-current","page"):link.removeAttribute("aria-current"));
@@ -531,12 +548,11 @@ function render() {
     : "";
   const pip=["♠","♦","♣","♥","♠","♦","♥","♣","♠"][active];
   $("hero-host").innerHTML = slug==="verdict"?$("marquee-template").innerHTML:"";
-  $("content").innerHTML = '<section class="intro"><p class="muted">'+escape(tab)+'</p><h2><span aria-hidden="true" class="pip'
-    +("♥♦".includes(pip)?" red":"")+'">'+pip+'</span>'+escape(title)+'</h2><p>'+escape(description)
-    +'</p><p class="muted" id="scope">'+escape(scope)+'</p>'+intro
-    +(slug==="verdict"?pitBossAnswers():"")
-    +(slug==="verdict" && insights.length?'<aside class="card strategic"><h3>What to do next</h3>'+insights.map(p=>'<p>'+escape(p)+'</p>').join("")+'</aside>':"")
-    +'</section><div class="grid">'
+  const scopeLine = '<p class="muted" id="scope">'+escape(scope)+'</p>';
+  const pageIntro = slug==="verdict" ? scopeLine : '<p class="muted">'+escape(tab)+'</p><h2><span aria-hidden="true" class="pip'
+    +("♥♦".includes(pip)?" red":"")+'">'+pip+'</span>'+escape(title)+'</h2><p>'+escape(description)+'</p>'+scopeLine+intro;
+  $("content").innerHTML = '<section class="intro">'+pageIntro+'</section><div class="grid'+(slug==="verdict"?' verdict-grid':'')+'">'
+    +(slug==="plan"?augustDecisions():"")
     +layout[slug].map(name=>{
       if (!review && ["forecast-review","review-evidence"].includes(name)) return "";
       const widget = pages.get(name);
@@ -613,7 +629,7 @@ function render() {
       const scoped = name==="tribunal" && (filters.zone || filters.bank || selectedMachine);
       return '<section class="card'+cls+'" id="'+name+'"><h3>'+escape(scoped?"Machines in the selected area":heading)
         +'</h3><p class="muted">'+escape(scoped?"The table shows up to ten machines, ordered by their six-month rank.":explanation)+'</p>'+body+'</section>';
-    }).join("")+'</div>';
+    }).join("")+(slug==="verdict"?verdictFindings():"")+'</div>'+(slug==="verdict"?pitBossAnswers():"");
   $("content").setAttribute("aria-busy","false");
 }
 function currentView() {
@@ -662,7 +678,6 @@ async function start() {
   if (!response.ok) throw new Error("The Gold export is unavailable.");
   const result=await response.json();
   review=result.review;
-  insights=result.insights || [];
   pages=new Map(result.pages.flatMap(p=>p.layout).map(({widget})=>[widget.name,widget]));
   data = Object.fromEntries(Object.entries(result.datasets).map(([key,{columns,rows}])=>
     [key,rows.map(row=>Object.fromEntries(columns.map((column,i)=>[column,row[i]])))]));

@@ -165,8 +165,6 @@ footer {text-align:center;border-color:var(--gold3)}
 .budget-allocation figcaption {font-weight:700}
 #unfunded-options td:last-child {min-width:220px}
 #unfunded-options td:first-child {min-width:155px}
-.strategic {margin:18px 0 3px}
-.strategic p+p {margin-top:10px}
 .pit-boss-answers {margin:18px 0 3px}
 .pit-boss-answers details {border-top:1px solid var(--seam);padding:7px 0}
 .pit-boss-answers summary {margin:0;font-weight:700}
@@ -188,3 +186,9 @@ footer {text-align:center;border-color:var(--gold3)}
   #cage-slip tr {margin-bottom:12px;border:1px solid var(--seam);border-radius:8px}
   #cage-slip td::before {content:attr(data-label);display:inline-block;min-width:8em;color:var(--gold)}
 }
+
+.verdict-grid .finding {grid-column:span 4}
+@media(min-width:551px){.verdict-grid .kpi{grid-column:span 3}}
+@media(max-width:700px){.verdict-grid .finding{grid-column:1/-1}}
+
+@media(max-width:550px){.verdict-grid #coin.kpi{grid-column:span 6}}
