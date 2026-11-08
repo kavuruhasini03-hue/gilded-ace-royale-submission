@@ -16,6 +16,6 @@ The data is available from the [official Dashboard Royale repository](https://gi
 python3 scripts/deploy_phase2.py --warehouse-id YOUR_WAREHOUSE_ID && python3 twin/refresh.py --warehouse-id YOUR_WAREHOUSE_ID
 ```
 
-See the [setup and verification notes](twin/README.md), [methods](docs/METHODS.md), [write-up](submission/WRITEUP.md), [evidence ledger](submission/CLAIMS_EVIDENCE.md), [walkthrough script](submission/VIDEO_SCRIPT.md), [quality gates](submission/QUALITY.md), and [screenshots](docs/screens/views/README.md).
+See the [setup and verification notes](twin/README.md), [methods](docs/METHODS.md), [write-up](submission/WRITEUP.md), [evidence ledger](submission/CLAIMS_EVIDENCE.md), [walkthrough script](submission/VIDEO_SCRIPT.md), [quality gates](submission/QUALITY.md), and [before and after screenshots](docs/screens/restyle/README.md).
 
 The Databricks bundle and SQL are in `databricks/`. The AI/BI dashboard definition is in `dashboards/`. The public page source is in `twin/` and the deployment configuration is in `embed/`. This submission omits the challenge data, generated exports, and credentials. Sound and optional music are synthesized in the browser. No audio files are distributed.

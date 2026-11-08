@@ -1,10 +1,21 @@
 <!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>The Gilded Ace · Eye in the Sky</title><style>/* STYLE */</style></head>
-<body><header><div class="top"><p class="brand">♠ THE GILDED ACE <span>EYE IN THE SKY</span></p><div class="live-link"><a href="/live">Live on Databricks</a><small>The main page shows the same figures.</small></div></div>
-<h1>We recommend not replacing any of the ten lowest-earning machines in July. Instead, inspect machine M-1158, hold off on the comp pilot until it can give a clear answer, and keep $98,800 of the budget in reserve.</h1>
+<title>The Gilded Ace · Eye in the Sky</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Limelight&amp;family=Playfair+Display:wght@700;900&amp;display=swap"><style>/* STYLE */</style></head>
+<body><header><div class="top"><p class="brand">♠ Gilded <b>Ace</b></p><div class="live-link"><a href="/live">Live on Databricks</a><small>The main page shows the same figures.</small></div></div>
 <p class="muted">Fictional casino · January–June 2025 · Interactive dashboard from Databricks. Figures exported from Databricks on __EXPORT_DATE__.</p></header>
 <nav aria-label="Dashboard pages" id="tabs"></nav>
+<template id="marquee-template"><section class="marquee">
+<div class="bulbs" aria-hidden="true"></div><p class="suits" aria-hidden="true">♠ <span>♥</span> ♣ <span>♦</span></p>
+<p class="eyebrow">TAMU Datathon 2026 · Dashboard Royale · Jan–Jun 2025</p>
+<h1>Luck, Location, or a Leak?</h1>
+<p class="lede">Theoretical win, or theo, is what the house expects to win given the wagers and game settings.</p>
+<div class="slot"><div class="reels" aria-hidden="true"><span>♠</span><span>♥</span><span>♣</span></div>
+<button type="button" id="lever">Pull the lever</button></div>
+<p id="deal-status" class="slotmsg" role="status">Pull the lever to deal a machine from the selected part of the floor.</p>
+<p class="house-verdict"><span class="verdict-tag">THE HOUSE CALLS IT</span><br>We recommend not replacing any of the ten lowest-earning machines in July. Instead, inspect machine M-1158, hold off on the comp pilot until it can give a clear answer, and keep $98,800 of the budget in reserve.</p>
+</section></template>
+<div id="hero-host"></div>
 <div id="audio-settings"><label><input id="sound" type="checkbox"> Sound</label><label><input id="music" type="checkbox"> Music</label></div>
 <form id="filters" aria-label="Dashboard filters">
 <label>From <input id="start" type="date" min="2025-01-01" max="2025-06-30" value="2025-01-01" required></label>

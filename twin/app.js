@@ -9,8 +9,8 @@ const pct = new Intl.NumberFormat("en-US", {style:"percent",maximumFractionDigit
 const unique = values => [...new Set(values.filter(Boolean))].sort();
 const sum = (rows, key) => rows.reduce((total, row) => total + Number(row[key] ?? 0), 0);
 const ratio = (a,b) => b ? a / b : null;
-const colors = ["#d4af37","#3fd6e0","#b48cff","#ff5a6e","#c9a66b","#f4f1ea","#38d39f"];
-const suitColor = label => ({"♦":colors[2],"♣":colors[1],"♥":colors[3],"⚙":colors[4],"♠":colors[5],"🔍":colors[0]})[Array.from(label || "")[0]] ?? colors[5];
+const colors = ["#e3b850","#6fb6ff","#c79bff","#ff5f57","#ffa24c","#fbf6e9","#5fd39a"];
+const suitColor = label => ({"♦":colors[6],"♣":colors[1],"♥":colors[4],"⚙":colors[2],"♠":colors[0],"🔍":colors[3]})[Array.from(label || "")[0]] ?? colors[5];
 const filters = {start:"2025-01-01",end:"2025-06-30",zone:"",bank:"",tier:"",region:"",age:""};
 let data, pages, active = 0, selectedMachine = "", evidenceMachine = "";
 const dateIn = value => value && value.slice(0,10) >= filters.start && value.slice(0,10) <= filters.end;
@@ -354,6 +354,50 @@ function extra(name,title,rows) {
   return "";
 }
 
+function planCards(rows) {
+  const inspection = rows.find(row=>row.action_type_id==="A-INSPECT" && row.selected);
+  const pilot = rows.find(row=>row.action_type_id==="A-COMP-PILOT");
+  const move = rows.find(row=>row.action_type_id==="A-MOVE-BANK");
+  const cards = [
+    ["A","♥","Funded",inspection.cash_cost_usd,"Inspect "+inspection.target_id,
+      "Check the payout meter, game settings, and accounting. Compare the records by "+inspection.measurement_date+". Confirm a repeatable discrepancy before approving more work."],
+    ["K","♠","Deferred",pilot.cash_cost_usd,"Comp pilot",
+      "The trial can only detect a change of 5.77% over 60 days. We need it to detect 2.5% before funding it."],
+    ["Q","♦","Watchlist",move.cash_cost_usd,"Test the bank position",
+      "Check whether the bank position explains the gap. A move does not pay for itself in July."],
+    ["J","♣","Kept in reserve",data.cage[0].kept_usd,"Preserve the budget",
+      "Keep the cash available and revisit the decision after the inspection and August results."]
+  ];
+  return '<p class="muted">Select a card to see the reasoning behind each decision.</p><div class="plan-cards">'
+    +cards.map(([rank,suit,status,amount,title,reason])=>{
+      const corner='<span class="plan-corner">'+rank+'<br>'+suit+'</span>';
+      const label=title+', '+usd.format(amount);
+      return '<button type="button" class="plan-card" aria-pressed="false" aria-label="'+escape(label)+'" data-front="'+escape(label)
+        +'" data-back="'+escape(reason)+'"><span class="plan-face plan-front'+('♥♦'.includes(suit)?' red':'')+'" aria-hidden="true">'
+        +corner+'<span class="plan-status">'+status+'</span><span class="plan-amount">'+usd.format(amount)
+        +'</span><span class="plan-title">'+escape(title)+'</span>'+corner
+        +'</span><span class="plan-face plan-back" aria-hidden="true"><span>'+escape(reason)+'</span></span></button>';
+    }).join("")+'</div>';
+}
+function dealMachine() {
+  const candidates=unique(stable("machine").filter(machineIn).map(row=>row.machine_id));
+  const status=$("deal-status");
+  if(!candidates.length){
+    status.textContent="No machines match the selected filters.";
+    return;
+  }
+  const id=candidates[Math.floor(Math.random()*candidates.length)];
+  const row=stable("machine").find(machine=>machine.machine_id===id && machineIn(machine));
+  const reel=$("lever").previousElementSibling;
+  const labels=[id,Array.from(row.verdict_chip)[0],row.bank_name];
+  reel.classList.remove("dealing");
+  reel.querySelectorAll("span").forEach((item,i)=>item.textContent=labels[i]);
+  void reel.offsetWidth;
+  reel.classList.add("dealing");
+  status.innerHTML='<button type="button" data-machine="'+escape(id)+'">Open '+escape(id)
+    +'</button> '+escape(row.bank_name)+' · '+escape(row.verdict_chip);
+}
+
 function render() {
   const [slug, tab, title, description] = views[active];
   $("tabs").querySelectorAll("a").forEach((link,i)=>i===active?link.setAttribute("aria-current","page"):link.removeAttribute("aria-current"));
@@ -368,9 +412,12 @@ function render() {
     : slug==="players" ? '<p>The six-month ranking and winner/loser split stay fixed. The tier and decile table uses the selected dates and guest group.</p>'
     : slug==="comps" ? '<p>Guest filters apply to redemption prices and the tracked reinvestment trend. The points balance and comparison with untracked wagers describe the whole floor.</p>'
     : "";
-  $("content").innerHTML = '<section class="intro"><p class="muted">'+escape(tab)+'</p><h2>'+escape(title)+'</h2><p>'+escape(description)
+  const pip=["♠","♦","♣","♥","♠","♦","♥","♣","♠"][active];
+  $("hero-host").innerHTML = slug==="verdict"?$("marquee-template").innerHTML:"";
+  $("content").innerHTML = '<section class="intro"><p class="muted">'+escape(tab)+'</p><h2><span aria-hidden="true" class="pip'
+    +("♥♦".includes(pip)?" red":"")+'">'+pip+'</span>'+escape(title)+'</h2><p>'+escape(description)
     +'</p><p class="muted" id="scope">'+escape(scope)+'</p>'+intro
-    +(slug==="verdict"?'<button type="button" id="lever">Pull the lever</button>':'')+'</section><div class="grid">'
+    +'</section><div class="grid">'
     +layout[slug].map(name=>{
       const widget = pages.get(name);
       const [heading,explanation] = copy[name] ?? extraCopy[name];
@@ -400,11 +447,7 @@ function render() {
           if(name==="player-segments") cols=cols.filter(c=>!["players","comp","contrib"].includes(c.fieldName))
             .map(c=>({...c,displayName:({theo:"Expected win",luck:"Player payout variation",wagers:"Wagers"})[c.fieldName]??c.displayName}));
           if(name==="cage-slip"){
-            body=table(cols.filter(c=>!["assumption","success_rule","evidence_view"].includes(c.fieldName)),found)
-              + '<div class="plan-cards">'+found.filter(r=>r.selected && r.action_type_id!=="A-HOLD").map(r=>
-                '<details data-card><summary>'+escape(r.target_label)+'</summary><p>We will check the payout meter, game settings, and accounting for a repeatable discrepancy.</p>'
-                +'<p>Compare the records by '+escape(r.measurement_date)+'. Confirm the discrepancy before approving further work.</p>'
-                +'<button class="link" data-evidence="'+escape(r.target_id)+'">Read the evidence for '+escape(r.target_id)+'</button></details>').join("")+'</div>';
+            body=planCards(found)+table(cols.filter(c=>!["assumption","success_rule","evidence_view"].includes(c.fieldName)),found);
           } else {
             body=table(cols,found);
             if(name==="comp-control"){
@@ -501,10 +544,15 @@ async function start() {
   history.scrollRestoration="manual";
   window.addEventListener("hashchange",route);
   document.addEventListener("click",event=>{
-    const target=event.target.closest("[data-machine],[data-evidence],[data-focus-machine],[data-card] summary,#lever");
+    const target=event.target.closest("[data-machine],[data-evidence],[data-focus-machine],.plan-card,#lever");
     if (!target) return;
-    if (target.id==="lever") { playSound("lever"); $("bridge")?.scrollIntoView({block:"start"}); }
-    if (target.matches("summary")) playSound("card");
+    if (target.id==="lever") { playSound("lever"); dealMachine(); }
+    if (target.matches(".plan-card")) {
+      const flipped=target.getAttribute("aria-pressed")==="true";
+      target.setAttribute("aria-pressed",String(!flipped));
+      target.setAttribute("aria-label",flipped?target.dataset.front:target.dataset.back);
+      playSound("card");
+    }
     if (target.dataset.machine) drawer(target.dataset.machine);
     if (target.dataset.focusMachine) { selectedMachine=target.dataset.focusMachine;$("drawer").close();go("verdict"); }
     if (target.dataset.evidence) { evidenceMachine=target.dataset.evidence;go("evidence"); }

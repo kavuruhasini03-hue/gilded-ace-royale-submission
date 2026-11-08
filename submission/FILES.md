@@ -1,12 +1,6 @@
-# Proposed public GitHub file list
+# Public GitHub file list
 
-[Public source repository](https://github.com/kavuruhasini03-hue/gilded-ace-royale-submission)
-
-The source-only package contains 98 files. It excludes challenge data, Gold exports,
-generated site output, local configuration, credentials, and old diagnostic screenshots.
-
-Review this list before any push. The existing collaboration repository already contains data
-in its Git history. A public repository with no data in its history needs a clean destination.
+This source package contains 130 files, including the restyle captures. It excludes challenge data, generated exports, local configuration, and credentials.
 
 ```text
 .gitignore
@@ -49,6 +43,38 @@ docs/METHODS.md
 docs/PUBLIC_COPY_REVIEW.md
 docs/RECON.md
 docs/screens/README.md
+docs/screens/restyle/README.md
+docs/screens/restyle/after/comps.png
+docs/screens/restyle/after/demand.png
+docs/screens/restyle/after/evidence.png
+docs/screens/restyle/after/judge-01-dates.png
+docs/screens/restyle/after/judge-02-bank-timeline.png
+docs/screens/restyle/after/judge-03-gold.png
+docs/screens/restyle/after/judge-04-evidence.png
+docs/screens/restyle/after/judge-04-model.png
+docs/screens/restyle/after/leak.png
+docs/screens/restyle/after/luck.png
+docs/screens/restyle/after/mobile.png
+docs/screens/restyle/after/model.png
+docs/screens/restyle/after/plan-flipped.png
+docs/screens/restyle/after/plan.png
+docs/screens/restyle/after/players.png
+docs/screens/restyle/after/verdict.png
+docs/screens/restyle/before/comps.png
+docs/screens/restyle/before/demand.png
+docs/screens/restyle/before/evidence.png
+docs/screens/restyle/before/judge-01-dates.png
+docs/screens/restyle/before/judge-02-bank-timeline.png
+docs/screens/restyle/before/judge-03-gold.png
+docs/screens/restyle/before/judge-04-evidence.png
+docs/screens/restyle/before/judge-04-model.png
+docs/screens/restyle/before/leak.png
+docs/screens/restyle/before/luck.png
+docs/screens/restyle/before/mobile.png
+docs/screens/restyle/before/model.png
+docs/screens/restyle/before/plan.png
+docs/screens/restyle/before/players.png
+docs/screens/restyle/before/verdict.png
 docs/screens/views/README.md
 docs/screens/views/comps.png
 docs/screens/views/demand.png

@@ -14,3 +14,7 @@
 - **Blocked. Signed-in AI/BI judge workflow.** The console blocks browser automation. The bonus live embed fails during the Databricks scoped token exchange. The signed-in AI/BI walkthrough still needs a manual pass.
 
 The separate organizer data release check remains blocked on the draft data version, calibration approval, and redistribution evidence for LVCVA and the Missouri Gaming Commission. The proposed public source package contains no challenge data or generated Gold export.
+
+## Restyle checks
+
+The browser reran the judge workflow, the three exact Gold KPI comparisons, the machine deal, and the plan-card flip. It also checked phone-width overflow and reduced-motion behavior. The restored palette passed the contrast checks. The built assets contain zero em dashes and no DuckDB or Parquet references. [Before and after screenshots](../docs/screens/restyle/README.md).

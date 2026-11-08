@@ -3,7 +3,7 @@ import { mkdir, readFile } from "node:fs/promises";
 import { createServer } from "node:http";
 import { chromium } from "../embed/node_modules/playwright/index.mjs";
 
-const out = new URL("../docs/screens/views/",import.meta.url);
+const out = new URL(process.env.QA_SCREEN_DIR || "../docs/screens/views/",import.meta.url);
 const publicDir = new URL("../embed/public/",import.meta.url);
 await mkdir(out,{recursive:true});
 const server = createServer(async (req,res)=>{
@@ -47,6 +47,7 @@ try {
   await page.locator("#downtime-total").waitFor();
   assert.equal(await page.getByLabel("Sound",{exact:true}).isChecked(),true);
   await page.getByLabel("Sound",{exact:true}).uncheck();
+  await page.evaluate(()=>document.fonts.ready);
   const gold=JSON.parse(await readFile(new URL("../embed/.gold-export.json",import.meta.url),"utf8"));
   await open("verdict");
   for(const expected of decode(gold.kpi_expected)){
@@ -59,6 +60,11 @@ try {
       assert.equal(actual,Number(value).toFixed(digits),name+" in "+expected.start+" to "+expected.end);
     }
   }
+  await page.getByRole("button",{name:"Pull the lever"}).click();
+  const dealt=page.locator("#deal-status [data-machine]");
+  await dealt.click();
+  assert.match(await page.getByRole("dialog").innerText(),/06:00 → 06:00/);
+  await page.keyboard.press("Escape");
   await dates("2025-04-01","2025-06-30");
   assert.equal(await page.locator('[data-kpi="coin"]').textContent(),"$124,003,503.70");
   await capture("judge-01-dates");
@@ -98,6 +104,11 @@ try {
   assert.match(await page.locator("#model-score").innerText(),/55,270\.94/);
   await capture("judge-04-model");
   await open("plan");
+  const card=page.locator(".plan-card").first();
+  await card.click();
+  assert.equal(await card.getAttribute("aria-pressed"),"true");
+  await capture("plan-flipped",false);
+  await card.click();
   await page.getByRole("button",{name:"M-1158 evidence",exact:true}).first().click();
   await page.locator("#evidence-match").waitFor();
   assert.match(await page.locator("#evidence-match").innerText(),/M-1158/);
