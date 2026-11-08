@@ -2834,6 +2834,63 @@
         },
         {
           "widget": {
+            "name": "budget-allocation-ai",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "cage",
+                  "fields": [
+                    {
+                      "name": "spent_usd",
+                      "expression": "`spent_usd`"
+                    },
+                    {
+                      "name": "kept_usd",
+                      "expression": "`kept_usd`"
+                    }
+                  ],
+                  "disaggregated": true
+                }
+              }
+            ],
+            "spec": {
+              "version": 1,
+              "widgetType": "custom-vega-viz",
+              "data": {
+                "queryName": "main_query"
+              },
+              "encodings": {
+                "fields": [
+                  {
+                    "fieldName": "spent_usd"
+                  },
+                  {
+                    "fieldName": "kept_usd"
+                  }
+                ]
+              },
+              "jsonSpec": {
+                "type": "vega-lite",
+                "spec": "{\"$schema\":\"https://vega.github.io/schema/vega-lite/v6.json\",\"data\":{\"name\":\"databricks_query\"},\"width\":\"container\",\"height\":\"container\",\"background\":\"transparent\",\"config\":{\"autosize\":{\"type\":\"fit\",\"contains\":\"padding\"},\"view\":{\"stroke\":null},\"axis\":{\"labelColor\":\"#9FAEA6\",\"titleColor\":\"#EDE6D3\",\"gridColor\":\"#24443A\",\"domainColor\":\"#24443A\"},\"legend\":{\"labelColor\":\"#EDE6D3\",\"titleColor\":\"#EDE6D3\"}},\"transform\":[{\"fold\":[\"spent_usd\",\"kept_usd\"],\"as\":[\"part\",\"amount\"]},{\"calculate\":\"datum.spent_usd + datum.kept_usd\",\"as\":\"total\"},{\"calculate\":\"datum.part === 'spent_usd' ? 'Funded' : 'Reserve'\",\"as\":\"allocation\"},{\"calculate\":\"datum.amount / datum.total\",\"as\":\"share\"}],\"mark\":{\"type\":\"bar\",\"stroke\":\"#EDE6D3\",\"strokeWidth\":1},\"encoding\":{\"x\":{\"field\":\"amount\",\"type\":\"quantitative\",\"title\":\"July budget\",\"stack\":\"zero\",\"axis\":{\"format\":\"$~s\"}},\"color\":{\"field\":\"allocation\",\"type\":\"nominal\",\"title\":\"Allocation\",\"scale\":{\"domain\":[\"Funded\",\"Reserve\"],\"range\":[\"#D4AF37\",\"#38D39F\"]}},\"tooltip\":[{\"field\":\"allocation\",\"type\":\"nominal\",\"title\":\"Allocation\"},{\"field\":\"amount\",\"type\":\"quantitative\",\"title\":\"Amount\",\"format\":\"$,.2f\"},{\"field\":\"share\",\"type\":\"quantitative\",\"title\":\"Share\",\"format\":\".1%\"}]}}"
+              },
+              "frame": {
+                "title": "The July budget stays mostly in reserve",
+                "showTitle": true,
+                "description": "The counters above label the funded and reserve amounts. Select a segment for its percentage.",
+                "showDescription": true
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 5,
+            "width": 12,
+            "height": 4
+          }
+        },
+        {
+          "widget": {
             "name": "action-board",
             "queries": [
               {
@@ -2919,7 +2976,7 @@
           },
           "position": {
             "x": 0,
-            "y": 5,
+            "y": 9,
             "width": 12,
             "height": 7
           }
@@ -3108,7 +3165,7 @@
           },
           "position": {
             "x": 0,
-            "y": 12,
+            "y": 16,
             "width": 12,
             "height": 8
           }
@@ -3212,7 +3269,7 @@
           },
           "position": {
             "x": 0,
-            "y": 20,
+            "y": 24,
             "width": 7,
             "height": 7
           }
@@ -3290,7 +3347,7 @@
           },
           "position": {
             "x": 7,
-            "y": 20,
+            "y": 24,
             "width": 5,
             "height": 4
           }
@@ -3373,7 +3430,7 @@
           },
           "position": {
             "x": 7,
-            "y": 24,
+            "y": 28,
             "width": 5,
             "height": 3
           }
@@ -3400,6 +3457,22 @@
             "y": 0,
             "width": 12,
             "height": 2
+          }
+        },
+        {
+          "widget": {
+            "name": "cutoff-disclosure",
+            "multilineTextboxSpec": {
+              "lines": [
+                "**Why the primary score changed**\n\nGilded Ace Locals Appreciation Week was announced on May 26, after the April 30 forecast date. We removed it from the forecast, refit through April 30, and scored the frozen May and June forecasts once. Average error fell from $55,270.94 (4.06%) to $51,128.96 (3.84%). The trend model lost because it increased error in April and on the holdout."
+              ]
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 2,
+            "width": 12,
+            "height": 3
           }
         },
         {
@@ -3459,7 +3532,7 @@
                 "spec": "{\"$schema\":\"https://vega.github.io/schema/vega-lite/v6.json\",\"data\":{\"name\":\"databricks_query\"},\"width\":\"container\",\"height\":\"container\",\"background\":\"transparent\",\"config\":{\"autosize\":{\"type\":\"fit\",\"contains\":\"padding\"},\"view\":{\"stroke\":null},\"axis\":{\"labelColor\":\"#9FAEA6\",\"titleColor\":\"#EDE6D3\",\"gridColor\":\"#24443A\",\"domainColor\":\"#24443A\"},\"legend\":{\"labelColor\":\"#EDE6D3\",\"titleColor\":\"#EDE6D3\"}},\"layer\":[{\"data\":{\"values\":[{\"start\":\"2025-05-01\",\"end\":\"2025-07-01\"}]},\"mark\":{\"type\":\"rect\",\"color\":\"#D4AF37\",\"opacity\":0.1},\"encoding\":{\"x\":{\"field\":\"start\",\"type\":\"temporal\",\"title\":\"Gaming date\"},\"x2\":{\"field\":\"end\"}}},{\"transform\":[{\"fold\":[\"actual_usd\",\"forecast_usd\",\"baseline_usd\"],\"as\":[\"series\",\"coin\"]},{\"calculate\":\"[\\\"Actual\\\", \\\"Weekday + flags\\\", \\\"Constant baseline\\\"][indexof([\\\"actual_usd\\\", \\\"forecast_usd\\\", \\\"baseline_usd\\\"], datum.series)]\",\"as\":\"label\"}],\"mark\":{\"type\":\"line\",\"strokeWidth\":1.6},\"encoding\":{\"x\":{\"field\":\"gaming_date\",\"type\":\"temporal\",\"title\":\"Gaming date\"},\"y\":{\"field\":\"coin\",\"type\":\"quantitative\",\"title\":\"Daily coin-in\",\"axis\":{\"format\":\"$~s\"},\"scale\":{\"zero\":false}},\"color\":{\"field\":\"label\",\"type\":\"nominal\",\"scale\":{\"domain\":[\"Actual\",\"Weekday + flags\",\"Constant baseline\"],\"range\":[\"#EDE6D3\",\"#3FD6E0\",\"#8A9690\"]}},\"tooltip\":[{\"field\":\"gaming_date\",\"type\":\"temporal\",\"title\":\"Date\"},{\"field\":\"label\",\"type\":\"nominal\"},{\"field\":\"coin\",\"type\":\"quantitative\",\"format\":\"$,.0f\"}]}}]}"
               },
               "frame": {
-                "title": "The weekday model cuts holdout MAE by 75%",
+                "title": "The weekday model cuts holdout MAE by 77%",
                 "showTitle": true,
                 "description": "Frozen Jan–Apr fits. Shaded area is the 61-day May–Jun holdout.",
                 "showDescription": true
@@ -3468,7 +3541,7 @@
           },
           "position": {
             "x": 0,
-            "y": 2,
+            "y": 5,
             "width": 12,
             "height": 8
           }
@@ -3532,7 +3605,7 @@
                 ]
               },
               "frame": {
-                "title": "MAE fell from $218K to $55K",
+                "title": "MAE fell from $218K to $51K",
                 "showTitle": true,
                 "description": "MAPE is the mean absolute percentage error.",
                 "showDescription": true
@@ -3541,7 +3614,7 @@
           },
           "position": {
             "x": 0,
-            "y": 10,
+            "y": 13,
             "width": 6,
             "height": 4
           }
@@ -3602,16 +3675,16 @@
                 ]
               },
               "frame": {
-                "title": "The model still overpredicts every weekday",
+                "title": "Check forecast bias by weekday",
                 "showTitle": true,
-                "description": "Residual = actual minus forecast. Sunday has the largest average bias.",
+                "description": "Residual = actual minus forecast. A negative value means the forecast was too high.",
                 "showDescription": true
               }
             }
           },
           "position": {
             "x": 6,
-            "y": 10,
+            "y": 13,
             "width": 6,
             "height": 6
           }
@@ -3621,13 +3694,13 @@
             "name": "leakage-check",
             "multilineTextboxSpec": {
               "lines": [
-                "**Leakage checks**\n\nTrain ends Apr 30. Holdout is frozen. Event announcements precede the gaming date. Weather, tourism and realized play are excluded."
+                "**Leakage checks**\n\nTrain ends Apr 30. Holdout is frozen. Event announcements must be known by April 30 and precede the gaming date. Weather, tourism and realized play are excluded."
               ]
             }
           },
           "position": {
             "x": 0,
-            "y": 16,
+            "y": 19,
             "width": 12,
             "height": 2
           }

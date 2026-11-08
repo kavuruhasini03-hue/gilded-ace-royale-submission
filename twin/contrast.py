@@ -27,3 +27,5 @@ for foreground, background in [("headline","felt"),("headline","felt2"),("cardin
     assert contrast(palette[foreground],palette[background]) >= 4.5, (foreground,background)
 assert contrast("#2a1a00","#b88a24") >= 4.5
 print("PASS: palette text, suit chips, opaque chart marks and control borders.")
+assert contrast(palette["gold"], "#265a44") >= 3
+assert contrast(palette["gold2"], palette["panel"]) >= 4.5

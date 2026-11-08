@@ -18,7 +18,7 @@ Open [the public dashboard](https://gilded-ace-royale.vercel.app) in a private w
 
 **0:57 to 1:13. Model validation.** Open Model Room and point to both error values.
 
-> We froze the forecast before scoring May and June. Over those 61 days, the typical error fell from about 218 thousand dollars to 55 thousand dollars.
+> We used only announcements known by April 30 and froze the forecast before scoring May and June. Over those 61 days, the typical error fell from about 218 thousand dollars to 51 thousand dollars.
 
 **1:13 to 1:55. July action and evidence.** Open July Plan and follow the M-1158 link into Evidence Vault.
 

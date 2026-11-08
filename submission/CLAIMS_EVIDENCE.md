@@ -299,3 +299,17 @@ Gold source and query: gold_machine_verdict / machine_verdict.sql
 Result: 0 machines appear in both lists
 Alternative tested: Availability-adjusted peer comparison and day bootstrap
 Limitation: Peer benchmarks are fixed to the six-month release
+
+## A linear trend did not improve the forecast
+
+The April test used January through March to fit both models. Mean absolute error was $65,287 for the weekday ridge and $68,585 for the trend. The frozen trend scored $66,520 (5.00%) on 61 May and June days, compared with $51,129 (3.84%) for the corrected primary ridge. The trend increased error in both periods and stays secondary.
+
+### Disclosure on the earlier score
+
+Gilded Ace Locals Appreciation Week was announced on May 26, after the April 30 forecast date. The earlier run used it on seven June dates and scored $55,271 (4.06%). We removed it, refit through April 30, froze the forecasts, and rescored the holdout once. The corrected primary reduces average dollar error by 76.57% against the constant forecast. [Secondary MLflow run](https://dbc-a3bbfca6-850a.cloud.databricks.com/ml/experiments/2633256274998390/runs/cff3756efcee4ce9b896eefe12f54729).
+
+## The staffing decision still holds
+
+The July action plan estimates $381 in recovered expected win overnight and $131 on Saturday evenings, against $11,520 per package. Applying the ratio of the trend and current daily forecasts to eligible July shifts raises those estimates to $395 and $135. The July sensitivity keeps the original hourly opportunity pattern. Even if technicians recover all modeled wait time at the highest scaling factor, the estimates are $798 and $270. Neither package comes close to its cost.
+
+[Primary forecast and frozen predictions](https://dbc-a3bbfca6-850a.cloud.databricks.com/ml/experiments/2633256274998390/runs/aa13697e0b5a4a2da3af5f269c2f2393).

@@ -6,7 +6,7 @@ const views = [
   ["players", "Q4 · Players", "The top tenth generated about two-thirds of tracked expected win.", "Player net is payouts minus wagers. A negative amount is a player loss. No action targets heavy losers."],
   ["comps", "Q5 · Comps", "Rewards became easier to redeem on May 1.", "A comp is a guest reward. On May 1 the redemption price fell from 12.50 to 5.85 points per dollar of face value. Review comp pricing and tracked play if economic comp cost exceeds 1.50% of tracked theo for two consecutive complete gaming weeks."],
   ["plan", "Q6 · July plan", "Spend $1,200 to inspect M-1158.", "The July plan funds the payout check and keeps the rest of the $100,000 budget in reserve. The plan is a fixed decision based on January through June."],
-  ["model", "Model Room", "The weekday forecast cut typical error by 75%.", "The team fitted the model through April 30, then scored it on 61 days in May and June. The published scores use that same test period."],
+  ["model", "Model Room", "The weekday forecast cut typical error by 77%.", "The team fitted the model through April 30, then scored it on 61 days in May and June. The published scores use that same test period."],
   ["evidence", "Evidence Vault", "Every recommendation has an evidence trail.", "Follow each recommendation to the Gold source, the alternative explanation tested, and what remains uncertain."],
 ];
 
@@ -54,7 +54,7 @@ const copy = {
   "tech-compare":["Extra technician coverage costs more than the estimated recovery","We price recoverable wait hours at the expected win for the affected machines and compare overnight with Saturday evening."],
   "tech-sensitivity":["The staffing decision holds under different downtime estimates","This compares results when the estimated downtime cost is 30% lower or higher."],
   "model-holdout":["The weekday forecast tracks daily wagers more closely","The shaded area marks the 61-day test period. Both forecasts were fixed before those results were scored."],
-  "model-score":["Typical error fell from about $218,000 to $55,000","Mean absolute error is the average dollar size of a forecast miss, regardless of direction."],
-  "model-residual":["The model still forecasts too high on every weekday","This compares actual wagers with the forecast. Sunday has the largest average overestimate."],
+  "model-score":["Typical error fell from about $218,000 to $51,000","Mean absolute error is the average dollar size of a forecast miss, regardless of direction."],
+  "model-residual":["Check forecast bias by weekday","This compares actual wagers with the forecast. A negative value means the forecast was too high."],
   claims:["Follow the evidence behind each decision","Each row gives a finding, its source, the alternative considered, and the limits of the evidence."],
 };

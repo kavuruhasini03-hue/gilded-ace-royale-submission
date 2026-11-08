@@ -5,6 +5,7 @@ SELECT c.gaming_date, c.local_weekday, c.is_weekend,
            SELECT 1 FROM workspace.royale.events e
            WHERE c.gaming_date BETWEEN e.start_date AND e.end_date
              AND e.announced_date < c.gaming_date
+             AND e.announced_date <= DATE '2025-04-30'
        ) AS DOUBLE) AS event_flag
 FROM workspace.royale.calendar_day c
 WHERE c.gaming_date BETWEEN DATE '2025-01-01' AND DATE '2025-06-30';

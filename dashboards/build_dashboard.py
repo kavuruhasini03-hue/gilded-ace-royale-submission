@@ -387,6 +387,23 @@ def player_page():
 
 
 def action_page():
+    allocation = custom("budget-allocation-ai", "cage", [field("spent_usd"), field("kept_usd")], {
+        "transform": [
+            {"fold": ["spent_usd", "kept_usd"], "as": ["part", "amount"]},
+            {"calculate": "datum.spent_usd + datum.kept_usd", "as": "total"},
+            {"calculate": "datum.part === 'spent_usd' ? 'Funded' : 'Reserve'", "as": "allocation"},
+            {"calculate": "datum.amount / datum.total", "as": "share"},
+        ],
+        "mark": {"type": "bar", "stroke": IVORY, "strokeWidth": 1},
+        "encoding": {
+            "x": axis("amount", "quantitative", "July budget", stack="zero", axis={"format": "$~s"}),
+            "color": axis("allocation", "nominal", "Allocation", scale={"domain": ["Funded", "Reserve"], "range": [GOLD, JADE]}),
+            "tooltip": [axis("allocation", "nominal", "Allocation"),
+                        axis("amount", "quantitative", "Amount", format="$,.2f"),
+                        axis("share", "quantitative", "Share", format=".1%")],
+        },
+    }, "The July budget stays mostly in reserve",
+        "The counters above label the funded and reserve amounts. Select a segment for its percentage.", pos(0, 5, 12, 4))
     spread = custom("action-board","actions",[field(k) for k in ("action_type_id","target_label","selected","cash_cost_usd",
                     "expected_net_usd","low_net_usd","high_net_usd")],{
         "transform":[{"calculate":"datum.high_net_usd-datum.low_net_usd","as":"spread"},
@@ -403,7 +420,7 @@ def action_page():
                                axis("low_net_usd","quantitative","Low",format="$,.0f"),
                                axis("high_net_usd","quantitative","High",format="$,.0f")]}
     },"Only the inspection clears the funding screens","Spread measures scenario uncertainty. The vertical scale is symmetric log.",
-    pos(0,5,12,7))
+    pos(0,9,12,7))
     cols=[("action_type_id","Action"),("target_label","Target"),("selected","Funded"),("quantity","Qty"),
           ("cash_cost_usd","Cost",None,MONEY),("lead_days","Lead days"),("operating_days","Post-lead days"),
           ("low_net_usd","Low net",None,MONEY),("expected_net_usd","Base net",None,MONEY),("high_net_usd","High net",None,MONEY),
@@ -413,32 +430,33 @@ def action_page():
         counter("spent","cage","MAX(spent_usd)","Funded in July","M-1158 inspection. Pilot deferred on power.",pos(0,2,4,3)),
         counter("kept","cage","MAX(kept_usd)","Kept in reserve","No move, replacement or staffing package funded.",pos(4,2,4,3)),
         counter("hold-ref","cage","0*MAX(spent_usd)","Hold-only net","The alternative preserves the full $100,000.",pos(8,2,4,3)),
-        spread,
+        allocation, spread,
         table("cage-slip","actions",cols,"The July slip funds $1,200","Net includes catalog costs and any disruption. Information value is a scenario, not July cash.",
-              pos(0,12,12,8),order="CASE WHEN selected THEN 0 ELSE 1 END"),
+              pos(0,16,12,8),order="CASE WHEN selected THEN 0 ELSE 1 END"),
         table("annual-options","annual",[("action_type_id","Action"),("target_label","Target"),("cash_cost_usd","12-month cost",None,MONEY),
               ("expected_net_usd","Base net",None,MONEY),("low_net_usd","Low",None,MONEY),("high_net_usd","High",None,MONEY)],
-              "The bank move and three leases remain on the watchlist","Annual economics do not authorize July funding.",pos(0,20,7,7)),
+              "The bank move and three leases remain on the watchlist","Annual economics do not authorize July funding.",pos(0,24,7,7)),
         table("tech-compare","tech",[("target","Coverage"),("funded_shifts","July shifts"),("package_cost_usd","Cost",None,MONEY),
               ("full_recovery_theo_per_shift","100% theo/shift",None,MONEY)],
-              "Neither shift pays for its package","Saturday wins per shift. Grave yields more total July opportunity.",pos(7,20,5,4)),
+              "Neither shift pays for its package","Saturday wins per shift. Grave yields more total July opportunity.",pos(7,24,5,4)),
         table("tech-sensitivity","tech_sensitivity",[("target_label","Target"),("net_lost_theo_minus_30_pct_usd","−30%",None,MONEY),
               ("expected_net_usd","Base",None,MONEY),("net_lost_theo_plus_30_pct_usd","+30%",None,MONEY)],
-              "Higher hourly theo still leaves staffing underwater","Downtime-value sensitivity. Other action rows are unchanged.",pos(7,24,5,3)))
+              "Higher hourly theo still leaves staffing underwater","Downtime-value sensitivity. Other action rows are unchanged.",pos(7,28,5,3)))
 
 
 def model_page():
     return page("model-room","Model Room",
         text("model-intro","## THE MODEL ROOM\n\nPrioritize Saturday 7–10 p.m. if coverage can clear its cost hurdle."),
-        timeline_chart("model-holdout","forecast","actual_usd",["forecast_usd","baseline_usd"],"The weekday model cuts holdout MAE by 75%",
-                       "Frozen Jan–Apr fits. Shaded area is the 61-day May–Jun holdout.",pos(0,2,12,8),"2025-05-01","2025-07-01",
+        text("cutoff-disclosure", "**Why the primary score changed**\n\nGilded Ace Locals Appreciation Week was announced on May 26, after the April 30 forecast date. We removed it from the forecast, refit through April 30, and scored the frozen May and June forecasts once. Average error fell from $55,270.94 (4.06%) to $51,128.96 (3.84%). The trend model lost because it increased error in April and on the holdout.", 2, 3),
+        timeline_chart("model-holdout","forecast","actual_usd",["forecast_usd","baseline_usd"],"The weekday model cuts holdout MAE by 77%",
+                       "Frozen Jan–Apr fits. Shaded area is the 61-day May–Jun holdout.",pos(0,5,12,8),"2025-05-01","2025-07-01",
                        ["Weekday + flags","Constant baseline"]),
         table("model-score","scores",[("model","Model"),("scored_days","Scored days"),("mae_usd","MAE",None,MONEY),("mape_pct","MAPE (%)")],
-              "MAE fell from $218K to $55K","MAPE is the mean absolute percentage error.",pos(0,10,6,4)),
+              "MAE fell from $218K to $51K","MAPE is the mean absolute percentage error.",pos(0,13,6,4)),
         table("model-residual","residual",[("local_weekday","Weekday"),("model_mean_residual_usd","Mean residual",None,MONEY),
-               ("model_mae_usd","MAE",None,MONEY)],"The model still overpredicts every weekday",
-               "Residual = actual minus forecast. Sunday has the largest average bias.",pos(6,10,6,6)),
-        text("leakage-check","**Leakage checks**\n\nTrain ends Apr 30. Holdout is frozen. Event announcements precede the gaming date. Weather, tourism and realized play are excluded.",16,2))
+               ("model_mae_usd","MAE",None,MONEY)],"Check forecast bias by weekday",
+               "Residual = actual minus forecast. A negative value means the forecast was too high.",pos(6,13,6,6)),
+        text("leakage-check","**Leakage checks**\n\nTrain ends Apr 30. Holdout is frozen. Event announcements must be known by April 30 and precede the gaming date. Weather, tourism and realized play are excluded.",19,2))
 
 
 def dashboard():

@@ -12,7 +12,7 @@ const ratio = (a,b) => b ? a / b : null;
 const colors = ["#e3b850","#6fb6ff","#c79bff","#ff5f57","#ffa24c","#fbf6e9","#5fd39a"];
 const suitColor = label => ({"♦":colors[6],"♣":colors[1],"♥":colors[4],"⚙":colors[2],"♠":colors[0],"🔍":colors[3]})[Array.from(label || "")[0]] ?? colors[5];
 const filters = {start:"2025-01-01",end:"2025-06-30",zone:"",bank:"",tier:"",region:"",age:""};
-let data, pages, active = 0, selectedMachine = "", evidenceMachine = "";
+let data, pages, review, insights, active = 0, selectedMachine = "", evidenceMachine = "";
 const dateIn = value => value && value.slice(0,10) >= filters.start && value.slice(0,10) <= filters.end;
 const machineIn = row => dateIn(row.gaming_date) && (!filters.zone || row.zone_name === filters.zone)
   && (!filters.bank || row.bank_name === filters.bank) && (!selectedMachine || row.machine_id === selectedMachine);
@@ -259,11 +259,15 @@ const layout = {
   leak:["downtime-total","downtime-month","downtime-hour","downtime-maker","fault-hour","leak-heat"],
   players:["player-segments","concentration-curve","top-shares","player-outcomes","net-histogram"],
   comps:["comp-price","comp-rates","points-exposure","comp-weekly","comp-control"],
-  plan:["spent","kept","hold-ref","action-board","cage-slip","annual-options","tech-compare","tech-sensitivity"],
-  model:["model-holdout","model-score","model-residual"],
-  evidence:["claims"]
+  plan:["budget-allocation","unfunded-options","spent","kept","hold-ref","action-board","cage-slip","annual-options","tech-compare","tech-sensitivity"],
+  model:["forecast-review","model-holdout","model-score","model-residual"],
+  evidence:["review-evidence","claims"]
 };
 const extraCopy = {
+  "budget-allocation":["Most of the July budget stays in reserve","The thin slice is the funded inspection. The labels show the amount and share on both sides."],
+  "unfunded-options":["What we chose to leave unfunded","Net value includes cost and the estimated benefit. Pilot and survey values describe what their findings might be worth."],
+  "forecast-review":["A trend checks whether the weekday forecast can handle falling demand","We compared the two ridge models on April, using January through March to fit them. Then we froze the trend forecast through April 30 before checking May and June."],
+  "review-evidence":["The forecast sensitivity leaves the staffing decision unchanged","We repriced the expected recovery using the trend forecast. Even a generous upper bound does not cover the staffing package."],
   "monthly-demand":["Compare wagers per day by month and zone","The table divides total wagers and expected win by the number of gaming dates selected in each month."],
   "demand-bridge":["Weekdays, events and the closure explain part of the change","This floor-wide table separates each month’s wagers per day into its weekday mix, event days, the closure, and everything else."],
   "lasting-gap":["Back Forty had a lasting gap after the closure","This compares January with the weeks after the walkway reopened. It describes what happened, and other changes could also explain the gap."],
@@ -295,7 +299,58 @@ function compTrend(name,title) {
     name==="comp-price" ? [["price","Points per dollar"]] : [["trackedRate","Tracked expected win",percent],
       ...(!selected?[["floorRate","Floor expected win",percent]]:[])],{shade:"2025-05-05"});
 }
+function budgetAllocation() {
+  const spent=sum(stable("actions").filter(row=>row.selected),"cash_cost_usd");
+  const reserve=data.cage[0].kept_usd;
+  const total=spent+reserve, share=100*spent/total;
+  const label=(name,amount)=>name+" "+usd.format(amount)+" ("+(100*amount/total).toFixed(1)+"%)";
+  const funded=label("Funded",spent), kept=label("Reserve",reserve);
+  return '<figure class="budget-allocation" tabindex="0" aria-label="'+escape(funded+". "+kept+". Total "+usd.format(total))+'">'
+    +'<div class="budget-callout">'+escape(funded)+'</div><div class="budget-track" aria-hidden="true">'
+    +'<span style="width:'+share+'%"></span></div><figcaption>'+escape(kept)+' · Total '+usd.format(total)+'</figcaption></figure>';
+}
+function unfundedOptions() {
+  const reasons={
+    "A-TECH-SHIFT":"The expected win recovered by a shorter wait does not cover the staffing cost.",
+    "A-MOVE-BANK":"Test whether the bank position explains the gap before moving the machines.",
+    "A-REPLACE-LEASE":"Keep this on the long-term watchlist. The July estimate does not cover the cost.",
+    "A-COMP-PILOT":"The trial cannot detect a small enough change. Fund it only when the smallest detectable change is at most "+
+      (stable("actions").find(row=>row.action_type_id==="A-COMP-PILOT").success_rule.match(/at most ([\d.]+%)/)?.[1] ?? "the planning threshold")+".",
+    "A-SURVEY":"The expected value of the survey findings does not cover its cost."
+  };
+  const annual=new Map(stable("annual").map(r=>[r.action_type_id+"|"+r.target_id,r]));
+  const rows=stable("actions").filter(r=>!r.selected && reasons[r.action_type_id] && r.target_id!=="GM-BOTTOM-10")
+    .map(r=>({...r,option:r.action_type_id==="A-TECH-SHIFT"?(r.target_id==="Grave"?"Overnight technician shift":"Saturday evening technician shift")
+      :r.action_type_id==="A-REPLACE-LEASE"?"Lease "+r.target_label:r.target_label,
+      annualNet:["A-COMP-PILOT","A-SURVEY"].includes(r.action_type_id)?null:annual.get(r.action_type_id+"|"+r.target_id)?.expected_net_usd,
+      reason:reasons[r.action_type_id]}));
+  return table([metric("option","Option"),metric("cash_cost_usd","July cost",currency),metric("expected_net_usd","July net value",currency),
+    metric("annualNet","12-month net value",currency),metric("reason","Why it stays unfunded")],rows);
+}
+function forecastReview() {
+  const scores=Object.entries(review.holdout).map(([model,values])=>({model,...values}));
+  const bias=Object.entries(review.bias).map(([weekday,values])=>({weekday,...values}));
+  return '<p>April average error was '+usd.format(review.april.current.mae)+' for the current model and '+usd.format(review.april.trend.mae)
+    +' for the trend model. '+(review.promote?'The trend also reduced error in May and June. It qualifies as a candidate to replace the current model.':'The trend did not improve both tests. The current model remains primary.')+'</p>'
+    +table([metric("model","Model"),metric("mae","May–June average dollar error",currency),metric("mape","May–June average percentage error")],scores)
+    +'<p>Positive bias means the forecast was too high. These averages use the same 61 days.</p>'
+    +table([metric("weekday","Weekday"),...scores.map(row=>metric(row.model,row.model,currency))],bias)
+    +'<div class="forecast-disclosure"><h4>Why the primary score changed</h4><p>'+escape(review.disclosure.event)
+    +' was announced on May 26, after the April 30 forecast date. The earlier forecast used it on seven June dates. We removed it, refit the model through April 30, froze the forecasts, and rescored the 61 holdout days once.</p>'
+    +'<p>Earlier score: '+usd.format(review.disclosure.old.mae)+' and '+review.disclosure.old.mape.toFixed(2)+'%. Corrected primary score: '
+    +usd.format(review.holdout["Current ridge"].mae)+' and '+review.holdout["Current ridge"].mape.toFixed(2)
+    +'%. The trend lost because it increased error in April and in May and June.</p></div>';
+}
+function staffingReview() {
+  return table([metric("shift","Coverage"),metric("cost","July package",currency),metric("original_recovery","Original expected recovery",currency),
+    metric("repriced_recovery","With trend",currency),metric("maximum_recovery","Upper bound",currency)],review.tech)
+    +'<p>See the repository evidence ledger for the frozen prediction record and the assumptions behind the recovery estimate.</p>';
+}
 function extra(name,title,rows) {
+  if(name==="budget-allocation") return budgetAllocation();
+  if(name==="unfunded-options") return unfundedOptions();
+  if(name==="forecast-review") return forecastReview();
+  if(name==="review-evidence") return staffingReview();
   const days = stable("floor").filter(r=>dateIn(r.gaming_date));
   const monthDays = new Map(groups(monthRows(days),["month"],{days:"count"}).map(r=>[r.month,r.days]));
   const cash = (key,label) => metric(key,label,currency);
@@ -417,14 +472,16 @@ function render() {
   $("content").innerHTML = '<section class="intro"><p class="muted">'+escape(tab)+'</p><h2><span aria-hidden="true" class="pip'
     +("♥♦".includes(pip)?" red":"")+'">'+pip+'</span>'+escape(title)+'</h2><p>'+escape(description)
     +'</p><p class="muted" id="scope">'+escape(scope)+'</p>'+intro
+    +(slug==="verdict" && insights.length?'<aside class="card strategic"><h3>What to do next</h3>'+insights.map(p=>'<p>'+escape(p)+'</p>').join("")+'</aside>':"")
     +'</section><div class="grid">'
     +layout[slug].map(name=>{
+      if (!review && ["forecast-review","review-evidence"].includes(name)) return "";
       const widget = pages.get(name);
       const [heading,explanation] = copy[name] ?? extraCopy[name];
       let body, cls = "";
       if (!widget) {
         body=extra(name,heading,rows);
-        cls=["monthly-demand","demand-bridge","high-limit","downtime-hour"].includes(name)?" wide":"";
+        cls=["monthly-demand","demand-bridge","high-limit","downtime-hour","budget-allocation","unfunded-options","forecast-review","review-evidence"].includes(name)?" wide":"";
       } else {
         const s = widget.spec, query = widget.queries[0].query;
         if (s.widgetType==="counter") {
@@ -514,6 +571,8 @@ async function start() {
   const response=await fetch("./gold.json");
   if (!response.ok) throw new Error("The Gold export is unavailable.");
   const result=await response.json();
+  review=result.review;
+  insights=result.insights || [];
   pages=new Map(result.pages.flatMap(p=>p.layout).map(({widget})=>[widget.name,widget]));
   data = Object.fromEntries(Object.entries(result.datasets).map(([key,{columns,rows}])=>
     [key,rows.map(row=>Object.fromEntries(columns.map((column,i)=>[column,row[i]])))]));

@@ -49,7 +49,7 @@ def main():
         else:
             params.update({f"weekday_{row[0]}_usd": row[1] for row in parameters})
             params.update(event_effect_usd=parameters[0][2], holiday_effect_usd=parameters[0][3],
-                          flag_ridge_penalty="1.0", event_gate="announced_date < gaming_date")
+                          flag_ridge_penalty="1.0", event_gate="announced_date <= forecast_origin and announced_date < gaming_date")
         payload = {
             "run_id": run_id,
             "params": [{"key": k, "value": str(v)} for k, v in params.items()],
@@ -64,6 +64,8 @@ def main():
             raise
         experiment("update-run", "--run-id", run_id, "--status", "FINISHED",
                    "--end-time", str(int(time.time() * 1000)))
+        if model != "constant_baseline":
+            experiment("set-tag", "--json", json.dumps({"run_id": run_id, "key": "model_role", "value": "primary"}))
         print(f"{model}: experiment {experiment_id}, run {run_id}", flush=True)
 
 

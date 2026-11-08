@@ -86,11 +86,11 @@
 
 ## Model Room
 
-**The weekday forecast cut typical error by 75%.** The team fitted the model through April 30, then scored it on 61 days in May and June. The published scores use that same test period.
+**The weekday forecast cut typical error by 77%.** The team fitted the model through April 30, then scored it on 61 days in May and June. The published scores use that same test period.
 
 - **The weekday forecast tracks daily wagers more closely** The shaded area marks the 61-day test period. Both forecasts were fixed before those results were scored.
-- **Typical error fell from about $218,000 to $55,000** Mean absolute error is the average dollar size of a forecast miss, regardless of direction.
-- **The model still forecasts too high on every weekday** This compares actual wagers with the forecast. Sunday has the largest average overestimate.
+- **Typical error fell from about $218,000 to $51,000** Mean absolute error is the average dollar size of a forecast miss, regardless of direction.
+- **Check forecast bias by weekday** This compares actual wagers with the forecast. A negative value means the forecast was too high.
 
 ## Evidence Vault
 

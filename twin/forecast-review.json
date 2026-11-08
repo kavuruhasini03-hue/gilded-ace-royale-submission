@@ -1,0 +1,94 @@
+{
+  "april": {
+    "current": {
+      "mae": 65286.54436167655,
+      "mape": 4.861916197194095
+    },
+    "trend": {
+      "mae": 68584.75165666557,
+      "mape": 5.193084043538191
+    }
+  },
+  "holdout": {
+    "Constant baseline": {
+      "mae": 218258.09692622945,
+      "mape": 16.42508682947673
+    },
+    "Current ridge": {
+      "mae": 51128.961404669935,
+      "mape": 3.83938819263724
+    },
+    "Ridge with a trend": {
+      "mae": 66519.66415699545,
+      "mape": 4.999451292303027
+    }
+  },
+  "bias": {
+    "Mon": {
+      "Constant baseline": 208469.9619444442,
+      "Current ridge": 19820.06077838097,
+      "Ridge with a trend": 51899.10727110572
+    },
+    "Tue": {
+      "Constant baseline": 310024.4008333331,
+      "Current ridge": 14090.32234727258,
+      "Ridge with a trend": 45097.666452957244
+    },
+    "Wed": {
+      "Constant baseline": 241586.31333333306,
+      "Current ridge": -15109.473634768918,
+      "Ridge with a trend": 16514.167400510865
+    },
+    "Thu": {
+      "Constant baseline": 117681.02305555524,
+      "Current ridge": -1951.0602304986678,
+      "Ridge with a trend": 31483.821051185096
+    },
+    "Fri": {
+      "Constant baseline": -214511.91583333362,
+      "Current ridge": 39447.622370738405,
+      "Ridge with a trend": 71606.86082749994
+    },
+    "Sat": {
+      "Constant baseline": -386538.3158333336,
+      "Current ridge": 32279.20472368016,
+      "Ridge with a trend": 64438.44318044108
+    },
+    "Sun": {
+      "Constant baseline": -19295.949166666975,
+      "Current ridge": 44805.46844916995,
+      "Ridge with a trend": 76964.70690593141
+    }
+  },
+  "origin_flag_differences": 7,
+  "trend_usd_per_week": 2459.5585931676333,
+  "frozen_sha256": "aaa1d86091f2a5facfc9b2acae04c75cf2adec43d2382ca7815d3002e6d54c76",
+  "tech": [
+    {
+      "shift": "Grave",
+      "cost": 11520.0,
+      "original_recovery": 380.907232,
+      "repriced_recovery": 395.2509630989962,
+      "maximum_recovery": 798.13133372778
+    },
+    {
+      "shift": "Saturday evening",
+      "cost": 11520.0,
+      "original_recovery": 131.192115,
+      "repriced_recovery": 134.82584162291775,
+      "maximum_recovery": 270.01248214230964
+    }
+  ],
+  "promote": false,
+  "mlflow_run_id": "cff3756efcee4ce9b896eefe12f54729",
+  "disclosure": {
+    "event": "Gilded Ace Locals Appreciation Week",
+    "announced_on": "2025-05-26",
+    "affected_days": 7,
+    "old": {
+      "mae": 55270.93815152147,
+      "mape": 4.064618115987882
+    }
+  },
+  "primary_run_id": "aa13697e0b5a4a2da3af5f269c2f2393"
+}

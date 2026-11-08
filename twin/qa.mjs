@@ -105,9 +105,22 @@ try {
   assert.equal(await page.getByLabel("Age band").inputValue(),age);
   await page.getByRole("button",{name:"Reset",exact:true}).click();
   await open("model");
-  assert.match(await page.locator("#model-score").innerText(),/55,270\.94/);
+  const forecast=page.locator("#forecast-review");
+  await forecast.waitFor();
+  assert.match(await forecast.innerText(),/66,519\.66/);
+  await forecast.screenshot({path:new URL("model-comparison.png",out).pathname});
+  assert.match(await page.locator("#model-score").innerText(),/51,128\.96/);
   await capture("judge-04-model");
   await open("plan");
+  const allocation=page.locator(".budget-allocation");
+  await allocation.focus();
+  assert.equal(await allocation.evaluate(el=>el===document.activeElement),true);
+  const cage=decode(gold.cage)[0];
+  const currency=new Intl.NumberFormat("en-US",{style:"currency",currency:"USD"});
+  assert.ok((await allocation.innerText()).includes(currency.format(cage.spent_usd)));
+  assert.ok((await allocation.innerText()).includes(currency.format(cage.kept_usd)));
+  assert.equal(await page.locator("#unfunded-options tbody tr").count(),8);
+  await page.locator("#budget-allocation").screenshot({path:new URL("budget-allocation.png",out).pathname});
   const card=page.locator(".plan-card").first();
   await card.click();
   assert.equal(await card.getAttribute("aria-pressed"),"true");
@@ -131,6 +144,9 @@ try {
   await open("verdict");
   assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth),390);
   await capture("mobile",false);
+  await open("plan");
+  assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth),390);
+  await page.locator("#budget-allocation").screenshot({path:new URL("budget-phone.png",out).pathname});
   assert.deepEqual(errors,[]);
   console.log("PASS: exact Gold KPIs, nine views, history and deep links, guest filters, audio preferences, and judge captures.");
 } catch(error){

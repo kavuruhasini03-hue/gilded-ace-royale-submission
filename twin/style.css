@@ -155,3 +155,15 @@ footer {text-align:center;border-color:var(--gold3)}
 }
 
 .house-verdict .verdict-context {margin:9px 0 0;font-weight:500;font-size:.92em}
+
+.budget-allocation {margin:16px 0 3px;padding:10px}
+.budget-allocation:focus-visible {outline:2px solid var(--gold);outline-offset:2px}
+.budget-callout {width:fit-content;padding:6px 10px;border:1px solid var(--gold);border-radius:8px;color:var(--gold2);font-weight:700}
+.budget-callout::after {content:"";display:block;position:absolute;height:10px;border-left:2px solid var(--gold);margin-top:6px}
+.budget-track {height:24px;border:1px solid var(--gold2);border-radius:6px;background:#265a44;overflow:hidden;margin:10px 0}
+.budget-track span {display:block;height:100%;background:repeating-linear-gradient(45deg,var(--gold) 0 4px,var(--gold2) 4px 7px)}
+.budget-allocation figcaption {font-weight:700}
+#unfunded-options td:last-child {min-width:220px}
+#unfunded-options td:first-child {min-width:155px}
+.strategic {margin:18px 0 3px}
+.strategic p+p {margin-top:10px}

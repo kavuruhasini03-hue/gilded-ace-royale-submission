@@ -11,3 +11,4 @@ embed/.env*
 /embed/public/
 /data/
 /submission/.preview.zip
+/twin/.secondary-frozen.json

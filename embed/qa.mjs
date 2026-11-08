@@ -32,7 +32,7 @@ try {
   const pages = ["Pit Boss", "Luck Funnel", "Floor Radar", "High-Roller Ladder", "Cashier’s Cage", "Model Room", "Evidence Vault"];
   const headings = ["Theo captured", "M-1158 warrants a payout check", "Bank positions reveal local clusters",
     "The top tenth generated two-thirds of tracked theo", "The July slip funds $1,200",
-    "The weekday model cuts holdout MAE by 75%", "Every recommendation has an evidence trail"];
+    "The weekday model cuts holdout MAE by 77%", "Every recommendation has an evidence trail"];
 
   async function open(name) {
     await frame.getByText(name, { exact: true }).first().click();
@@ -74,7 +74,7 @@ try {
   await filter("Tier", "Gold");
   await capture("03-tier-gold");
   await open("Model Room");
-  await frame.getByText(/\$55K|\$55\.3K|55,271/).first().waitFor();
+  await frame.getByText(/\$51K|\$51\.1K|51,129/).first().waitFor();
   await capture("04-model-validation");
   await open("Evidence Vault");
   const evidence = frame.getByText(/A-INSPECT.*M-1158/).first();
