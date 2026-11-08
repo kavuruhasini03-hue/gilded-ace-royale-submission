@@ -3718,7 +3718,7 @@
             "name": "evidence-intro",
             "multilineTextboxSpec": {
               "lines": [
-                "## THE EVIDENCE VAULT\n\nTrace each recommendation to the tested alternative and its limitation."
+                "## THE EVIDENCE VAULT\n\nTrace each recommendation to the tested alternative and its limitation.\n\n[Ask the Pit Boss in Genie (workspace sign-in required)](https://dbc-a3bbfca6-850a.cloud.databricks.com/genie/rooms/01f1db4548ec16ee9f10853bb4959656?o=7474653288963289)."
               ]
             }
           },

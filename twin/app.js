@@ -370,7 +370,7 @@ function forecastReview() {
 function staffingReview() {
   return table([metric("shift","Coverage"),metric("cost","July package",currency),metric("original_recovery","Original expected recovery",currency),
     metric("repriced_recovery","With trend",currency),metric("maximum_recovery","Upper bound",currency)],review.tech)
-    +'<p>See the repository evidence ledger for the frozen prediction record and the assumptions behind the recovery estimate.</p>';
+    +'<p>See the repository evidence ledger for the frozen prediction record and the assumptions behind the recovery estimate.</p><p><a href="https://dbc-a3bbfca6-850a.cloud.databricks.com/genie/rooms/01f1db4548ec16ee9f10853bb4959656?o=7474653288963289">Ask the Pit Boss in Databricks Genie (workspace sign-in required)</a>.</p>';
 }
 function extra(name,title,rows) {
   if(name==="budget-allocation") return budgetAllocation();

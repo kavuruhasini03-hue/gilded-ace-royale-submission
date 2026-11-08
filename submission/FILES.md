@@ -1,6 +1,6 @@
 # Public GitHub file list
 
-This clean source package contains 145 files. It omits challenge data, generated exports, local configuration, and credentials.
+This clean source package contains 146 files. It omits challenge data, generated exports, local configuration, and credentials.
 
 ```text
 .gitignore
@@ -40,6 +40,7 @@ databricks/gold/tech_shift_economics.sql
 databricks/gold/twin_daily.sql
 databricks/silver/align_events.sql
 docs/BUDGET_FORECAST_REVIEW.md
+docs/GENIE_VALIDATION.md
 docs/METHODS.md
 docs/PUBLIC_COPY_REVIEW.md
 docs/RECON.md

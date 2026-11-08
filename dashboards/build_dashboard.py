@@ -472,7 +472,7 @@ def dashboard():
     for index,(key,label) in enumerate([("tier_end","Tier"),("home_region","Region"),("age_band","Age band")]):
         filters.append(filter_widget(f"filter-{key}",label,"filter-multi-select",[("segments",key)],index*4,6,4))
     pages = [page("pit-boss","Pit Boss",*board()),luck_page(),floor_page(),player_page(),action_page(),model_page(),
-             page("evidence-vault","Evidence Vault",text("evidence-intro","## THE EVIDENCE VAULT\n\nTrace each recommendation to the tested alternative and its limitation."),
+             page("evidence-vault","Evidence Vault",text("evidence-intro","## THE EVIDENCE VAULT\n\nTrace each recommendation to the tested alternative and its limitation.\n\n[Ask the Pit Boss in Genie (workspace sign-in required)](https://dbc-a3bbfca6-850a.cloud.databricks.com/genie/rooms/01f1db4548ec16ee9f10853bb4959656?o=7474653288963289)."),
                   table("claims","evidence",[("claim","Claim"),("widget","Page"),("evidence","Gold source and SQL"),
                         ("result","Result"),("alternative_tested","Alternative or rule"),("limitation","Limitation")],
                         "Every recommendation has an evidence trail","Information value and closure effects are scenario or descriptive estimates.",

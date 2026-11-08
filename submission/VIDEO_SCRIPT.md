@@ -2,7 +2,7 @@
 
 [Public source repository](https://github.com/kavuruhasini03-hue/gilded-ace-royale-submission)
 
-Open [the public dashboard](https://gilded-ace-royale.vercel.app) in a private window before recording. The target runtime is 1 minute and 55 seconds.
+Open [the public dashboard](https://gilded-ace-royale.vercel.app) in a private window before recording. The target runtime is 2 minutes.
 
 **0:00 to 0:20. Verdict and dates.** Set April 1 through June 30.
 
@@ -20,6 +20,10 @@ Open [the public dashboard](https://gilded-ace-royale.vercel.app) in a private w
 
 > We used only announcements known by April 30 and froze the forecast before scoring May and June. Over those 61 days, the typical error fell from about 218 thousand dollars to 51 thousand dollars.
 
-**1:13 to 1:55. July action and evidence.** Open July Plan and follow the M-1158 link into Evidence Vault.
+**1:13 to 1:45. July action and evidence.** Open July Plan and follow the M-1158 link into Evidence Vault.
 
 > Spend twelve hundred dollars to check the payout meter, game settings, and accounting on M-1158. The inspection has about 785 dollars in estimated net value, but it could turn up nothing. The comp pilot cannot reliably detect a change small enough to guide the decision. Extra technician coverage, a bank move, and replacements do not pay for themselves in July. Keep the remaining 98,800 dollars in reserve.
+
+**1:45 to 2:00. Genie.** Open [Ask the Pit Boss](https://dbc-a3bbfca6-850a.cloud.databricks.com/genie/rooms/01f1db4548ec16ee9f10853bb4959656?o=7474653288963289) from the Evidence Vault in a signed-in tab. Select the July budget question.
+
+> Ask Genie what July funds. Its trusted query reads Gold and confirms one inspection, twelve hundred dollars spent, and 98,800 dollars in reserve.

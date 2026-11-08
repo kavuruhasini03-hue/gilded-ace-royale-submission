@@ -6,7 +6,7 @@ We recommend not replacing any of the ten lowest-earning machines in July. Inste
 
 The primary weekday forecast uses only announcements known by April 30. On the 61-day holdout it missed by $51,129 per day (3.84%), about 77% less than the constant baseline.
 
-The project examines six months at a fictional casino. The interactive dashboard uses figures exported from the Databricks Gold pipeline. Ask the Pit Boss on the Verdict page provides prepared answers without an LLM. [Open the separate Genie space](https://dbc-a3bbfca6-850a.cloud.databricks.com/genie/rooms/01f1db4548ec16ee9f10853bb4959656?o=7474653288963289) for workspace-only questions. It covers machine performance, demand, downtime, tracked play, comps, and the July plan.
+The project examines six months at a fictional casino. The interactive dashboard uses figures exported from the Databricks Gold pipeline. Ask the Pit Boss on the Verdict page provides prepared answers without an LLM. [Open the separate Genie space](https://dbc-a3bbfca6-850a.cloud.databricks.com/genie/rooms/01f1db4548ec16ee9f10853bb4959656?o=7474653288963289) for six curated workspace-only questions about the bottom ten, walkway closure, Ridgeline downtime, the inspection, comp repricing, and the July budget. It covers machine performance, demand, downtime, tracked play, comps, and the July plan.
 
 [Open the public dashboard](https://gilded-ace-royale.vercel.app) · [Open Databricks AI/BI (workspace sign-in required)](https://dbc-a3bbfca6-850a.cloud.databricks.com/dashboardsv3/01f1daeb815914e69b3ef75f86f7d789/published?o=7474653288963289)
 
