@@ -1,0 +1,4378 @@
+{
+  "datasets": [
+    {
+      "name": "machine",
+      "displayName": "Machine",
+      "queryLines": [
+        "SELECT d.*, v.verdict_chip, v.gm_rank, v.adjusted_rank, v.last_zone, v.last_bank_name\n            FROM workspace.royale.gold_machine_day d JOIN workspace.royale.gold_machine_verdict v USING (machine_id)"
+      ]
+    },
+    {
+      "name": "adjusted",
+      "displayName": "Adjusted",
+      "queryLines": [
+        "SELECT * FROM workspace.royale.gold_adjusted_bottom10"
+      ]
+    },
+    {
+      "name": "comparison",
+      "displayName": "Comparison",
+      "queryLines": [
+        "SELECT machine_id, theo_usd, house_win_usd, verdict_chip, gm_rank, adjusted_rank\n            FROM workspace.royale.gold_machine_verdict WHERE gm_rank<=10 OR adjusted_rank<=10"
+      ]
+    },
+    {
+      "name": "rank",
+      "displayName": "Rank",
+      "queryLines": [
+        "SELECT * FROM workspace.royale.gold_bottom10_mean_reversion WHERE gm_rank<=10"
+      ]
+    },
+    {
+      "name": "floor",
+      "displayName": "Floor",
+      "queryLines": [
+        "SELECT * FROM workspace.royale.gold_kpi_header"
+      ]
+    },
+    {
+      "name": "traffic",
+      "displayName": "Traffic",
+      "queryLines": [
+        "SELECT *, CASE zone_id\n            WHEN 'Z-B40' THEN 'Back Forty' WHEN 'Z-BAR' THEN 'Bar Row' WHEN 'Z-ENT' THEN 'Main Entrance'\n            WHEN 'Z-GAR' THEN 'Garage Entrance' WHEN 'Z-HL' THEN 'High-Limit Room'\n            WHEN 'Z-HTL' THEN 'Hotel Corridor' WHEN 'Z-PIT' THEN 'Center Pit' END AS zone_name\n            FROM workspace.royale.gold_zone_gaming_hour"
+      ]
+    },
+    {
+      "name": "walkway",
+      "displayName": "Walkway",
+      "queryLines": [
+        "SELECT *, CASE phase WHEN 'pre' THEN '1 Before' WHEN 'closure' THEN '2 Closed'\n            ELSE '3 After' END AS period FROM workspace.royale.gold_walkway_did"
+      ]
+    },
+    {
+      "name": "demand",
+      "displayName": "Demand",
+      "queryLines": [
+        "SELECT d.*, f.forecast_usd, f.split FROM workspace.royale.gold_demand_context_day d\n            JOIN workspace.royale.gold_forecast_day f USING (gaming_date)"
+      ]
+    },
+    {
+      "name": "zones",
+      "displayName": "Zones",
+      "queryLines": [
+        "SELECT * FROM workspace.royale.gold_zone_other_bridge"
+      ]
+    },
+    {
+      "name": "fault",
+      "displayName": "Fault",
+      "queryLines": [
+        "SELECT * FROM workspace.royale.gold_downtime_ticket WHERE event_type='fault_repair'"
+      ]
+    },
+    {
+      "name": "concentration",
+      "displayName": "Concentration",
+      "queryLines": [
+        "SELECT * FROM workspace.royale.gold_concentration"
+      ]
+    },
+    {
+      "name": "ladder",
+      "displayName": "Ladder",
+      "queryLines": [
+        "SELECT player_rank,cumulative_player_share,cumulative_theo_share,cumulative_coin_in_share\n            FROM workspace.royale.gold_lorenz WHERE PMOD(player_rank,400)=0 OR player_rank IN (1,1138,11389,113890)"
+      ]
+    },
+    {
+      "name": "segments",
+      "displayName": "Segments",
+      "queryLines": [
+        "SELECT *, TO_DATE(CONCAT(period_month,'-01')) AS gaming_date\n            FROM workspace.royale.gold_player_decile_month"
+      ]
+    },
+    {
+      "name": "outcomes",
+      "displayName": "Outcomes",
+      "queryLines": [
+        "SELECT * FROM workspace.royale.gold_player_outcome_split"
+      ]
+    },
+    {
+      "name": "hist",
+      "displayName": "Hist",
+      "queryLines": [
+        "SELECT bin_id, CASE bin_id WHEN 0 THEN '0 No tracked gaming' WHEN 1 THEN '1 Below −$1,000'\n            WHEN 2 THEN '2 −$1,000 to −$100' WHEN 3 THEN '3 Loss under $100' WHEN 4 THEN '4 Exactly zero'\n            WHEN 5 THEN '5 Win up to $100' WHEN 6 THEN '6 $100 to $1,000' ELSE '7 Above $1,000' END AS band,\n            observations, player_net_usd FROM workspace.royale.gold_player_net_histogram WHERE period='Jan–Jun'"
+      ]
+    },
+    {
+      "name": "comps",
+      "displayName": "Comps",
+      "queryLines": [
+        "SELECT *, valuation_date AS gaming_date FROM workspace.royale.gold_comp_week"
+      ]
+    },
+    {
+      "name": "control",
+      "displayName": "Control",
+      "queryLines": [
+        "SELECT * FROM workspace.royale.gold_comp_control_effect"
+      ]
+    },
+    {
+      "name": "points",
+      "displayName": "Points",
+      "queryLines": [
+        "SELECT * FROM workspace.royale.gold_points_liability_bridge"
+      ]
+    },
+    {
+      "name": "actions",
+      "displayName": "Actions",
+      "queryLines": [
+        "SELECT * FROM workspace.royale.gold_action_plan WHERE horizon_days=30"
+      ]
+    },
+    {
+      "name": "annual",
+      "displayName": "Annual",
+      "queryLines": [
+        "SELECT * FROM workspace.royale.gold_action_plan WHERE horizon_days=365"
+      ]
+    },
+    {
+      "name": "tech_sensitivity",
+      "displayName": "Tech Sensitivity",
+      "queryLines": [
+        "SELECT * FROM workspace.royale.gold_action_plan WHERE horizon_days=30 AND action_type_id IN ('A-TECH-SHIFT','A-PREVENTIVE')"
+      ]
+    },
+    {
+      "name": "cage",
+      "displayName": "Cage",
+      "queryLines": [
+        "SELECT * FROM workspace.royale.gold_cage_slip"
+      ]
+    },
+    {
+      "name": "tech",
+      "displayName": "Tech",
+      "queryLines": [
+        "SELECT * FROM workspace.royale.gold_tech_shift_economics WHERE horizon_days=30"
+      ]
+    },
+    {
+      "name": "forecast",
+      "displayName": "Forecast",
+      "queryLines": [
+        "SELECT * FROM workspace.royale.gold_forecast_day"
+      ]
+    },
+    {
+      "name": "scores",
+      "displayName": "Scores",
+      "queryLines": [
+        "SELECT * FROM workspace.royale.gold_forecast_holdout_metrics"
+      ]
+    },
+    {
+      "name": "residual",
+      "displayName": "Residual",
+      "queryLines": [
+        "SELECT * FROM workspace.royale.gold_forecast_weekday_residual"
+      ]
+    },
+    {
+      "name": "evidence",
+      "displayName": "Evidence",
+      "queryLines": [
+        "SELECT * FROM workspace.royale.gold_claims_evidence"
+      ]
+    }
+  ],
+  "pages": [
+    {
+      "name": "pit-boss",
+      "displayName": "Pit Boss",
+      "layout": [
+        {
+          "widget": {
+            "name": "verdict",
+            "multilineTextboxSpec": {
+              "lines": [
+                "## Replace none of the GM’s bottom ten in July, inspect M-1158, defer the underpowered comp pilot, and keep $98,800 in reserve.\n\n**THE GILDED ACE · EYE IN THE SKY** · Fictional casino · Jan–Jun 2025 evidence\n\n**Comp monitoring:** review comp pricing and tracked play if cost exceeds 1.50% of tracked theo for two consecutive complete gaming weeks.\n\n**Pilot power:** the 60-day MDE is larger in dollars ($7.61 vs $4.15) but smaller as a share (5.77% vs 6.44%) because the baseline contribution accumulates over more days."
+              ]
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 0,
+            "width": 12,
+            "height": 5
+          }
+        },
+        {
+          "widget": {
+            "name": "health",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "machine",
+                  "fields": [
+                    {
+                      "name": "value",
+                      "expression": "SUM(theo_usd)/NULLIF(SUM(theo_usd + leak_usd + location_opportunity_usd),0)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "value",
+                  "displayName": "Theo captured",
+                  "format": {
+                    "type": "number-percent",
+                    "decimalPlaces": {
+                      "type": "max",
+                      "places": 2
+                    }
+                  }
+                }
+              },
+              "frame": {
+                "title": "Theo captured",
+                "showTitle": true,
+                "description": "Health versus the best observed zone factor after leak.",
+                "showDescription": true
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 5,
+            "width": 2,
+            "height": 3
+          }
+        },
+        {
+          "widget": {
+            "name": "coin",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "machine",
+                  "fields": [
+                    {
+                      "name": "value",
+                      "expression": "SUM(coin_in_usd)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "value",
+                  "displayName": "Coin-in",
+                  "format": {
+                    "type": "number-currency",
+                    "currencyCode": "USD",
+                    "abbreviation": "compact"
+                  }
+                }
+              },
+              "frame": {
+                "title": "Coin-in",
+                "showTitle": true,
+                "description": "Total wagers in the current slice.",
+                "showDescription": true
+              }
+            }
+          },
+          "position": {
+            "x": 2,
+            "y": 5,
+            "width": 2,
+            "height": 3
+          }
+        },
+        {
+          "widget": {
+            "name": "hold",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "machine",
+                  "fields": [
+                    {
+                      "name": "value",
+                      "expression": "SUM(house_win_usd)/NULLIF(SUM(coin_in_usd),0)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "value",
+                  "displayName": "Actual hold",
+                  "format": {
+                    "type": "number-percent",
+                    "decimalPlaces": {
+                      "type": "max",
+                      "places": 2
+                    }
+                  }
+                }
+              },
+              "frame": {
+                "title": "Actual hold",
+                "showTitle": true,
+                "description": "House win divided by wagers.",
+                "showDescription": true
+              }
+            }
+          },
+          "position": {
+            "x": 4,
+            "y": 5,
+            "width": 2,
+            "height": 3
+          }
+        },
+        {
+          "widget": {
+            "name": "theo-hold",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "machine",
+                  "fields": [
+                    {
+                      "name": "value",
+                      "expression": "SUM(theo_usd)/NULLIF(SUM(coin_in_usd),0)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "value",
+                  "displayName": "Theo hold",
+                  "format": {
+                    "type": "number-percent",
+                    "decimalPlaces": {
+                      "type": "max",
+                      "places": 2
+                    }
+                  }
+                }
+              },
+              "frame": {
+                "title": "Theo hold",
+                "showTitle": true,
+                "description": "Expected win divided by wagers.",
+                "showDescription": true
+              }
+            }
+          },
+          "position": {
+            "x": 6,
+            "y": 5,
+            "width": 2,
+            "height": 3
+          }
+        },
+        {
+          "widget": {
+            "name": "luck",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "machine",
+                  "fields": [
+                    {
+                      "name": "value",
+                      "expression": "SUM(luck_residual_usd)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "value",
+                  "displayName": "Luck residual",
+                  "format": {
+                    "type": "number-currency",
+                    "currencyCode": "USD",
+                    "abbreviation": "compact"
+                  }
+                }
+              },
+              "frame": {
+                "title": "Luck residual",
+                "showTitle": true,
+                "description": "Actual win less expected win.",
+                "showDescription": true
+              }
+            }
+          },
+          "position": {
+            "x": 8,
+            "y": 5,
+            "width": 2,
+            "height": 3
+          }
+        },
+        {
+          "widget": {
+            "name": "leak",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "machine",
+                  "fields": [
+                    {
+                      "name": "value",
+                      "expression": "SUM(leak_usd)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "value",
+                  "displayName": "Theo lost to downtime",
+                  "format": {
+                    "type": "number-currency",
+                    "currencyCode": "USD",
+                    "abbreviation": "compact"
+                  }
+                }
+              },
+              "frame": {
+                "title": "Theo lost to downtime",
+                "showTitle": true,
+                "description": "Hour-weighted opportunity.",
+                "showDescription": true
+              }
+            }
+          },
+          "position": {
+            "x": 10,
+            "y": 5,
+            "width": 2,
+            "height": 3
+          }
+        },
+        {
+          "widget": {
+            "name": "comp-kpi",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "floor",
+                  "fields": [
+                    {
+                      "name": "value",
+                      "expression": "SUM(comp_cost_usd)/NULLIF(SUM(tracked_theo_usd),0)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "value",
+                  "displayName": "Comp reinvestment",
+                  "format": {
+                    "type": "number-percent",
+                    "decimalPlaces": {
+                      "type": "max",
+                      "places": 2
+                    }
+                  }
+                }
+              },
+              "frame": {
+                "title": "Comp reinvestment",
+                "showTitle": true,
+                "description": "Tracked theo denominator. Floor-wide, date filter only.",
+                "showDescription": true
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 8,
+            "width": 4,
+            "height": 3
+          }
+        },
+        {
+          "widget": {
+            "name": "sigma-kpi",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "machine",
+                  "fields": [
+                    {
+                      "name": "value",
+                      "expression": "SUM(luck_residual_usd)/NULLIF(SQRT(SUM(luck_variance_usd2)),0)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "value",
+                  "displayName": "Luck z-score"
+                }
+              },
+              "frame": {
+                "title": "Luck z-score",
+                "showTitle": true,
+                "description": "A magnitude under 2 is within the two-sigma screen.",
+                "showDescription": true
+              }
+            }
+          },
+          "position": {
+            "x": 4,
+            "y": 8,
+            "width": 4,
+            "height": 3
+          }
+        },
+        {
+          "widget": {
+            "name": "cash-kept",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "cage",
+                  "fields": [
+                    {
+                      "name": "value",
+                      "expression": "MAX(kept_usd)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "value",
+                  "displayName": "Kept in the cage",
+                  "format": {
+                    "type": "number-currency",
+                    "currencyCode": "USD",
+                    "abbreviation": "compact"
+                  }
+                }
+              },
+              "frame": {
+                "title": "Kept in the cage",
+                "showTitle": true,
+                "description": "July plan is a fixed decision snapshot.",
+                "showDescription": true
+              }
+            }
+          },
+          "position": {
+            "x": 8,
+            "y": 8,
+            "width": 4,
+            "height": 3
+          }
+        },
+        {
+          "widget": {
+            "name": "tribunal",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "machine",
+                  "fields": [
+                    {
+                      "name": "machine_id",
+                      "expression": "`machine_id`"
+                    },
+                    {
+                      "name": "gm_rank",
+                      "expression": "`gm_rank`"
+                    },
+                    {
+                      "name": "last_bank_name",
+                      "expression": "`last_bank_name`"
+                    },
+                    {
+                      "name": "verdict_chip",
+                      "expression": "`verdict_chip`"
+                    },
+                    {
+                      "name": "win",
+                      "expression": "SUM(house_win_usd)"
+                    }
+                  ],
+                  "disaggregated": false,
+                  "orders": [
+                    {
+                      "direction": "ASC",
+                      "expression": "`gm_rank`"
+                    }
+                  ]
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "widgetType": "table",
+              "encodings": {
+                "columns": [
+                  {
+                    "fieldName": "machine_id",
+                    "displayName": "Machine"
+                  },
+                  {
+                    "fieldName": "gm_rank",
+                    "displayName": "GM rank"
+                  },
+                  {
+                    "fieldName": "last_bank_name",
+                    "displayName": "Last bank"
+                  },
+                  {
+                    "fieldName": "verdict_chip",
+                    "displayName": "Verdict"
+                  },
+                  {
+                    "fieldName": "win",
+                    "displayName": "Win in slice",
+                    "format": {
+                      "type": "number-currency",
+                      "currencyCode": "USD",
+                      "abbreviation": "compact"
+                    }
+                  }
+                ]
+              },
+              "frame": {
+                "title": "The GM’s raw list starts with exposure and lineup",
+                "showTitle": true,
+                "description": "Select a machine row to focus the shared bridge. Rank is Jan–Jun.",
+                "showDescription": true
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 11,
+            "width": 6,
+            "height": 7
+          }
+        },
+        {
+          "widget": {
+            "name": "bridge",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "machine",
+                  "fields": [
+                    {
+                      "name": "potential",
+                      "expression": "SUM(potential_theo_usd)"
+                    },
+                    {
+                      "name": "leak",
+                      "expression": "SUM(-leak_usd)"
+                    },
+                    {
+                      "name": "location",
+                      "expression": "SUM(location_usd)"
+                    },
+                    {
+                      "name": "lineup",
+                      "expression": "SUM(lineup_usd)"
+                    },
+                    {
+                      "name": "machine_effect",
+                      "expression": "SUM(machine_specific_usd)"
+                    },
+                    {
+                      "name": "theo",
+                      "expression": "SUM(theo_usd)"
+                    },
+                    {
+                      "name": "luck",
+                      "expression": "SUM(luck_residual_usd)"
+                    },
+                    {
+                      "name": "actual",
+                      "expression": "SUM(house_win_usd)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 1,
+              "widgetType": "custom-vega-viz",
+              "data": {
+                "queryName": "main_query"
+              },
+              "encodings": {
+                "fields": [
+                  {
+                    "fieldName": "potential"
+                  },
+                  {
+                    "fieldName": "leak"
+                  },
+                  {
+                    "fieldName": "location"
+                  },
+                  {
+                    "fieldName": "lineup"
+                  },
+                  {
+                    "fieldName": "machine_effect"
+                  },
+                  {
+                    "fieldName": "theo"
+                  },
+                  {
+                    "fieldName": "luck"
+                  },
+                  {
+                    "fieldName": "actual"
+                  }
+                ]
+              },
+              "jsonSpec": {
+                "type": "vega-lite",
+                "spec": "{\"$schema\":\"https://vega.github.io/schema/vega-lite/v6.json\",\"data\":{\"name\":\"databricks_query\"},\"width\":\"container\",\"height\":\"container\",\"background\":\"transparent\",\"config\":{\"autosize\":{\"type\":\"fit\",\"contains\":\"padding\"},\"view\":{\"stroke\":null},\"axis\":{\"labelColor\":\"#9FAEA6\",\"titleColor\":\"#EDE6D3\",\"gridColor\":\"#24443A\",\"domainColor\":\"#24443A\"},\"legend\":{\"labelColor\":\"#EDE6D3\",\"titleColor\":\"#EDE6D3\"}},\"transform\":[{\"fold\":[\"potential\",\"leak\",\"location\",\"lineup\",\"machine_effect\",\"theo\",\"luck\",\"actual\"],\"as\":[\"step\",\"amount\"]},{\"calculate\":\"indexof([\\\"potential\\\", \\\"leak\\\", \\\"location\\\", \\\"lineup\\\", \\\"machine_effect\\\", \\\"theo\\\", \\\"luck\\\", \\\"actual\\\"], datum.step)\",\"as\":\"idx\"},{\"calculate\":\"datum.step === 'theo' || datum.step === 'actual' ? 0 : datum.amount\",\"as\":\"delta\"},{\"window\":[{\"op\":\"sum\",\"field\":\"delta\",\"as\":\"running\"}],\"sort\":[{\"field\":\"idx\"}]},{\"calculate\":\"datum.step === 'theo' || datum.step === 'actual' ? 0 : datum.running-datum.delta\",\"as\":\"start\"},{\"calculate\":\"datum.step === 'theo' || datum.step === 'actual' ? datum.amount : datum.running\",\"as\":\"end\"},{\"calculate\":\"[\\\"Potential\\\", \\\"♥ LEAK\\\", \\\"♣ LOCATION\\\", \\\"⚙ LINEUP\\\", \\\"♠ Machine-specific\\\", \\\"Theo\\\", \\\"♦ LUCK\\\", \\\"Actual\\\"][datum.idx]\",\"as\":\"label\"}],\"mark\":{\"type\":\"bar\",\"cornerRadius\":2},\"encoding\":{\"y\":{\"field\":\"label\",\"type\":\"ordinal\",\"sort\":[\"Potential\",\"♥ LEAK\",\"♣ LOCATION\",\"⚙ LINEUP\",\"♠ Machine-specific\",\"Theo\",\"♦ LUCK\",\"Actual\"]},\"x\":{\"field\":\"start\",\"type\":\"quantitative\",\"title\":\"USD\",\"axis\":{\"format\":\"$~s\"}},\"x2\":{\"field\":\"end\"},\"color\":{\"field\":\"label\",\"type\":\"nominal\",\"scale\":{\"domain\":[\"Potential\",\"♥ LEAK\",\"♣ LOCATION\",\"⚙ LINEUP\",\"♠ Machine-specific\",\"Theo\",\"♦ LUCK\",\"Actual\"],\"range\":[\"#8A9690\",\"#FF5A6E\",\"#3FD6E0\",\"#C9A66B\",\"#F4F1EA\",\"#8A9690\",\"#B48CFF\",\"#38D39F\"]},\"legend\":null},\"tooltip\":[{\"field\":\"label\",\"type\":\"nominal\",\"title\":\"Component\"},{\"field\":\"amount\",\"type\":\"quantitative\",\"title\":\"USD\",\"format\":\"$,.0f\"}]}}"
+              },
+              "frame": {
+                "title": "The 4-L bridge closes to actual win",
+                "showTitle": true,
+                "description": "Start at potential, subtract leak, add signed drivers and then luck.",
+                "showDescription": true
+              }
+            }
+          },
+          "position": {
+            "x": 6,
+            "y": 11,
+            "width": 6,
+            "height": 7
+          }
+        },
+        {
+          "widget": {
+            "name": "adjusted",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "adjusted",
+                  "fields": [
+                    {
+                      "name": "adjusted_rank",
+                      "expression": "`adjusted_rank`"
+                    },
+                    {
+                      "name": "machine_id",
+                      "expression": "`machine_id`"
+                    },
+                    {
+                      "name": "last_bank_name",
+                      "expression": "`last_bank_name`"
+                    },
+                    {
+                      "name": "verdict_chip",
+                      "expression": "`verdict_chip`"
+                    },
+                    {
+                      "name": "floor_days",
+                      "expression": "`floor_days`"
+                    },
+                    {
+                      "name": "net_benefit_12m_usd",
+                      "expression": "`net_benefit_12m_usd`"
+                    },
+                    {
+                      "name": "payback_month",
+                      "expression": "`payback_month`"
+                    }
+                  ],
+                  "disaggregated": true,
+                  "orders": [
+                    {
+                      "direction": "ASC",
+                      "expression": "`adjusted_rank`"
+                    }
+                  ]
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "widgetType": "table",
+              "encodings": {
+                "columns": [
+                  {
+                    "fieldName": "adjusted_rank",
+                    "displayName": "Rank"
+                  },
+                  {
+                    "fieldName": "machine_id",
+                    "displayName": "Machine"
+                  },
+                  {
+                    "fieldName": "last_bank_name",
+                    "displayName": "Bank"
+                  },
+                  {
+                    "fieldName": "verdict_chip",
+                    "displayName": "Verdict"
+                  },
+                  {
+                    "fieldName": "floor_days",
+                    "displayName": "Floor days"
+                  },
+                  {
+                    "fieldName": "net_benefit_12m_usd",
+                    "displayName": "12-month net",
+                    "format": {
+                      "type": "number-currency",
+                      "currencyCode": "USD",
+                      "abbreviation": "compact"
+                    }
+                  },
+                  {
+                    "fieldName": "payback_month",
+                    "displayName": "Payback month"
+                  }
+                ]
+              },
+              "frame": {
+                "title": "The adjusted list identifies three long-term candidates",
+                "showTitle": true,
+                "description": "Full-window ranks and lease economics. None clears the July screen.",
+                "showDescription": true
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 18,
+            "width": 12,
+            "height": 6
+          }
+        },
+        {
+          "widget": {
+            "name": "cage-overview",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "cage",
+                  "fields": [
+                    {
+                      "name": "spent_usd",
+                      "expression": "`spent_usd`"
+                    },
+                    {
+                      "name": "kept_usd",
+                      "expression": "`kept_usd`"
+                    },
+                    {
+                      "name": "funded_action_types",
+                      "expression": "`funded_action_types`"
+                    }
+                  ],
+                  "disaggregated": true
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "widgetType": "table",
+              "encodings": {
+                "columns": [
+                  {
+                    "fieldName": "spent_usd",
+                    "displayName": "Funded",
+                    "format": {
+                      "type": "number-currency",
+                      "currencyCode": "USD",
+                      "abbreviation": "compact"
+                    }
+                  },
+                  {
+                    "fieldName": "kept_usd",
+                    "displayName": "Kept",
+                    "format": {
+                      "type": "number-currency",
+                      "currencyCode": "USD",
+                      "abbreviation": "compact"
+                    }
+                  },
+                  {
+                    "fieldName": "funded_action_types",
+                    "displayName": "Funded types"
+                  }
+                ]
+              },
+              "frame": {
+                "title": "One inspection, no July replacements",
+                "showTitle": true,
+                "description": "See the Evidence Vault for assumptions and alternative explanations.",
+                "showDescription": true
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 24,
+            "width": 12,
+            "height": 3
+          }
+        }
+      ],
+      "layoutVersion": "GRID_V1",
+      "pageType": "PAGE_TYPE_CANVAS"
+    },
+    {
+      "name": "luck-funnel",
+      "displayName": "Luck Funnel",
+      "layout": [
+        {
+          "widget": {
+            "name": "luck-intro",
+            "multilineTextboxSpec": {
+              "lines": [
+                "## THE LUCK FUNNEL\n\nSeparate meter variation from a repeatable performance gap."
+              ]
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 0,
+            "width": 12,
+            "height": 2
+          }
+        },
+        {
+          "widget": {
+            "name": "luck-funnel",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "machine",
+                  "fields": [
+                    {
+                      "name": "machine_id",
+                      "expression": "`machine_id`"
+                    },
+                    {
+                      "name": "verdict_chip",
+                      "expression": "`verdict_chip`"
+                    },
+                    {
+                      "name": "gm_rank",
+                      "expression": "`gm_rank`"
+                    },
+                    {
+                      "name": "sigma",
+                      "expression": "SQRT(SUM(luck_variance_usd2))"
+                    },
+                    {
+                      "name": "luck",
+                      "expression": "SUM(luck_residual_usd)"
+                    },
+                    {
+                      "name": "hours",
+                      "expression": "SUM(available_hours)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 1,
+              "widgetType": "custom-vega-viz",
+              "data": {
+                "queryName": "main_query"
+              },
+              "encodings": {
+                "fields": [
+                  {
+                    "fieldName": "machine_id"
+                  },
+                  {
+                    "fieldName": "verdict_chip"
+                  },
+                  {
+                    "fieldName": "gm_rank"
+                  },
+                  {
+                    "fieldName": "sigma"
+                  },
+                  {
+                    "fieldName": "luck"
+                  },
+                  {
+                    "fieldName": "hours"
+                  }
+                ]
+              },
+              "jsonSpec": {
+                "type": "vega-lite",
+                "spec": "{\"$schema\":\"https://vega.github.io/schema/vega-lite/v6.json\",\"data\":{\"name\":\"databricks_query\"},\"width\":\"container\",\"height\":\"container\",\"background\":\"transparent\",\"config\":{\"autosize\":{\"type\":\"fit\",\"contains\":\"padding\"},\"view\":{\"stroke\":null},\"axis\":{\"labelColor\":\"#9FAEA6\",\"titleColor\":\"#EDE6D3\",\"gridColor\":\"#24443A\",\"domainColor\":\"#24443A\"},\"legend\":{\"labelColor\":\"#EDE6D3\",\"titleColor\":\"#EDE6D3\"}},\"layer\":[{\"transform\":[{\"calculate\":\"[-3,-2,2,3]\",\"as\":\"bounds\"},{\"flatten\":[\"bounds\"],\"as\":[\"k\"]},{\"calculate\":\"datum.k*datum.sigma\",\"as\":\"bound_usd\"}],\"mark\":{\"type\":\"line\",\"color\":\"#8A9690\",\"opacity\":0.65},\"encoding\":{\"x\":{\"field\":\"sigma\",\"type\":\"quantitative\",\"title\":\"Expected sigma ($)\",\"axis\":{\"format\":\"$~s\"}},\"y\":{\"field\":\"bound_usd\",\"type\":\"quantitative\",\"title\":\"Luck residual ($)\",\"axis\":{\"format\":\"$~s\"}},\"detail\":{\"field\":\"k\",\"type\":\"nominal\"},\"strokeDash\":{\"field\":\"k\",\"type\":\"nominal\",\"legend\":null}}},{\"mark\":{\"type\":\"point\",\"filled\":true,\"opacity\":0.78},\"encoding\":{\"x\":{\"field\":\"sigma\",\"type\":\"quantitative\",\"title\":\"Expected sigma ($)\",\"axis\":{\"format\":\"$~s\"}},\"y\":{\"field\":\"luck\",\"type\":\"quantitative\",\"title\":\"Luck residual ($)\",\"axis\":{\"format\":\"$~s\"}},\"color\":{\"field\":\"verdict_chip\",\"type\":\"nominal\",\"title\":\"Verdict\",\"scale\":{\"domain\":[\"♦ LUCK\",\"♣ LOCATION\",\"♥ LEAK\",\"⚙ LINEUP\",\"♠ REPLACE (long-term candidate)\",\"🔍 INSPECT\"],\"range\":[\"#B48CFF\",\"#3FD6E0\",\"#FF5A6E\",\"#C9A66B\",\"#F4F1EA\",\"#D4AF37\"]}},\"size\":{\"field\":\"hours\",\"type\":\"quantitative\",\"title\":\"Available hours\",\"legend\":null},\"stroke\":{\"condition\":{\"test\":\"datum.gm_rank <= 10\",\"value\":\"#D4AF37\"},\"value\":null},\"tooltip\":[{\"field\":\"machine_id\",\"type\":\"nominal\",\"title\":\"Machine\"},{\"field\":\"verdict_chip\",\"type\":\"nominal\",\"title\":\"Verdict\"},{\"field\":\"sigma\",\"type\":\"quantitative\",\"title\":\"Sigma\",\"format\":\"$,.0f\"},{\"field\":\"luck\",\"type\":\"quantitative\",\"title\":\"Luck\",\"format\":\"$,.0f\"}]}}]}"
+              },
+              "frame": {
+                "title": "M-1158 warrants a payout check",
+                "showTitle": true,
+                "description": "Luck alone is unlikely (adjusted p = 0.0015), but only 34% is modeled as real and fixable because meter or accounting effects, resolved issues and non-fixable causes remain possible.",
+                "showDescription": true
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 2,
+            "width": 12,
+            "height": 8
+          }
+        },
+        {
+          "widget": {
+            "name": "actual-theo",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "comparison",
+                  "fields": [
+                    {
+                      "name": "machine_id",
+                      "expression": "`machine_id`"
+                    },
+                    {
+                      "name": "theo_usd",
+                      "expression": "`theo_usd`"
+                    },
+                    {
+                      "name": "house_win_usd",
+                      "expression": "`house_win_usd`"
+                    },
+                    {
+                      "name": "verdict_chip",
+                      "expression": "`verdict_chip`"
+                    }
+                  ],
+                  "disaggregated": true
+                }
+              }
+            ],
+            "spec": {
+              "version": 1,
+              "widgetType": "custom-vega-viz",
+              "data": {
+                "queryName": "main_query"
+              },
+              "encodings": {
+                "fields": [
+                  {
+                    "fieldName": "machine_id"
+                  },
+                  {
+                    "fieldName": "theo_usd"
+                  },
+                  {
+                    "fieldName": "house_win_usd"
+                  },
+                  {
+                    "fieldName": "verdict_chip"
+                  }
+                ]
+              },
+              "jsonSpec": {
+                "type": "vega-lite",
+                "spec": "{\"$schema\":\"https://vega.github.io/schema/vega-lite/v6.json\",\"data\":{\"name\":\"databricks_query\"},\"width\":\"container\",\"height\":\"container\",\"background\":\"transparent\",\"config\":{\"autosize\":{\"type\":\"fit\",\"contains\":\"padding\"},\"view\":{\"stroke\":null},\"axis\":{\"labelColor\":\"#9FAEA6\",\"titleColor\":\"#EDE6D3\",\"gridColor\":\"#24443A\",\"domainColor\":\"#24443A\"},\"legend\":{\"labelColor\":\"#EDE6D3\",\"titleColor\":\"#EDE6D3\"}},\"layer\":[{\"mark\":{\"type\":\"rule\",\"color\":\"#8A9690\"},\"encoding\":{\"y\":{\"field\":\"machine_id\",\"type\":\"nominal\",\"title\":\"Machine\"},\"x\":{\"field\":\"theo_usd\",\"type\":\"quantitative\",\"title\":\"Win ($)\"},\"x2\":{\"field\":\"house_win_usd\"}}},{\"mark\":{\"type\":\"point\",\"filled\":true,\"color\":\"#8A9690\"},\"encoding\":{\"y\":{\"field\":\"machine_id\",\"type\":\"nominal\"},\"x\":{\"field\":\"theo_usd\",\"type\":\"quantitative\"}}},{\"mark\":{\"type\":\"point\",\"filled\":true},\"encoding\":{\"y\":{\"field\":\"machine_id\",\"type\":\"nominal\"},\"x\":{\"field\":\"house_win_usd\",\"type\":\"quantitative\"},\"color\":{\"field\":\"verdict_chip\",\"type\":\"nominal\",\"title\":\"Verdict\",\"scale\":{\"domain\":[\"♦ LUCK\",\"♣ LOCATION\",\"♥ LEAK\",\"⚙ LINEUP\",\"♠ REPLACE (long-term candidate)\",\"🔍 INSPECT\"],\"range\":[\"#B48CFF\",\"#3FD6E0\",\"#FF5A6E\",\"#C9A66B\",\"#F4F1EA\",\"#D4AF37\"]},\"legend\":null}}}]}"
+              },
+              "frame": {
+                "title": "Actual win can miss theo by a wide margin",
+                "showTitle": true,
+                "description": "Pewter is theo. The colored end is actual win.",
+                "showDescription": true
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 10,
+            "width": 6,
+            "height": 10
+          }
+        },
+        {
+          "widget": {
+            "name": "mean-reversion",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "rank",
+                  "fields": [
+                    {
+                      "name": "machine_id",
+                      "expression": "`machine_id`"
+                    },
+                    {
+                      "name": "jan_mar_rank",
+                      "expression": "`jan_mar_rank`"
+                    },
+                    {
+                      "name": "apr_jun_rank",
+                      "expression": "`apr_jun_rank`"
+                    },
+                    {
+                      "name": "luck_z",
+                      "expression": "`luck_z`"
+                    }
+                  ],
+                  "disaggregated": true,
+                  "orders": [
+                    {
+                      "direction": "ASC",
+                      "expression": "`gm_rank`"
+                    }
+                  ]
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "widgetType": "table",
+              "encodings": {
+                "columns": [
+                  {
+                    "fieldName": "machine_id",
+                    "displayName": "Machine"
+                  },
+                  {
+                    "fieldName": "jan_mar_rank",
+                    "displayName": "Jan–Mar rank"
+                  },
+                  {
+                    "fieldName": "apr_jun_rank",
+                    "displayName": "Apr–Jun rank"
+                  },
+                  {
+                    "fieldName": "luck_z",
+                    "displayName": "Luck z"
+                  }
+                ]
+              },
+              "frame": {
+                "title": "Raw bottom ranks move unevenly",
+                "showTitle": true,
+                "description": "Three of eight machines ranked in both halves improved.",
+                "showDescription": true
+              }
+            }
+          },
+          "position": {
+            "x": 6,
+            "y": 10,
+            "width": 6,
+            "height": 5
+          }
+        },
+        {
+          "widget": {
+            "name": "peers",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "machine",
+                  "fields": [
+                    {
+                      "name": "config_id",
+                      "expression": "`config_id`"
+                    },
+                    {
+                      "name": "machine_id",
+                      "expression": "`machine_id`"
+                    },
+                    {
+                      "name": "rate",
+                      "expression": "SUM(theo_usd)/NULLIF(SUM(available_hours),0)"
+                    },
+                    {
+                      "name": "verdict_chip",
+                      "expression": "`verdict_chip`"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 1,
+              "widgetType": "custom-vega-viz",
+              "data": {
+                "queryName": "main_query"
+              },
+              "encodings": {
+                "fields": [
+                  {
+                    "fieldName": "config_id"
+                  },
+                  {
+                    "fieldName": "machine_id"
+                  },
+                  {
+                    "fieldName": "rate"
+                  },
+                  {
+                    "fieldName": "verdict_chip"
+                  }
+                ]
+              },
+              "jsonSpec": {
+                "type": "vega-lite",
+                "spec": "{\"$schema\":\"https://vega.github.io/schema/vega-lite/v6.json\",\"data\":{\"name\":\"databricks_query\"},\"width\":\"container\",\"height\":\"container\",\"background\":\"transparent\",\"config\":{\"autosize\":{\"type\":\"fit\",\"contains\":\"padding\"},\"view\":{\"stroke\":null},\"axis\":{\"labelColor\":\"#9FAEA6\",\"titleColor\":\"#EDE6D3\",\"gridColor\":\"#24443A\",\"domainColor\":\"#24443A\"},\"legend\":{\"labelColor\":\"#EDE6D3\",\"titleColor\":\"#EDE6D3\"}},\"mark\":{\"type\":\"point\",\"filled\":true,\"opacity\":0.63},\"encoding\":{\"x\":{\"field\":\"rate\",\"type\":\"quantitative\",\"title\":\"Theo per available hour\",\"axis\":{\"format\":\"$~s\"}},\"y\":{\"field\":\"config_id\",\"type\":\"nominal\",\"title\":\"Config\"},\"color\":{\"field\":\"verdict_chip\",\"type\":\"nominal\",\"title\":\"Verdict\",\"scale\":{\"domain\":[\"♦ LUCK\",\"♣ LOCATION\",\"♥ LEAK\",\"⚙ LINEUP\",\"♠ REPLACE (long-term candidate)\",\"🔍 INSPECT\"],\"range\":[\"#B48CFF\",\"#3FD6E0\",\"#FF5A6E\",\"#C9A66B\",\"#F4F1EA\",\"#D4AF37\"]},\"legend\":null},\"tooltip\":[{\"field\":\"machine_id\",\"type\":\"nominal\"},{\"field\":\"rate\",\"type\":\"quantitative\",\"format\":\"$.2f\"}]}}"
+              },
+              "frame": {
+                "title": "Game settings shift the peer baseline",
+                "showTitle": true,
+                "description": "Compare machines within their installed configuration.",
+                "showDescription": true
+              }
+            }
+          },
+          "position": {
+            "x": 6,
+            "y": 15,
+            "width": 6,
+            "height": 5
+          }
+        }
+      ],
+      "layoutVersion": "GRID_V1",
+      "pageType": "PAGE_TYPE_CANVAS"
+    },
+    {
+      "name": "floor-radar",
+      "displayName": "Floor Radar",
+      "layout": [
+        {
+          "widget": {
+            "name": "floor-intro",
+            "multilineTextboxSpec": {
+              "lines": [
+                "## THE FLOOR RADAR\n\nFollow foot traffic, floor demand and the cost of unavailable machines."
+              ]
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 0,
+            "width": 12,
+            "height": 2
+          }
+        },
+        {
+          "widget": {
+            "name": "slot-map",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "machine",
+                  "fields": [
+                    {
+                      "name": "machine_id",
+                      "expression": "`machine_id`"
+                    },
+                    {
+                      "name": "x_m",
+                      "expression": "`x_m`"
+                    },
+                    {
+                      "name": "y_m",
+                      "expression": "`y_m`"
+                    },
+                    {
+                      "name": "bank_name",
+                      "expression": "`bank_name`"
+                    },
+                    {
+                      "name": "verdict_chip",
+                      "expression": "`verdict_chip`"
+                    },
+                    {
+                      "name": "rate",
+                      "expression": "SUM(theo_usd)/NULLIF(SUM(available_hours),0)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 1,
+              "widgetType": "custom-vega-viz",
+              "data": {
+                "queryName": "main_query"
+              },
+              "encodings": {
+                "fields": [
+                  {
+                    "fieldName": "machine_id"
+                  },
+                  {
+                    "fieldName": "x_m"
+                  },
+                  {
+                    "fieldName": "y_m"
+                  },
+                  {
+                    "fieldName": "bank_name"
+                  },
+                  {
+                    "fieldName": "verdict_chip"
+                  },
+                  {
+                    "fieldName": "rate"
+                  }
+                ]
+              },
+              "jsonSpec": {
+                "type": "vega-lite",
+                "spec": "{\"$schema\":\"https://vega.github.io/schema/vega-lite/v6.json\",\"data\":{\"name\":\"databricks_query\"},\"width\":\"container\",\"height\":\"container\",\"background\":\"transparent\",\"config\":{\"autosize\":{\"type\":\"fit\",\"contains\":\"padding\"},\"view\":{\"stroke\":null},\"axis\":{\"labelColor\":\"#9FAEA6\",\"titleColor\":\"#EDE6D3\",\"gridColor\":\"#24443A\",\"domainColor\":\"#24443A\"},\"legend\":{\"labelColor\":\"#EDE6D3\",\"titleColor\":\"#EDE6D3\"}},\"layer\":[{\"mark\":{\"type\":\"point\",\"filled\":true,\"opacity\":0.8},\"encoding\":{\"x\":{\"field\":\"x_m\",\"type\":\"quantitative\",\"title\":\"Floor x (m)\",\"scale\":{\"zero\":false}},\"y\":{\"field\":\"y_m\",\"type\":\"quantitative\",\"title\":\"Floor y (m)\",\"scale\":{\"zero\":false}},\"color\":{\"field\":\"verdict_chip\",\"type\":\"nominal\",\"title\":\"Verdict\",\"scale\":{\"domain\":[\"♦ LUCK\",\"♣ LOCATION\",\"♥ LEAK\",\"⚙ LINEUP\",\"♠ REPLACE (long-term candidate)\",\"🔍 INSPECT\"],\"range\":[\"#B48CFF\",\"#3FD6E0\",\"#FF5A6E\",\"#C9A66B\",\"#F4F1EA\",\"#D4AF37\"]}},\"size\":{\"field\":\"rate\",\"type\":\"quantitative\",\"title\":\"Theo/hour\",\"legend\":null},\"tooltip\":[{\"field\":\"machine_id\",\"type\":\"nominal\"},{\"field\":\"bank_name\",\"type\":\"nominal\"},{\"field\":\"verdict_chip\",\"type\":\"nominal\"}]}},{\"data\":{\"values\":[{\"x\":15,\"y\":50,\"x2\":20,\"y2\":92}]},\"mark\":{\"type\":\"rule\",\"color\":\"#3FD6E0\",\"strokeDash\":[5,4],\"strokeWidth\":2},\"encoding\":{\"x\":{\"field\":\"x\",\"type\":\"quantitative\",\"scale\":{\"zero\":false}},\"x2\":{\"field\":\"x2\"},\"y\":{\"field\":\"y\",\"type\":\"quantitative\",\"scale\":{\"zero\":false}},\"y2\":{\"field\":\"y2\"}}},{\"data\":{\"values\":[{\"x\":20,\"y\":92,\"zone\":\"Back Forty\"},{\"x\":100,\"y\":72,\"zone\":\"Bar Row\"},{\"x\":15,\"y\":50,\"zone\":\"Main Entrance\"},{\"x\":120,\"y\":100,\"zone\":\"Garage Entrance\"},{\"x\":105,\"y\":22,\"zone\":\"High-Limit\"},{\"x\":62,\"y\":8,\"zone\":\"Hotel Corridor\"},{\"x\":60,\"y\":50,\"zone\":\"Center Pit\"}]},\"mark\":{\"type\":\"text\",\"color\":\"#EDE6D3\",\"fontWeight\":600,\"dy\":-8},\"encoding\":{\"x\":{\"field\":\"x\",\"type\":\"quantitative\",\"scale\":{\"zero\":false}},\"y\":{\"field\":\"y\",\"type\":\"quantitative\",\"scale\":{\"zero\":false}},\"text\":{\"field\":\"zone\"}}}]}"
+              },
+              "frame": {
+                "title": "Bank positions reveal local clusters",
+                "showTitle": true,
+                "description": "Dots are observed slot positions. The dashed route was closed Mar 3–Apr 7.",
+                "showDescription": true
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 2,
+            "width": 7,
+            "height": 8
+          }
+        },
+        {
+          "widget": {
+            "name": "traffic-heat",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "traffic",
+                  "fields": [
+                    {
+                      "name": "zone_id",
+                      "expression": "`zone_id`"
+                    },
+                    {
+                      "name": "gaming_hour",
+                      "expression": "`gaming_hour`"
+                    },
+                    {
+                      "name": "metric",
+                      "expression": "60*SUM(entries)/NULLIF(SUM(coverage_minutes),0)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 1,
+              "widgetType": "custom-vega-viz",
+              "data": {
+                "queryName": "main_query"
+              },
+              "encodings": {
+                "fields": [
+                  {
+                    "fieldName": "zone_id"
+                  },
+                  {
+                    "fieldName": "gaming_hour"
+                  },
+                  {
+                    "fieldName": "metric"
+                  }
+                ]
+              },
+              "jsonSpec": {
+                "type": "vega-lite",
+                "spec": "{\"$schema\":\"https://vega.github.io/schema/vega-lite/v6.json\",\"data\":{\"name\":\"databricks_query\"},\"width\":\"container\",\"height\":\"container\",\"background\":\"transparent\",\"config\":{\"autosize\":{\"type\":\"fit\",\"contains\":\"padding\"},\"view\":{\"stroke\":null},\"axis\":{\"labelColor\":\"#9FAEA6\",\"titleColor\":\"#EDE6D3\",\"gridColor\":\"#24443A\",\"domainColor\":\"#24443A\"},\"legend\":{\"labelColor\":\"#EDE6D3\",\"titleColor\":\"#EDE6D3\"}},\"mark\":\"rect\",\"encoding\":{\"x\":{\"field\":\"gaming_hour\",\"type\":\"ordinal\",\"title\":\"Gaming hour from 06:00\"},\"y\":{\"field\":\"zone_id\",\"type\":\"nominal\",\"title\":\"Zone\"},\"color\":{\"field\":\"metric\",\"type\":\"quantitative\",\"scale\":{\"range\":[\"#10241B\",\"#3FD6E0\"]}},\"tooltip\":[{\"field\":\"zone_id\",\"type\":\"nominal\"},{\"field\":\"gaming_hour\",\"type\":\"ordinal\"},{\"field\":\"metric\",\"type\":\"quantitative\",\"format\":\",.1f\"}]}}"
+              },
+              "frame": {
+                "title": "Counters peak at different hours",
+                "showTitle": true,
+                "description": "Crossings per covered sensor-hour. Blanks indicate no coverage.",
+                "showDescription": true
+              }
+            }
+          },
+          "position": {
+            "x": 7,
+            "y": 2,
+            "width": 5,
+            "height": 4
+          }
+        },
+        {
+          "widget": {
+            "name": "leak-heat",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "traffic",
+                  "fields": [
+                    {
+                      "name": "zone_id",
+                      "expression": "`zone_id`"
+                    },
+                    {
+                      "name": "gaming_hour",
+                      "expression": "`gaming_hour`"
+                    },
+                    {
+                      "name": "metric",
+                      "expression": "SUM(lost_theo_usd)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 1,
+              "widgetType": "custom-vega-viz",
+              "data": {
+                "queryName": "main_query"
+              },
+              "encodings": {
+                "fields": [
+                  {
+                    "fieldName": "zone_id"
+                  },
+                  {
+                    "fieldName": "gaming_hour"
+                  },
+                  {
+                    "fieldName": "metric"
+                  }
+                ]
+              },
+              "jsonSpec": {
+                "type": "vega-lite",
+                "spec": "{\"$schema\":\"https://vega.github.io/schema/vega-lite/v6.json\",\"data\":{\"name\":\"databricks_query\"},\"width\":\"container\",\"height\":\"container\",\"background\":\"transparent\",\"config\":{\"autosize\":{\"type\":\"fit\",\"contains\":\"padding\"},\"view\":{\"stroke\":null},\"axis\":{\"labelColor\":\"#9FAEA6\",\"titleColor\":\"#EDE6D3\",\"gridColor\":\"#24443A\",\"domainColor\":\"#24443A\"},\"legend\":{\"labelColor\":\"#EDE6D3\",\"titleColor\":\"#EDE6D3\"}},\"mark\":\"rect\",\"encoding\":{\"x\":{\"field\":\"gaming_hour\",\"type\":\"ordinal\",\"title\":\"Gaming hour from 06:00\"},\"y\":{\"field\":\"zone_id\",\"type\":\"nominal\",\"title\":\"Zone\"},\"color\":{\"field\":\"metric\",\"type\":\"quantitative\",\"scale\":{\"range\":[\"#10241B\",\"#FF5A6E\"]}},\"tooltip\":[{\"field\":\"zone_id\",\"type\":\"nominal\"},{\"field\":\"gaming_hour\",\"type\":\"ordinal\"},{\"field\":\"metric\",\"type\":\"quantitative\",\"format\":\",.1f\"}]}}"
+              },
+              "frame": {
+                "title": "Downtime costs most at busy hours",
+                "showTitle": true,
+                "description": "Estimated lost theo weights unavailable time by hour.",
+                "showDescription": true
+              }
+            }
+          },
+          "position": {
+            "x": 7,
+            "y": 6,
+            "width": 5,
+            "height": 4
+          }
+        },
+        {
+          "widget": {
+            "name": "demand-timeline",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "demand",
+                  "fields": [
+                    {
+                      "name": "gaming_date",
+                      "expression": "`gaming_date`"
+                    },
+                    {
+                      "name": "coin_in_usd",
+                      "expression": "`coin_in_usd`"
+                    },
+                    {
+                      "name": "forecast_usd",
+                      "expression": "`forecast_usd`"
+                    }
+                  ],
+                  "disaggregated": true
+                }
+              }
+            ],
+            "spec": {
+              "version": 1,
+              "widgetType": "custom-vega-viz",
+              "data": {
+                "queryName": "main_query"
+              },
+              "encodings": {
+                "fields": [
+                  {
+                    "fieldName": "gaming_date"
+                  },
+                  {
+                    "fieldName": "coin_in_usd"
+                  },
+                  {
+                    "fieldName": "forecast_usd"
+                  }
+                ]
+              },
+              "jsonSpec": {
+                "type": "vega-lite",
+                "spec": "{\"$schema\":\"https://vega.github.io/schema/vega-lite/v6.json\",\"data\":{\"name\":\"databricks_query\"},\"width\":\"container\",\"height\":\"container\",\"background\":\"transparent\",\"config\":{\"autosize\":{\"type\":\"fit\",\"contains\":\"padding\"},\"view\":{\"stroke\":null},\"axis\":{\"labelColor\":\"#9FAEA6\",\"titleColor\":\"#EDE6D3\",\"gridColor\":\"#24443A\",\"domainColor\":\"#24443A\"},\"legend\":{\"labelColor\":\"#EDE6D3\",\"titleColor\":\"#EDE6D3\"}},\"layer\":[{\"data\":{\"values\":[{\"start\":\"2025-03-03\",\"end\":\"2025-04-07\"}]},\"mark\":{\"type\":\"rect\",\"color\":\"#D4AF37\",\"opacity\":0.1},\"encoding\":{\"x\":{\"field\":\"start\",\"type\":\"temporal\",\"title\":\"Gaming date\"},\"x2\":{\"field\":\"end\"}}},{\"transform\":[{\"fold\":[\"coin_in_usd\",\"forecast_usd\"],\"as\":[\"series\",\"coin\"]},{\"calculate\":\"[\\\"Actual\\\", \\\"Forecast\\\"][indexof([\\\"coin_in_usd\\\", \\\"forecast_usd\\\"], datum.series)]\",\"as\":\"label\"}],\"mark\":{\"type\":\"line\",\"strokeWidth\":1.6},\"encoding\":{\"x\":{\"field\":\"gaming_date\",\"type\":\"temporal\",\"title\":\"Gaming date\"},\"y\":{\"field\":\"coin\",\"type\":\"quantitative\",\"title\":\"Daily coin-in\",\"axis\":{\"format\":\"$~s\"},\"scale\":{\"zero\":false}},\"color\":{\"field\":\"label\",\"type\":\"nominal\",\"scale\":{\"domain\":[\"Actual\",\"Forecast\"],\"range\":[\"#EDE6D3\",\"#3FD6E0\"]}},\"tooltip\":[{\"field\":\"gaming_date\",\"type\":\"temporal\",\"title\":\"Date\"},{\"field\":\"label\",\"type\":\"nominal\"},{\"field\":\"coin\",\"type\":\"quantitative\",\"format\":\"$,.0f\"}]}}]}"
+              },
+              "frame": {
+                "title": "Back Forty weakened during the closure",
+                "showTitle": true,
+                "description": "Actual coin-in and the frozen forecast. Shaded days overlap the walkway closure.",
+                "showDescription": true
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 10,
+            "width": 12,
+            "height": 7
+          }
+        },
+        {
+          "widget": {
+            "name": "walkway-did",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "walkway",
+                  "fields": [
+                    {
+                      "name": "period",
+                      "expression": "`period`"
+                    },
+                    {
+                      "name": "back_forty_index",
+                      "expression": "`back_forty_index`"
+                    },
+                    {
+                      "name": "control_index",
+                      "expression": "`control_index`"
+                    }
+                  ],
+                  "disaggregated": true
+                }
+              }
+            ],
+            "spec": {
+              "version": 1,
+              "widgetType": "custom-vega-viz",
+              "data": {
+                "queryName": "main_query"
+              },
+              "encodings": {
+                "fields": [
+                  {
+                    "fieldName": "period"
+                  },
+                  {
+                    "fieldName": "back_forty_index"
+                  },
+                  {
+                    "fieldName": "control_index"
+                  }
+                ]
+              },
+              "jsonSpec": {
+                "type": "vega-lite",
+                "spec": "{\"$schema\":\"https://vega.github.io/schema/vega-lite/v6.json\",\"data\":{\"name\":\"databricks_query\"},\"width\":\"container\",\"height\":\"container\",\"background\":\"transparent\",\"config\":{\"autosize\":{\"type\":\"fit\",\"contains\":\"padding\"},\"view\":{\"stroke\":null},\"axis\":{\"labelColor\":\"#9FAEA6\",\"titleColor\":\"#EDE6D3\",\"gridColor\":\"#24443A\",\"domainColor\":\"#24443A\"},\"legend\":{\"labelColor\":\"#EDE6D3\",\"titleColor\":\"#EDE6D3\"}},\"transform\":[{\"fold\":[\"back_forty_index\",\"control_index\"],\"as\":[\"series\",\"value\"]},{\"calculate\":\"datum.series === 'back_forty_index' ? 'Back Forty' : 'Rest of floor'\",\"as\":\"group\"}],\"mark\":{\"type\":\"line\",\"point\":true},\"encoding\":{\"x\":{\"field\":\"period\",\"type\":\"ordinal\",\"title\":\"Walkway phase\"},\"y\":{\"field\":\"value\",\"type\":\"quantitative\",\"title\":\"Pre = 100\",\"scale\":{\"zero\":false}},\"color\":{\"field\":\"group\",\"type\":\"nominal\",\"scale\":{\"domain\":[\"Back Forty\",\"Rest of floor\"],\"range\":[\"#3FD6E0\",\"#8A9690\"]}}}}"
+              },
+              "frame": {
+                "title": "Back Forty fell to 71 while controls reached 103",
+                "showTitle": true,
+                "description": "Coin-in per installed machine-day. The pre-trend limits causal attribution.",
+                "showDescription": true
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 17,
+            "width": 6,
+            "height": 5
+          }
+        },
+        {
+          "widget": {
+            "name": "fault-hour",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "fault",
+                  "fields": [
+                    {
+                      "name": "gaming_hour",
+                      "expression": "`gaming_hour`"
+                    },
+                    {
+                      "name": "wait",
+                      "expression": "AVG(wait_seconds)/3600.0"
+                    },
+                    {
+                      "name": "work",
+                      "expression": "AVG(work_seconds)/3600.0"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 1,
+              "widgetType": "custom-vega-viz",
+              "data": {
+                "queryName": "main_query"
+              },
+              "encodings": {
+                "fields": [
+                  {
+                    "fieldName": "gaming_hour"
+                  },
+                  {
+                    "fieldName": "wait"
+                  },
+                  {
+                    "fieldName": "work"
+                  }
+                ]
+              },
+              "jsonSpec": {
+                "type": "vega-lite",
+                "spec": "{\"$schema\":\"https://vega.github.io/schema/vega-lite/v6.json\",\"data\":{\"name\":\"databricks_query\"},\"width\":\"container\",\"height\":\"container\",\"background\":\"transparent\",\"config\":{\"autosize\":{\"type\":\"fit\",\"contains\":\"padding\"},\"view\":{\"stroke\":null},\"axis\":{\"labelColor\":\"#9FAEA6\",\"titleColor\":\"#EDE6D3\",\"gridColor\":\"#24443A\",\"domainColor\":\"#24443A\"},\"legend\":{\"labelColor\":\"#EDE6D3\",\"titleColor\":\"#EDE6D3\"}},\"transform\":[{\"fold\":[\"wait\",\"work\"],\"as\":[\"part\",\"hours\"]}],\"mark\":\"bar\",\"encoding\":{\"x\":{\"field\":\"gaming_hour\",\"type\":\"ordinal\",\"title\":\"Gaming hour from 06:00\"},\"y\":{\"field\":\"hours\",\"type\":\"quantitative\",\"title\":\"Mean hours\"},\"color\":{\"field\":\"part\",\"type\":\"nominal\",\"scale\":{\"range\":[\"#FF5A6E\",\"#8A9690\"]}}}}"
+              },
+              "frame": {
+                "title": "Wait and repair time are different costs",
+                "showTitle": true,
+                "description": "Mean wait plus work time for fault tickets by opening hour.",
+                "showDescription": true
+              }
+            }
+          },
+          "position": {
+            "x": 6,
+            "y": 17,
+            "width": 6,
+            "height": 5
+          }
+        },
+        {
+          "widget": {
+            "name": "leak-month",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "machine",
+                  "fields": [
+                    {
+                      "name": "month",
+                      "expression": "DATE_TRUNC('month',gaming_date)"
+                    },
+                    {
+                      "name": "manufacturer",
+                      "expression": "`manufacturer`"
+                    },
+                    {
+                      "name": "downtime",
+                      "expression": "SUM(downtime_hours)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 1,
+              "widgetType": "custom-vega-viz",
+              "data": {
+                "queryName": "main_query"
+              },
+              "encodings": {
+                "fields": [
+                  {
+                    "fieldName": "month"
+                  },
+                  {
+                    "fieldName": "manufacturer"
+                  },
+                  {
+                    "fieldName": "downtime"
+                  }
+                ]
+              },
+              "jsonSpec": {
+                "type": "vega-lite",
+                "spec": "{\"$schema\":\"https://vega.github.io/schema/vega-lite/v6.json\",\"data\":{\"name\":\"databricks_query\"},\"width\":\"container\",\"height\":\"container\",\"background\":\"transparent\",\"config\":{\"autosize\":{\"type\":\"fit\",\"contains\":\"padding\"},\"view\":{\"stroke\":null},\"axis\":{\"labelColor\":\"#9FAEA6\",\"titleColor\":\"#EDE6D3\",\"gridColor\":\"#24443A\",\"domainColor\":\"#24443A\"},\"legend\":{\"labelColor\":\"#EDE6D3\",\"titleColor\":\"#EDE6D3\"}},\"mark\":\"bar\",\"encoding\":{\"x\":{\"field\":\"month\",\"type\":\"temporal\",\"title\":\"Month\",\"timeUnit\":\"yearmonth\"},\"y\":{\"field\":\"downtime\",\"type\":\"quantitative\",\"title\":\"Downtime hours\"},\"color\":{\"field\":\"manufacturer\",\"type\":\"nominal\",\"scale\":{\"range\":[\"#8A9690\",\"#C9A66B\",\"#FF5A6E\"]}}}}"
+              },
+              "frame": {
+                "title": "Ridgeline accounts for the largest six-month leak",
+                "showTitle": true,
+                "description": "Hours are stacked by manufacturer, with date and floor filters applied.",
+                "showDescription": true
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 22,
+            "width": 6,
+            "height": 5
+          }
+        },
+        {
+          "widget": {
+            "name": "zone-drivers",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "zones",
+                  "fields": [
+                    {
+                      "name": "zone_name",
+                      "expression": "`zone_name`"
+                    },
+                    {
+                      "name": "other_change_usd_per_day",
+                      "expression": "`other_change_usd_per_day`"
+                    },
+                    {
+                      "name": "occupied_hours_effect_usd_per_day",
+                      "expression": "`occupied_hours_effect_usd_per_day`"
+                    },
+                    {
+                      "name": "bet_effect_usd_per_day",
+                      "expression": "`bet_effect_usd_per_day`"
+                    },
+                    {
+                      "name": "spins_per_hour_effect_usd_per_day",
+                      "expression": "`spins_per_hour_effect_usd_per_day`"
+                    }
+                  ],
+                  "disaggregated": true
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "widgetType": "table",
+              "encodings": {
+                "columns": [
+                  {
+                    "fieldName": "zone_name",
+                    "displayName": "Zone"
+                  },
+                  {
+                    "fieldName": "other_change_usd_per_day",
+                    "displayName": "Other / day",
+                    "format": {
+                      "type": "number-currency",
+                      "currencyCode": "USD",
+                      "abbreviation": "compact"
+                    }
+                  },
+                  {
+                    "fieldName": "occupied_hours_effect_usd_per_day",
+                    "displayName": "Hours",
+                    "format": {
+                      "type": "number-currency",
+                      "currencyCode": "USD",
+                      "abbreviation": "compact"
+                    }
+                  },
+                  {
+                    "fieldName": "bet_effect_usd_per_day",
+                    "displayName": "Bet",
+                    "format": {
+                      "type": "number-currency",
+                      "currencyCode": "USD",
+                      "abbreviation": "compact"
+                    }
+                  },
+                  {
+                    "fieldName": "spins_per_hour_effect_usd_per_day",
+                    "displayName": "Pace",
+                    "format": {
+                      "type": "number-currency",
+                      "currencyCode": "USD",
+                      "abbreviation": "compact"
+                    }
+                  }
+                ]
+              },
+              "frame": {
+                "title": "Occupied time explains most of the residual",
+                "showTitle": true,
+                "description": "January–June standardized bridge. The Back Forty lasting gap is descriptive.",
+                "showDescription": true
+              }
+            }
+          },
+          "position": {
+            "x": 6,
+            "y": 22,
+            "width": 6,
+            "height": 5
+          }
+        }
+      ],
+      "layoutVersion": "GRID_V1",
+      "pageType": "PAGE_TYPE_CANVAS"
+    },
+    {
+      "name": "high-roller",
+      "displayName": "High-Roller Ladder",
+      "layout": [
+        {
+          "widget": {
+            "name": "players-intro",
+            "multilineTextboxSpec": {
+              "lines": [
+                "## THE HIGH-ROLLER LADDER\n\nTracked outcomes describe play. No action targets heavy losers."
+              ]
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 0,
+            "width": 12,
+            "height": 2
+          }
+        },
+        {
+          "widget": {
+            "name": "concentration-curve",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "ladder",
+                  "fields": [
+                    {
+                      "name": "cumulative_player_share",
+                      "expression": "`cumulative_player_share`"
+                    },
+                    {
+                      "name": "cumulative_theo_share",
+                      "expression": "`cumulative_theo_share`"
+                    },
+                    {
+                      "name": "cumulative_coin_in_share",
+                      "expression": "`cumulative_coin_in_share`"
+                    }
+                  ],
+                  "disaggregated": true
+                }
+              }
+            ],
+            "spec": {
+              "version": 1,
+              "widgetType": "custom-vega-viz",
+              "data": {
+                "queryName": "main_query"
+              },
+              "encodings": {
+                "fields": [
+                  {
+                    "fieldName": "cumulative_player_share"
+                  },
+                  {
+                    "fieldName": "cumulative_theo_share"
+                  },
+                  {
+                    "fieldName": "cumulative_coin_in_share"
+                  }
+                ]
+              },
+              "jsonSpec": {
+                "type": "vega-lite",
+                "spec": "{\"$schema\":\"https://vega.github.io/schema/vega-lite/v6.json\",\"data\":{\"name\":\"databricks_query\"},\"width\":\"container\",\"height\":\"container\",\"background\":\"transparent\",\"config\":{\"autosize\":{\"type\":\"fit\",\"contains\":\"padding\"},\"view\":{\"stroke\":null},\"axis\":{\"labelColor\":\"#9FAEA6\",\"titleColor\":\"#EDE6D3\",\"gridColor\":\"#24443A\",\"domainColor\":\"#24443A\"},\"legend\":{\"labelColor\":\"#EDE6D3\",\"titleColor\":\"#EDE6D3\"}},\"transform\":[{\"fold\":[\"cumulative_theo_share\",\"cumulative_coin_in_share\"],\"as\":[\"measure\",\"share\"]},{\"calculate\":\"datum.measure === 'cumulative_theo_share' ? 'Tracked theo' : 'Tracked coin-in'\",\"as\":\"label\"}],\"mark\":{\"type\":\"line\",\"strokeWidth\":2},\"encoding\":{\"x\":{\"field\":\"cumulative_player_share\",\"type\":\"quantitative\",\"title\":\"Top share of players\",\"axis\":{\"format\":\".0%\"}},\"y\":{\"field\":\"share\",\"type\":\"quantitative\",\"title\":\"Cumulative share\",\"axis\":{\"format\":\".0%\"}},\"color\":{\"field\":\"label\",\"type\":\"nominal\",\"scale\":{\"domain\":[\"Tracked theo\",\"Tracked coin-in\"],\"range\":[\"#3FD6E0\",\"#8A9690\"]}}}}"
+              },
+              "frame": {
+                "title": "The top tenth generated two-thirds of tracked theo",
+                "showTitle": true,
+                "description": "Jan–Jun player totals, ranked by tracked theo.",
+                "showDescription": true
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 2,
+            "width": 7,
+            "height": 6
+          }
+        },
+        {
+          "widget": {
+            "name": "top-shares",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "concentration",
+                  "fields": [
+                    {
+                      "name": "top_percent",
+                      "expression": "`top_percent`"
+                    },
+                    {
+                      "name": "tracked_theo_share",
+                      "expression": "`tracked_theo_share`"
+                    },
+                    {
+                      "name": "tracked_coin_in_share",
+                      "expression": "`tracked_coin_in_share`"
+                    },
+                    {
+                      "name": "tracked_player_net_usd",
+                      "expression": "`tracked_player_net_usd`"
+                    }
+                  ],
+                  "disaggregated": true,
+                  "orders": [
+                    {
+                      "direction": "ASC",
+                      "expression": "`top_percent`"
+                    }
+                  ]
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "widgetType": "table",
+              "encodings": {
+                "columns": [
+                  {
+                    "fieldName": "top_percent",
+                    "displayName": "Top %"
+                  },
+                  {
+                    "fieldName": "tracked_theo_share",
+                    "displayName": "Theo share",
+                    "format": {
+                      "type": "number-percent",
+                      "decimalPlaces": {
+                        "type": "max",
+                        "places": 2
+                      }
+                    }
+                  },
+                  {
+                    "fieldName": "tracked_coin_in_share",
+                    "displayName": "Coin-in share",
+                    "format": {
+                      "type": "number-percent",
+                      "decimalPlaces": {
+                        "type": "max",
+                        "places": 2
+                      }
+                    }
+                  },
+                  {
+                    "fieldName": "tracked_player_net_usd",
+                    "displayName": "Player net",
+                    "format": {
+                      "type": "number-currency",
+                      "currencyCode": "USD",
+                      "abbreviation": "compact"
+                    }
+                  }
+                ]
+              },
+              "frame": {
+                "title": "Top cohorts netted losses",
+                "showTitle": true,
+                "description": "The same ranked players drive both shares.",
+                "showDescription": true
+              }
+            }
+          },
+          "position": {
+            "x": 7,
+            "y": 2,
+            "width": 5,
+            "height": 3
+          }
+        },
+        {
+          "widget": {
+            "name": "player-outcomes",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "outcomes",
+                  "fields": [
+                    {
+                      "name": "outcome",
+                      "expression": "`outcome`"
+                    },
+                    {
+                      "name": "players",
+                      "expression": "`players`"
+                    },
+                    {
+                      "name": "player_net_usd",
+                      "expression": "`player_net_usd`"
+                    }
+                  ],
+                  "disaggregated": true
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "widgetType": "table",
+              "encodings": {
+                "columns": [
+                  {
+                    "fieldName": "outcome",
+                    "displayName": "Outcome"
+                  },
+                  {
+                    "fieldName": "players",
+                    "displayName": "Players"
+                  },
+                  {
+                    "fieldName": "player_net_usd",
+                    "displayName": "Net",
+                    "format": {
+                      "type": "number-currency",
+                      "currencyCode": "USD",
+                      "abbreviation": "compact"
+                    }
+                  }
+                ]
+              },
+              "frame": {
+                "title": "Wagering outcomes include winners",
+                "showTitle": true,
+                "description": "Zero coin-in is no tracked gaming. Exactly-zero bettors are separate.",
+                "showDescription": true
+              }
+            }
+          },
+          "position": {
+            "x": 7,
+            "y": 5,
+            "width": 5,
+            "height": 3
+          }
+        },
+        {
+          "widget": {
+            "name": "net-histogram",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "hist",
+                  "fields": [
+                    {
+                      "name": "band",
+                      "expression": "`band`"
+                    },
+                    {
+                      "name": "observations",
+                      "expression": "`observations`"
+                    }
+                  ],
+                  "disaggregated": true
+                }
+              }
+            ],
+            "spec": {
+              "version": 1,
+              "widgetType": "custom-vega-viz",
+              "data": {
+                "queryName": "main_query"
+              },
+              "encodings": {
+                "fields": [
+                  {
+                    "fieldName": "band"
+                  },
+                  {
+                    "fieldName": "observations"
+                  }
+                ]
+              },
+              "jsonSpec": {
+                "type": "vega-lite",
+                "spec": "{\"$schema\":\"https://vega.github.io/schema/vega-lite/v6.json\",\"data\":{\"name\":\"databricks_query\"},\"width\":\"container\",\"height\":\"container\",\"background\":\"transparent\",\"config\":{\"autosize\":{\"type\":\"fit\",\"contains\":\"padding\"},\"view\":{\"stroke\":null},\"axis\":{\"labelColor\":\"#9FAEA6\",\"titleColor\":\"#EDE6D3\",\"gridColor\":\"#24443A\",\"domainColor\":\"#24443A\"},\"legend\":{\"labelColor\":\"#EDE6D3\",\"titleColor\":\"#EDE6D3\"}},\"mark\":{\"type\":\"bar\",\"color\":\"#8A9690\"},\"encoding\":{\"x\":{\"field\":\"observations\",\"type\":\"quantitative\",\"title\":\"Players\"},\"y\":{\"field\":\"band\",\"type\":\"nominal\",\"title\":\"Jan–Jun player net\",\"sort\":\"ascending\"},\"tooltip\":[{\"field\":\"band\",\"type\":\"nominal\"},{\"field\":\"observations\",\"type\":\"quantitative\"}]}}"
+              },
+              "frame": {
+                "title": "Most tracked bettors finished down",
+                "showTitle": true,
+                "description": "Win and loss bins use player net. No tracked gaming is labeled separately.",
+                "showDescription": true
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 8,
+            "width": 5,
+            "height": 6
+          }
+        },
+        {
+          "widget": {
+            "name": "player-segments",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "segments",
+                  "fields": [
+                    {
+                      "name": "tier_end",
+                      "expression": "`tier_end`"
+                    },
+                    {
+                      "name": "theo_decile",
+                      "expression": "`theo_decile`"
+                    },
+                    {
+                      "name": "players",
+                      "expression": "SUM(player_months)"
+                    },
+                    {
+                      "name": "wagers",
+                      "expression": "SUM(coin_in_usd)"
+                    },
+                    {
+                      "name": "payout",
+                      "expression": "SUM(payout_usd)"
+                    },
+                    {
+                      "name": "net",
+                      "expression": "SUM(player_net_usd)"
+                    },
+                    {
+                      "name": "theo",
+                      "expression": "SUM(theo_usd)"
+                    },
+                    {
+                      "name": "luck",
+                      "expression": "SUM(player_luck_usd)"
+                    },
+                    {
+                      "name": "comp",
+                      "expression": "SUM(comp_cost_usd)"
+                    },
+                    {
+                      "name": "contrib",
+                      "expression": "SUM(contribution_usd)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "widgetType": "table",
+              "encodings": {
+                "columns": [
+                  {
+                    "fieldName": "tier_end",
+                    "displayName": "Tier"
+                  },
+                  {
+                    "fieldName": "theo_decile",
+                    "displayName": "Theo decile"
+                  },
+                  {
+                    "fieldName": "players",
+                    "displayName": "Player-months"
+                  },
+                  {
+                    "fieldName": "wagers",
+                    "displayName": "Coin-in",
+                    "format": {
+                      "type": "number-currency",
+                      "currencyCode": "USD",
+                      "abbreviation": "compact"
+                    }
+                  },
+                  {
+                    "fieldName": "payout",
+                    "displayName": "Payout",
+                    "format": {
+                      "type": "number-currency",
+                      "currencyCode": "USD",
+                      "abbreviation": "compact"
+                    }
+                  },
+                  {
+                    "fieldName": "net",
+                    "displayName": "Player net",
+                    "format": {
+                      "type": "number-currency",
+                      "currencyCode": "USD",
+                      "abbreviation": "compact"
+                    }
+                  },
+                  {
+                    "fieldName": "theo",
+                    "displayName": "Theo",
+                    "format": {
+                      "type": "number-currency",
+                      "currencyCode": "USD",
+                      "abbreviation": "compact"
+                    }
+                  },
+                  {
+                    "fieldName": "luck",
+                    "displayName": "Luck",
+                    "format": {
+                      "type": "number-currency",
+                      "currencyCode": "USD",
+                      "abbreviation": "compact"
+                    }
+                  },
+                  {
+                    "fieldName": "comp",
+                    "displayName": "Comp cost",
+                    "format": {
+                      "type": "number-currency",
+                      "currencyCode": "USD",
+                      "abbreviation": "compact"
+                    }
+                  },
+                  {
+                    "fieldName": "contrib",
+                    "displayName": "Contribution",
+                    "format": {
+                      "type": "number-currency",
+                      "currencyCode": "USD",
+                      "abbreviation": "compact"
+                    }
+                  }
+                ]
+              },
+              "frame": {
+                "title": "Tier and play intensity explain different outcomes",
+                "showTitle": true,
+                "description": "Counts are player-months. Use tier, region and age filters.",
+                "showDescription": true
+              }
+            }
+          },
+          "position": {
+            "x": 5,
+            "y": 8,
+            "width": 7,
+            "height": 6
+          }
+        },
+        {
+          "widget": {
+            "name": "comp-price",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "comps",
+                  "fields": [
+                    {
+                      "name": "week_start",
+                      "expression": "`week_start`"
+                    },
+                    {
+                      "name": "points_per_face_usd",
+                      "expression": "`points_per_face_usd`"
+                    }
+                  ],
+                  "disaggregated": true,
+                  "orders": [
+                    {
+                      "direction": "ASC",
+                      "expression": "`week_start`"
+                    }
+                  ]
+                }
+              }
+            ],
+            "spec": {
+              "version": 3,
+              "widgetType": "line",
+              "encodings": {
+                "x": {
+                  "fieldName": "week_start",
+                  "scale": {
+                    "type": "temporal"
+                  }
+                },
+                "y": {
+                  "scale": {
+                    "type": "quantitative"
+                  },
+                  "fields": [
+                    {
+                      "fieldName": "points_per_face_usd",
+                      "displayName": "Points per face dollar"
+                    }
+                  ]
+                }
+              },
+              "frame": {
+                "title": "Points bought more comp value after May 1",
+                "showTitle": true,
+                "description": "Compare observed redemption prices by gaming week.",
+                "showDescription": true
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 14,
+            "width": 6,
+            "height": 5
+          }
+        },
+        {
+          "widget": {
+            "name": "comp-rates",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "comps",
+                  "fields": [
+                    {
+                      "name": "week_start",
+                      "expression": "`week_start`"
+                    },
+                    {
+                      "name": "reinvestment_tracked",
+                      "expression": "`reinvestment_tracked`"
+                    },
+                    {
+                      "name": "reinvestment_floor",
+                      "expression": "`reinvestment_floor`"
+                    }
+                  ],
+                  "disaggregated": true,
+                  "orders": [
+                    {
+                      "direction": "ASC",
+                      "expression": "`week_start`"
+                    }
+                  ]
+                }
+              }
+            ],
+            "spec": {
+              "version": 3,
+              "widgetType": "line",
+              "encodings": {
+                "x": {
+                  "fieldName": "week_start",
+                  "scale": {
+                    "type": "temporal"
+                  }
+                },
+                "y": {
+                  "scale": {
+                    "type": "quantitative"
+                  },
+                  "fields": [
+                    {
+                      "fieldName": "reinvestment_tracked",
+                      "displayName": "Tracked theo",
+                      "format": {
+                        "type": "number-percent",
+                        "decimalPlaces": {
+                          "type": "max",
+                          "places": 2
+                        }
+                      }
+                    },
+                    {
+                      "fieldName": "reinvestment_floor",
+                      "displayName": "Floor theo",
+                      "format": {
+                        "type": "number-percent",
+                        "decimalPlaces": {
+                          "type": "max",
+                          "places": 2
+                        }
+                      }
+                    }
+                  ]
+                }
+              },
+              "frame": {
+                "title": "Tracked-theo reinvestment rose",
+                "showTitle": true,
+                "description": "Tracked theo is the headline denominator. Floor theo is a secondary view.",
+                "showDescription": true
+              }
+            }
+          },
+          "position": {
+            "x": 6,
+            "y": 14,
+            "width": 6,
+            "height": 5
+          }
+        },
+        {
+          "widget": {
+            "name": "comp-control",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "control",
+                  "fields": [
+                    {
+                      "name": "metric",
+                      "expression": "`metric`"
+                    },
+                    {
+                      "name": "estimate",
+                      "expression": "`estimate`"
+                    },
+                    {
+                      "name": "ci90_lower",
+                      "expression": "`ci90_lower`"
+                    },
+                    {
+                      "name": "ci90_upper",
+                      "expression": "`ci90_upper`"
+                    }
+                  ],
+                  "disaggregated": true
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "widgetType": "table",
+              "encodings": {
+                "columns": [
+                  {
+                    "fieldName": "metric",
+                    "displayName": "Measure"
+                  },
+                  {
+                    "fieldName": "estimate",
+                    "displayName": "Estimate"
+                  },
+                  {
+                    "fieldName": "ci90_lower",
+                    "displayName": "90% low"
+                  },
+                  {
+                    "fieldName": "ci90_upper",
+                    "displayName": "90% high"
+                  }
+                ]
+              },
+              "frame": {
+                "title": "The per-player theo decline does not survive the control",
+                "showTitle": true,
+                "description": "Uncarded meters are a floor-level control. No causal player lift is claimed.",
+                "showDescription": true
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 19,
+            "width": 6,
+            "height": 5
+          }
+        },
+        {
+          "widget": {
+            "name": "points-exposure",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "points",
+                  "fields": [
+                    {
+                      "name": "valuation",
+                      "expression": "`valuation`"
+                    },
+                    {
+                      "name": "apr30_usd",
+                      "expression": "`apr30_usd`"
+                    },
+                    {
+                      "name": "may28_usd",
+                      "expression": "`may28_usd`"
+                    },
+                    {
+                      "name": "excess_valuation_usd",
+                      "expression": "`excess_valuation_usd`"
+                    }
+                  ],
+                  "disaggregated": true
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "widgetType": "table",
+              "encodings": {
+                "columns": [
+                  {
+                    "fieldName": "valuation",
+                    "displayName": "Basis"
+                  },
+                  {
+                    "fieldName": "apr30_usd",
+                    "displayName": "Apr 30",
+                    "format": {
+                      "type": "number-currency",
+                      "currencyCode": "USD",
+                      "abbreviation": "compact"
+                    }
+                  },
+                  {
+                    "fieldName": "may28_usd",
+                    "displayName": "May 28",
+                    "format": {
+                      "type": "number-currency",
+                      "currencyCode": "USD",
+                      "abbreviation": "compact"
+                    }
+                  },
+                  {
+                    "fieldName": "excess_valuation_usd",
+                    "displayName": "Over normal accrual",
+                    "format": {
+                      "type": "number-currency",
+                      "currencyCode": "USD",
+                      "abbreviation": "compact"
+                    }
+                  }
+                ]
+              },
+              "frame": {
+                "title": "Repricing raised outstanding-point exposure",
+                "showTitle": true,
+                "description": "Full redemption at observed rates, before breakage. See the pilot's reset-adjusted decision value.",
+                "showDescription": true
+              }
+            }
+          },
+          "position": {
+            "x": 6,
+            "y": 19,
+            "width": 6,
+            "height": 5
+          }
+        }
+      ],
+      "layoutVersion": "GRID_V1",
+      "pageType": "PAGE_TYPE_CANVAS"
+    },
+    {
+      "name": "cashier",
+      "displayName": "Cashier’s Cage",
+      "layout": [
+        {
+          "widget": {
+            "name": "cage-intro",
+            "multilineTextboxSpec": {
+              "lines": [
+                "## THE CASHIER’S CAGE\n\nAuthorize information worth buying and preserve the rest."
+              ]
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 0,
+            "width": 12,
+            "height": 2
+          }
+        },
+        {
+          "widget": {
+            "name": "spent",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "cage",
+                  "fields": [
+                    {
+                      "name": "value",
+                      "expression": "MAX(spent_usd)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "value",
+                  "displayName": "Funded in July",
+                  "format": {
+                    "type": "number-currency",
+                    "currencyCode": "USD",
+                    "abbreviation": "compact"
+                  }
+                }
+              },
+              "frame": {
+                "title": "Funded in July",
+                "showTitle": true,
+                "description": "M-1158 inspection. Pilot deferred on power.",
+                "showDescription": true
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 2,
+            "width": 4,
+            "height": 3
+          }
+        },
+        {
+          "widget": {
+            "name": "kept",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "cage",
+                  "fields": [
+                    {
+                      "name": "value",
+                      "expression": "MAX(kept_usd)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "value",
+                  "displayName": "Kept in reserve",
+                  "format": {
+                    "type": "number-currency",
+                    "currencyCode": "USD",
+                    "abbreviation": "compact"
+                  }
+                }
+              },
+              "frame": {
+                "title": "Kept in reserve",
+                "showTitle": true,
+                "description": "No move, replacement or staffing package funded.",
+                "showDescription": true
+              }
+            }
+          },
+          "position": {
+            "x": 4,
+            "y": 2,
+            "width": 4,
+            "height": 3
+          }
+        },
+        {
+          "widget": {
+            "name": "hold-ref",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "cage",
+                  "fields": [
+                    {
+                      "name": "value",
+                      "expression": "0*MAX(spent_usd)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "value",
+                  "displayName": "Hold-only net",
+                  "format": {
+                    "type": "number-currency",
+                    "currencyCode": "USD",
+                    "abbreviation": "compact"
+                  }
+                }
+              },
+              "frame": {
+                "title": "Hold-only net",
+                "showTitle": true,
+                "description": "The alternative preserves the full $100,000.",
+                "showDescription": true
+              }
+            }
+          },
+          "position": {
+            "x": 8,
+            "y": 2,
+            "width": 4,
+            "height": 3
+          }
+        },
+        {
+          "widget": {
+            "name": "action-board",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "actions",
+                  "fields": [
+                    {
+                      "name": "action_type_id",
+                      "expression": "`action_type_id`"
+                    },
+                    {
+                      "name": "target_label",
+                      "expression": "`target_label`"
+                    },
+                    {
+                      "name": "selected",
+                      "expression": "`selected`"
+                    },
+                    {
+                      "name": "cash_cost_usd",
+                      "expression": "`cash_cost_usd`"
+                    },
+                    {
+                      "name": "expected_net_usd",
+                      "expression": "`expected_net_usd`"
+                    },
+                    {
+                      "name": "low_net_usd",
+                      "expression": "`low_net_usd`"
+                    },
+                    {
+                      "name": "high_net_usd",
+                      "expression": "`high_net_usd`"
+                    }
+                  ],
+                  "disaggregated": true
+                }
+              }
+            ],
+            "spec": {
+              "version": 1,
+              "widgetType": "custom-vega-viz",
+              "data": {
+                "queryName": "main_query"
+              },
+              "encodings": {
+                "fields": [
+                  {
+                    "fieldName": "action_type_id"
+                  },
+                  {
+                    "fieldName": "target_label"
+                  },
+                  {
+                    "fieldName": "selected"
+                  },
+                  {
+                    "fieldName": "cash_cost_usd"
+                  },
+                  {
+                    "fieldName": "expected_net_usd"
+                  },
+                  {
+                    "fieldName": "low_net_usd"
+                  },
+                  {
+                    "fieldName": "high_net_usd"
+                  }
+                ]
+              },
+              "jsonSpec": {
+                "type": "vega-lite",
+                "spec": "{\"$schema\":\"https://vega.github.io/schema/vega-lite/v6.json\",\"data\":{\"name\":\"databricks_query\"},\"width\":\"container\",\"height\":\"container\",\"background\":\"transparent\",\"config\":{\"autosize\":{\"type\":\"fit\",\"contains\":\"padding\"},\"view\":{\"stroke\":null},\"axis\":{\"labelColor\":\"#9FAEA6\",\"titleColor\":\"#EDE6D3\",\"gridColor\":\"#24443A\",\"domainColor\":\"#24443A\"},\"legend\":{\"labelColor\":\"#EDE6D3\",\"titleColor\":\"#EDE6D3\"}},\"transform\":[{\"calculate\":\"datum.high_net_usd-datum.low_net_usd\",\"as\":\"spread\"},{\"calculate\":\"datum.selected ? 'Funded' : datum.action_type_id === 'A-HOLD' ? 'Hold only' : 'Evaluated'\",\"as\":\"status\"}],\"mark\":{\"type\":\"point\",\"filled\":true,\"opacity\":0.86},\"encoding\":{\"x\":{\"field\":\"spread\",\"type\":\"quantitative\",\"title\":\"Scenario spread ($)\",\"axis\":{\"format\":\"$~s\"}},\"y\":{\"field\":\"expected_net_usd\",\"type\":\"quantitative\",\"title\":\"July base net ($)\",\"axis\":{\"format\":\"$~s\"},\"scale\":{\"type\":\"symlog\",\"constant\":2000}},\"size\":{\"field\":\"cash_cost_usd\",\"type\":\"quantitative\",\"title\":\"Catalog cost\"},\"color\":{\"field\":\"status\",\"type\":\"nominal\",\"scale\":{\"domain\":[\"Funded\",\"Hold only\",\"Evaluated\"],\"range\":[\"#D4AF37\",\"#EDE6D3\",\"#8A9690\"]}},\"shape\":{\"field\":\"status\",\"type\":\"nominal\"},\"tooltip\":[{\"field\":\"action_type_id\",\"type\":\"nominal\",\"title\":\"Action\"},{\"field\":\"target_label\",\"type\":\"nominal\",\"title\":\"Target\"},{\"field\":\"expected_net_usd\",\"type\":\"quantitative\",\"title\":\"Base net\",\"format\":\"$,.0f\"},{\"field\":\"low_net_usd\",\"type\":\"quantitative\",\"title\":\"Low\",\"format\":\"$,.0f\"},{\"field\":\"high_net_usd\",\"type\":\"quantitative\",\"title\":\"High\",\"format\":\"$,.0f\"}]}}"
+              },
+              "frame": {
+                "title": "Only the inspection clears the funding screens",
+                "showTitle": true,
+                "description": "Spread measures scenario uncertainty. The vertical scale is symmetric log.",
+                "showDescription": true
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 5,
+            "width": 12,
+            "height": 7
+          }
+        },
+        {
+          "widget": {
+            "name": "cage-slip",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "actions",
+                  "fields": [
+                    {
+                      "name": "action_type_id",
+                      "expression": "`action_type_id`"
+                    },
+                    {
+                      "name": "target_label",
+                      "expression": "`target_label`"
+                    },
+                    {
+                      "name": "selected",
+                      "expression": "`selected`"
+                    },
+                    {
+                      "name": "quantity",
+                      "expression": "`quantity`"
+                    },
+                    {
+                      "name": "cash_cost_usd",
+                      "expression": "`cash_cost_usd`"
+                    },
+                    {
+                      "name": "lead_days",
+                      "expression": "`lead_days`"
+                    },
+                    {
+                      "name": "operating_days",
+                      "expression": "`operating_days`"
+                    },
+                    {
+                      "name": "low_net_usd",
+                      "expression": "`low_net_usd`"
+                    },
+                    {
+                      "name": "expected_net_usd",
+                      "expression": "`expected_net_usd`"
+                    },
+                    {
+                      "name": "high_net_usd",
+                      "expression": "`high_net_usd`"
+                    },
+                    {
+                      "name": "p_mid",
+                      "expression": "`p_mid`"
+                    },
+                    {
+                      "name": "measurement_date",
+                      "expression": "`measurement_date`"
+                    },
+                    {
+                      "name": "assumption",
+                      "expression": "`assumption`"
+                    },
+                    {
+                      "name": "success_rule",
+                      "expression": "`success_rule`"
+                    },
+                    {
+                      "name": "evidence_view",
+                      "expression": "`evidence_view`"
+                    }
+                  ],
+                  "disaggregated": true,
+                  "orders": [
+                    {
+                      "direction": "ASC",
+                      "expression": "CASE WHEN selected THEN 0 ELSE 1 END"
+                    }
+                  ]
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "widgetType": "table",
+              "encodings": {
+                "columns": [
+                  {
+                    "fieldName": "action_type_id",
+                    "displayName": "Action"
+                  },
+                  {
+                    "fieldName": "target_label",
+                    "displayName": "Target"
+                  },
+                  {
+                    "fieldName": "selected",
+                    "displayName": "Funded"
+                  },
+                  {
+                    "fieldName": "quantity",
+                    "displayName": "Qty"
+                  },
+                  {
+                    "fieldName": "cash_cost_usd",
+                    "displayName": "Cost",
+                    "format": {
+                      "type": "number-currency",
+                      "currencyCode": "USD",
+                      "abbreviation": "compact"
+                    }
+                  },
+                  {
+                    "fieldName": "lead_days",
+                    "displayName": "Lead days"
+                  },
+                  {
+                    "fieldName": "operating_days",
+                    "displayName": "Post-lead days"
+                  },
+                  {
+                    "fieldName": "low_net_usd",
+                    "displayName": "Low net",
+                    "format": {
+                      "type": "number-currency",
+                      "currencyCode": "USD",
+                      "abbreviation": "compact"
+                    }
+                  },
+                  {
+                    "fieldName": "expected_net_usd",
+                    "displayName": "Base net",
+                    "format": {
+                      "type": "number-currency",
+                      "currencyCode": "USD",
+                      "abbreviation": "compact"
+                    }
+                  },
+                  {
+                    "fieldName": "high_net_usd",
+                    "displayName": "High net",
+                    "format": {
+                      "type": "number-currency",
+                      "currencyCode": "USD",
+                      "abbreviation": "compact"
+                    }
+                  },
+                  {
+                    "fieldName": "p_mid",
+                    "displayName": "Base probability",
+                    "format": {
+                      "type": "number-percent",
+                      "decimalPlaces": {
+                        "type": "max",
+                        "places": 2
+                      }
+                    }
+                  },
+                  {
+                    "fieldName": "measurement_date",
+                    "displayName": "Readout"
+                  },
+                  {
+                    "fieldName": "assumption",
+                    "displayName": "Assumption"
+                  },
+                  {
+                    "fieldName": "success_rule",
+                    "displayName": "Decision rule"
+                  },
+                  {
+                    "fieldName": "evidence_view",
+                    "displayName": "Evidence source"
+                  }
+                ]
+              },
+              "frame": {
+                "title": "The July slip funds $1,200",
+                "showTitle": true,
+                "description": "Net includes catalog costs and any disruption. Information value is a scenario, not July cash.",
+                "showDescription": true
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 12,
+            "width": 12,
+            "height": 8
+          }
+        },
+        {
+          "widget": {
+            "name": "annual-options",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "annual",
+                  "fields": [
+                    {
+                      "name": "action_type_id",
+                      "expression": "`action_type_id`"
+                    },
+                    {
+                      "name": "target_label",
+                      "expression": "`target_label`"
+                    },
+                    {
+                      "name": "cash_cost_usd",
+                      "expression": "`cash_cost_usd`"
+                    },
+                    {
+                      "name": "expected_net_usd",
+                      "expression": "`expected_net_usd`"
+                    },
+                    {
+                      "name": "low_net_usd",
+                      "expression": "`low_net_usd`"
+                    },
+                    {
+                      "name": "high_net_usd",
+                      "expression": "`high_net_usd`"
+                    }
+                  ],
+                  "disaggregated": true
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "widgetType": "table",
+              "encodings": {
+                "columns": [
+                  {
+                    "fieldName": "action_type_id",
+                    "displayName": "Action"
+                  },
+                  {
+                    "fieldName": "target_label",
+                    "displayName": "Target"
+                  },
+                  {
+                    "fieldName": "cash_cost_usd",
+                    "displayName": "12-month cost",
+                    "format": {
+                      "type": "number-currency",
+                      "currencyCode": "USD",
+                      "abbreviation": "compact"
+                    }
+                  },
+                  {
+                    "fieldName": "expected_net_usd",
+                    "displayName": "Base net",
+                    "format": {
+                      "type": "number-currency",
+                      "currencyCode": "USD",
+                      "abbreviation": "compact"
+                    }
+                  },
+                  {
+                    "fieldName": "low_net_usd",
+                    "displayName": "Low",
+                    "format": {
+                      "type": "number-currency",
+                      "currencyCode": "USD",
+                      "abbreviation": "compact"
+                    }
+                  },
+                  {
+                    "fieldName": "high_net_usd",
+                    "displayName": "High",
+                    "format": {
+                      "type": "number-currency",
+                      "currencyCode": "USD",
+                      "abbreviation": "compact"
+                    }
+                  }
+                ]
+              },
+              "frame": {
+                "title": "The bank move and three leases remain on the watchlist",
+                "showTitle": true,
+                "description": "Annual economics do not authorize July funding.",
+                "showDescription": true
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 20,
+            "width": 7,
+            "height": 7
+          }
+        },
+        {
+          "widget": {
+            "name": "tech-compare",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "tech",
+                  "fields": [
+                    {
+                      "name": "target",
+                      "expression": "`target`"
+                    },
+                    {
+                      "name": "funded_shifts",
+                      "expression": "`funded_shifts`"
+                    },
+                    {
+                      "name": "package_cost_usd",
+                      "expression": "`package_cost_usd`"
+                    },
+                    {
+                      "name": "full_recovery_theo_per_shift",
+                      "expression": "`full_recovery_theo_per_shift`"
+                    }
+                  ],
+                  "disaggregated": true
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "widgetType": "table",
+              "encodings": {
+                "columns": [
+                  {
+                    "fieldName": "target",
+                    "displayName": "Coverage"
+                  },
+                  {
+                    "fieldName": "funded_shifts",
+                    "displayName": "July shifts"
+                  },
+                  {
+                    "fieldName": "package_cost_usd",
+                    "displayName": "Cost",
+                    "format": {
+                      "type": "number-currency",
+                      "currencyCode": "USD",
+                      "abbreviation": "compact"
+                    }
+                  },
+                  {
+                    "fieldName": "full_recovery_theo_per_shift",
+                    "displayName": "100% theo/shift",
+                    "format": {
+                      "type": "number-currency",
+                      "currencyCode": "USD",
+                      "abbreviation": "compact"
+                    }
+                  }
+                ]
+              },
+              "frame": {
+                "title": "Neither shift pays for its package",
+                "showTitle": true,
+                "description": "Saturday wins per shift. Grave yields more total July opportunity.",
+                "showDescription": true
+              }
+            }
+          },
+          "position": {
+            "x": 7,
+            "y": 20,
+            "width": 5,
+            "height": 4
+          }
+        },
+        {
+          "widget": {
+            "name": "tech-sensitivity",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "tech_sensitivity",
+                  "fields": [
+                    {
+                      "name": "target_label",
+                      "expression": "`target_label`"
+                    },
+                    {
+                      "name": "net_lost_theo_minus_30_pct_usd",
+                      "expression": "`net_lost_theo_minus_30_pct_usd`"
+                    },
+                    {
+                      "name": "expected_net_usd",
+                      "expression": "`expected_net_usd`"
+                    },
+                    {
+                      "name": "net_lost_theo_plus_30_pct_usd",
+                      "expression": "`net_lost_theo_plus_30_pct_usd`"
+                    }
+                  ],
+                  "disaggregated": true
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "widgetType": "table",
+              "encodings": {
+                "columns": [
+                  {
+                    "fieldName": "target_label",
+                    "displayName": "Target"
+                  },
+                  {
+                    "fieldName": "net_lost_theo_minus_30_pct_usd",
+                    "displayName": "−30%",
+                    "format": {
+                      "type": "number-currency",
+                      "currencyCode": "USD",
+                      "abbreviation": "compact"
+                    }
+                  },
+                  {
+                    "fieldName": "expected_net_usd",
+                    "displayName": "Base",
+                    "format": {
+                      "type": "number-currency",
+                      "currencyCode": "USD",
+                      "abbreviation": "compact"
+                    }
+                  },
+                  {
+                    "fieldName": "net_lost_theo_plus_30_pct_usd",
+                    "displayName": "+30%",
+                    "format": {
+                      "type": "number-currency",
+                      "currencyCode": "USD",
+                      "abbreviation": "compact"
+                    }
+                  }
+                ]
+              },
+              "frame": {
+                "title": "Higher hourly theo still leaves staffing underwater",
+                "showTitle": true,
+                "description": "Downtime-value sensitivity. Other action rows are unchanged.",
+                "showDescription": true
+              }
+            }
+          },
+          "position": {
+            "x": 7,
+            "y": 24,
+            "width": 5,
+            "height": 3
+          }
+        }
+      ],
+      "layoutVersion": "GRID_V1",
+      "pageType": "PAGE_TYPE_CANVAS"
+    },
+    {
+      "name": "model-room",
+      "displayName": "Model Room",
+      "layout": [
+        {
+          "widget": {
+            "name": "model-intro",
+            "multilineTextboxSpec": {
+              "lines": [
+                "## THE MODEL ROOM\n\nPrioritize Saturday 7–10 p.m. if coverage can clear its cost hurdle."
+              ]
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 0,
+            "width": 12,
+            "height": 2
+          }
+        },
+        {
+          "widget": {
+            "name": "model-holdout",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "forecast",
+                  "fields": [
+                    {
+                      "name": "gaming_date",
+                      "expression": "`gaming_date`"
+                    },
+                    {
+                      "name": "actual_usd",
+                      "expression": "`actual_usd`"
+                    },
+                    {
+                      "name": "forecast_usd",
+                      "expression": "`forecast_usd`"
+                    },
+                    {
+                      "name": "baseline_usd",
+                      "expression": "`baseline_usd`"
+                    }
+                  ],
+                  "disaggregated": true
+                }
+              }
+            ],
+            "spec": {
+              "version": 1,
+              "widgetType": "custom-vega-viz",
+              "data": {
+                "queryName": "main_query"
+              },
+              "encodings": {
+                "fields": [
+                  {
+                    "fieldName": "gaming_date"
+                  },
+                  {
+                    "fieldName": "actual_usd"
+                  },
+                  {
+                    "fieldName": "forecast_usd"
+                  },
+                  {
+                    "fieldName": "baseline_usd"
+                  }
+                ]
+              },
+              "jsonSpec": {
+                "type": "vega-lite",
+                "spec": "{\"$schema\":\"https://vega.github.io/schema/vega-lite/v6.json\",\"data\":{\"name\":\"databricks_query\"},\"width\":\"container\",\"height\":\"container\",\"background\":\"transparent\",\"config\":{\"autosize\":{\"type\":\"fit\",\"contains\":\"padding\"},\"view\":{\"stroke\":null},\"axis\":{\"labelColor\":\"#9FAEA6\",\"titleColor\":\"#EDE6D3\",\"gridColor\":\"#24443A\",\"domainColor\":\"#24443A\"},\"legend\":{\"labelColor\":\"#EDE6D3\",\"titleColor\":\"#EDE6D3\"}},\"layer\":[{\"data\":{\"values\":[{\"start\":\"2025-05-01\",\"end\":\"2025-07-01\"}]},\"mark\":{\"type\":\"rect\",\"color\":\"#D4AF37\",\"opacity\":0.1},\"encoding\":{\"x\":{\"field\":\"start\",\"type\":\"temporal\",\"title\":\"Gaming date\"},\"x2\":{\"field\":\"end\"}}},{\"transform\":[{\"fold\":[\"actual_usd\",\"forecast_usd\",\"baseline_usd\"],\"as\":[\"series\",\"coin\"]},{\"calculate\":\"[\\\"Actual\\\", \\\"Weekday + flags\\\", \\\"Constant baseline\\\"][indexof([\\\"actual_usd\\\", \\\"forecast_usd\\\", \\\"baseline_usd\\\"], datum.series)]\",\"as\":\"label\"}],\"mark\":{\"type\":\"line\",\"strokeWidth\":1.6},\"encoding\":{\"x\":{\"field\":\"gaming_date\",\"type\":\"temporal\",\"title\":\"Gaming date\"},\"y\":{\"field\":\"coin\",\"type\":\"quantitative\",\"title\":\"Daily coin-in\",\"axis\":{\"format\":\"$~s\"},\"scale\":{\"zero\":false}},\"color\":{\"field\":\"label\",\"type\":\"nominal\",\"scale\":{\"domain\":[\"Actual\",\"Weekday + flags\",\"Constant baseline\"],\"range\":[\"#EDE6D3\",\"#3FD6E0\",\"#8A9690\"]}},\"tooltip\":[{\"field\":\"gaming_date\",\"type\":\"temporal\",\"title\":\"Date\"},{\"field\":\"label\",\"type\":\"nominal\"},{\"field\":\"coin\",\"type\":\"quantitative\",\"format\":\"$,.0f\"}]}}]}"
+              },
+              "frame": {
+                "title": "The weekday model cuts holdout MAE by 75%",
+                "showTitle": true,
+                "description": "Frozen Jan–Apr fits. Shaded area is the 61-day May–Jun holdout.",
+                "showDescription": true
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 2,
+            "width": 12,
+            "height": 8
+          }
+        },
+        {
+          "widget": {
+            "name": "model-score",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "scores",
+                  "fields": [
+                    {
+                      "name": "model",
+                      "expression": "`model`"
+                    },
+                    {
+                      "name": "scored_days",
+                      "expression": "`scored_days`"
+                    },
+                    {
+                      "name": "mae_usd",
+                      "expression": "`mae_usd`"
+                    },
+                    {
+                      "name": "mape_pct",
+                      "expression": "`mape_pct`"
+                    }
+                  ],
+                  "disaggregated": true
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "widgetType": "table",
+              "encodings": {
+                "columns": [
+                  {
+                    "fieldName": "model",
+                    "displayName": "Model"
+                  },
+                  {
+                    "fieldName": "scored_days",
+                    "displayName": "Scored days"
+                  },
+                  {
+                    "fieldName": "mae_usd",
+                    "displayName": "MAE",
+                    "format": {
+                      "type": "number-currency",
+                      "currencyCode": "USD",
+                      "abbreviation": "compact"
+                    }
+                  },
+                  {
+                    "fieldName": "mape_pct",
+                    "displayName": "MAPE (%)"
+                  }
+                ]
+              },
+              "frame": {
+                "title": "MAE fell from $218K to $55K",
+                "showTitle": true,
+                "description": "MAPE is the mean absolute percentage error.",
+                "showDescription": true
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 10,
+            "width": 6,
+            "height": 4
+          }
+        },
+        {
+          "widget": {
+            "name": "model-residual",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "residual",
+                  "fields": [
+                    {
+                      "name": "local_weekday",
+                      "expression": "`local_weekday`"
+                    },
+                    {
+                      "name": "model_mean_residual_usd",
+                      "expression": "`model_mean_residual_usd`"
+                    },
+                    {
+                      "name": "model_mae_usd",
+                      "expression": "`model_mae_usd`"
+                    }
+                  ],
+                  "disaggregated": true
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "widgetType": "table",
+              "encodings": {
+                "columns": [
+                  {
+                    "fieldName": "local_weekday",
+                    "displayName": "Weekday"
+                  },
+                  {
+                    "fieldName": "model_mean_residual_usd",
+                    "displayName": "Mean residual",
+                    "format": {
+                      "type": "number-currency",
+                      "currencyCode": "USD",
+                      "abbreviation": "compact"
+                    }
+                  },
+                  {
+                    "fieldName": "model_mae_usd",
+                    "displayName": "MAE",
+                    "format": {
+                      "type": "number-currency",
+                      "currencyCode": "USD",
+                      "abbreviation": "compact"
+                    }
+                  }
+                ]
+              },
+              "frame": {
+                "title": "The model still overpredicts every weekday",
+                "showTitle": true,
+                "description": "Residual = actual minus forecast. Sunday has the largest average bias.",
+                "showDescription": true
+              }
+            }
+          },
+          "position": {
+            "x": 6,
+            "y": 10,
+            "width": 6,
+            "height": 6
+          }
+        },
+        {
+          "widget": {
+            "name": "leakage-check",
+            "multilineTextboxSpec": {
+              "lines": [
+                "**Leakage checks**\n\nTrain ends Apr 30. Holdout is frozen. Event announcements precede the gaming date. Weather, tourism and realized play are excluded."
+              ]
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 16,
+            "width": 12,
+            "height": 2
+          }
+        }
+      ],
+      "layoutVersion": "GRID_V1",
+      "pageType": "PAGE_TYPE_CANVAS"
+    },
+    {
+      "name": "evidence-vault",
+      "displayName": "Evidence Vault",
+      "layout": [
+        {
+          "widget": {
+            "name": "evidence-intro",
+            "multilineTextboxSpec": {
+              "lines": [
+                "## THE EVIDENCE VAULT\n\nTrace each recommendation to the tested alternative and its limitation."
+              ]
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 0,
+            "width": 12,
+            "height": 2
+          }
+        },
+        {
+          "widget": {
+            "name": "claims",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "evidence",
+                  "fields": [
+                    {
+                      "name": "claim",
+                      "expression": "`claim`"
+                    },
+                    {
+                      "name": "widget",
+                      "expression": "`widget`"
+                    },
+                    {
+                      "name": "evidence",
+                      "expression": "`evidence`"
+                    },
+                    {
+                      "name": "result",
+                      "expression": "`result`"
+                    },
+                    {
+                      "name": "alternative_tested",
+                      "expression": "`alternative_tested`"
+                    },
+                    {
+                      "name": "limitation",
+                      "expression": "`limitation`"
+                    }
+                  ],
+                  "disaggregated": true
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "widgetType": "table",
+              "encodings": {
+                "columns": [
+                  {
+                    "fieldName": "claim",
+                    "displayName": "Claim"
+                  },
+                  {
+                    "fieldName": "widget",
+                    "displayName": "Page"
+                  },
+                  {
+                    "fieldName": "evidence",
+                    "displayName": "Gold source and SQL"
+                  },
+                  {
+                    "fieldName": "result",
+                    "displayName": "Result"
+                  },
+                  {
+                    "fieldName": "alternative_tested",
+                    "displayName": "Alternative or rule"
+                  },
+                  {
+                    "fieldName": "limitation",
+                    "displayName": "Limitation"
+                  }
+                ]
+              },
+              "frame": {
+                "title": "Every recommendation has an evidence trail",
+                "showTitle": true,
+                "description": "Information value and closure effects are scenario or descriptive estimates.",
+                "showDescription": true
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 2,
+            "width": 12,
+            "height": 15
+          }
+        }
+      ],
+      "layoutVersion": "GRID_V1",
+      "pageType": "PAGE_TYPE_CANVAS"
+    },
+    {
+      "name": "global-filters",
+      "displayName": "Global filters",
+      "layout": [
+        {
+          "widget": {
+            "name": "date-range",
+            "queries": [
+              {
+                "name": "machine_gaming_date",
+                "query": {
+                  "datasetName": "machine",
+                  "fields": [
+                    {
+                      "name": "gaming_date",
+                      "expression": "`gaming_date`"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              },
+              {
+                "name": "floor_gaming_date",
+                "query": {
+                  "datasetName": "floor",
+                  "fields": [
+                    {
+                      "name": "gaming_date",
+                      "expression": "`gaming_date`"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              },
+              {
+                "name": "traffic_gaming_date",
+                "query": {
+                  "datasetName": "traffic",
+                  "fields": [
+                    {
+                      "name": "gaming_date",
+                      "expression": "`gaming_date`"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              },
+              {
+                "name": "demand_gaming_date",
+                "query": {
+                  "datasetName": "demand",
+                  "fields": [
+                    {
+                      "name": "gaming_date",
+                      "expression": "`gaming_date`"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              },
+              {
+                "name": "fault_gaming_date",
+                "query": {
+                  "datasetName": "fault",
+                  "fields": [
+                    {
+                      "name": "gaming_date",
+                      "expression": "`gaming_date`"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              },
+              {
+                "name": "segments_gaming_date",
+                "query": {
+                  "datasetName": "segments",
+                  "fields": [
+                    {
+                      "name": "gaming_date",
+                      "expression": "`gaming_date`"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              },
+              {
+                "name": "comps_gaming_date",
+                "query": {
+                  "datasetName": "comps",
+                  "fields": [
+                    {
+                      "name": "gaming_date",
+                      "expression": "`gaming_date`"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              },
+              {
+                "name": "forecast_gaming_date",
+                "query": {
+                  "datasetName": "forecast",
+                  "fields": [
+                    {
+                      "name": "gaming_date",
+                      "expression": "`gaming_date`"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "widgetType": "filter-date-range-picker",
+              "encodings": {
+                "fields": [
+                  {
+                    "fieldName": "gaming_date",
+                    "displayName": "Gaming dates",
+                    "queryName": "machine_gaming_date"
+                  },
+                  {
+                    "fieldName": "gaming_date",
+                    "displayName": "Gaming dates",
+                    "queryName": "floor_gaming_date"
+                  },
+                  {
+                    "fieldName": "gaming_date",
+                    "displayName": "Gaming dates",
+                    "queryName": "traffic_gaming_date"
+                  },
+                  {
+                    "fieldName": "gaming_date",
+                    "displayName": "Gaming dates",
+                    "queryName": "demand_gaming_date"
+                  },
+                  {
+                    "fieldName": "gaming_date",
+                    "displayName": "Gaming dates",
+                    "queryName": "fault_gaming_date"
+                  },
+                  {
+                    "fieldName": "gaming_date",
+                    "displayName": "Gaming dates",
+                    "queryName": "segments_gaming_date"
+                  },
+                  {
+                    "fieldName": "gaming_date",
+                    "displayName": "Gaming dates",
+                    "queryName": "comps_gaming_date"
+                  },
+                  {
+                    "fieldName": "gaming_date",
+                    "displayName": "Gaming dates",
+                    "queryName": "forecast_gaming_date"
+                  }
+                ]
+              },
+              "frame": {
+                "title": "Gaming dates",
+                "showTitle": true
+              },
+              "selection": {
+                "defaultSelection": {
+                  "range": {
+                    "dataType": "DATE",
+                    "min": {
+                      "value": "2025-01-01"
+                    },
+                    "max": {
+                      "value": "2025-06-30"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 0,
+            "width": 4,
+            "height": 2
+          }
+        },
+        {
+          "widget": {
+            "name": "filter-zone_name",
+            "queries": [
+              {
+                "name": "machine_zone_name",
+                "query": {
+                  "datasetName": "machine",
+                  "fields": [
+                    {
+                      "name": "zone_name",
+                      "expression": "`zone_name`"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              },
+              {
+                "name": "traffic_zone_name",
+                "query": {
+                  "datasetName": "traffic",
+                  "fields": [
+                    {
+                      "name": "zone_name",
+                      "expression": "`zone_name`"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "widgetType": "filter-multi-select",
+              "encodings": {
+                "fields": [
+                  {
+                    "fieldName": "zone_name",
+                    "displayName": "Zone",
+                    "queryName": "machine_zone_name"
+                  },
+                  {
+                    "fieldName": "zone_name",
+                    "displayName": "Zone",
+                    "queryName": "traffic_zone_name"
+                  }
+                ]
+              },
+              "frame": {
+                "title": "Zone",
+                "showTitle": true
+              }
+            }
+          },
+          "position": {
+            "x": 4,
+            "y": 0,
+            "width": 4,
+            "height": 2
+          }
+        },
+        {
+          "widget": {
+            "name": "filter-bank_name",
+            "queries": [
+              {
+                "name": "machine_bank_name",
+                "query": {
+                  "datasetName": "machine",
+                  "fields": [
+                    {
+                      "name": "bank_name",
+                      "expression": "`bank_name`"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "widgetType": "filter-multi-select",
+              "encodings": {
+                "fields": [
+                  {
+                    "fieldName": "bank_name",
+                    "displayName": "Bank",
+                    "queryName": "machine_bank_name"
+                  }
+                ]
+              },
+              "frame": {
+                "title": "Bank",
+                "showTitle": true
+              }
+            }
+          },
+          "position": {
+            "x": 8,
+            "y": 0,
+            "width": 4,
+            "height": 2
+          }
+        },
+        {
+          "widget": {
+            "name": "filter-manufacturer",
+            "queries": [
+              {
+                "name": "machine_manufacturer",
+                "query": {
+                  "datasetName": "machine",
+                  "fields": [
+                    {
+                      "name": "manufacturer",
+                      "expression": "`manufacturer`"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "widgetType": "filter-multi-select",
+              "encodings": {
+                "fields": [
+                  {
+                    "fieldName": "manufacturer",
+                    "displayName": "Manufacturer",
+                    "queryName": "machine_manufacturer"
+                  }
+                ]
+              },
+              "frame": {
+                "title": "Manufacturer",
+                "showTitle": true
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 2,
+            "width": 4,
+            "height": 2
+          }
+        },
+        {
+          "widget": {
+            "name": "filter-volatility_class",
+            "queries": [
+              {
+                "name": "machine_volatility_class",
+                "query": {
+                  "datasetName": "machine",
+                  "fields": [
+                    {
+                      "name": "volatility_class",
+                      "expression": "`volatility_class`"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "widgetType": "filter-multi-select",
+              "encodings": {
+                "fields": [
+                  {
+                    "fieldName": "volatility_class",
+                    "displayName": "Volatility",
+                    "queryName": "machine_volatility_class"
+                  }
+                ]
+              },
+              "frame": {
+                "title": "Volatility",
+                "showTitle": true
+              }
+            }
+          },
+          "position": {
+            "x": 4,
+            "y": 2,
+            "width": 4,
+            "height": 2
+          }
+        },
+        {
+          "widget": {
+            "name": "filter-verdict_chip",
+            "queries": [
+              {
+                "name": "machine_verdict_chip",
+                "query": {
+                  "datasetName": "machine",
+                  "fields": [
+                    {
+                      "name": "verdict_chip",
+                      "expression": "`verdict_chip`"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "widgetType": "filter-multi-select",
+              "encodings": {
+                "fields": [
+                  {
+                    "fieldName": "verdict_chip",
+                    "displayName": "Verdict suit",
+                    "queryName": "machine_verdict_chip"
+                  }
+                ]
+              },
+              "frame": {
+                "title": "Verdict suit",
+                "showTitle": true
+              }
+            }
+          },
+          "position": {
+            "x": 8,
+            "y": 2,
+            "width": 4,
+            "height": 2
+          }
+        },
+        {
+          "widget": {
+            "name": "filter-machine_id",
+            "queries": [
+              {
+                "name": "machine_machine_id",
+                "query": {
+                  "datasetName": "machine",
+                  "fields": [
+                    {
+                      "name": "machine_id",
+                      "expression": "`machine_id`"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "widgetType": "filter-multi-select",
+              "encodings": {
+                "fields": [
+                  {
+                    "fieldName": "machine_id",
+                    "displayName": "Machine",
+                    "queryName": "machine_machine_id"
+                  }
+                ]
+              },
+              "frame": {
+                "title": "Machine",
+                "showTitle": true
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 4,
+            "width": 4,
+            "height": 2
+          }
+        },
+        {
+          "widget": {
+            "name": "filter-tier_end",
+            "queries": [
+              {
+                "name": "segments_tier_end",
+                "query": {
+                  "datasetName": "segments",
+                  "fields": [
+                    {
+                      "name": "tier_end",
+                      "expression": "`tier_end`"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "widgetType": "filter-multi-select",
+              "encodings": {
+                "fields": [
+                  {
+                    "fieldName": "tier_end",
+                    "displayName": "Tier",
+                    "queryName": "segments_tier_end"
+                  }
+                ]
+              },
+              "frame": {
+                "title": "Tier",
+                "showTitle": true
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 6,
+            "width": 4,
+            "height": 2
+          }
+        },
+        {
+          "widget": {
+            "name": "filter-home_region",
+            "queries": [
+              {
+                "name": "segments_home_region",
+                "query": {
+                  "datasetName": "segments",
+                  "fields": [
+                    {
+                      "name": "home_region",
+                      "expression": "`home_region`"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "widgetType": "filter-multi-select",
+              "encodings": {
+                "fields": [
+                  {
+                    "fieldName": "home_region",
+                    "displayName": "Region",
+                    "queryName": "segments_home_region"
+                  }
+                ]
+              },
+              "frame": {
+                "title": "Region",
+                "showTitle": true
+              }
+            }
+          },
+          "position": {
+            "x": 4,
+            "y": 6,
+            "width": 4,
+            "height": 2
+          }
+        },
+        {
+          "widget": {
+            "name": "filter-age_band",
+            "queries": [
+              {
+                "name": "segments_age_band",
+                "query": {
+                  "datasetName": "segments",
+                  "fields": [
+                    {
+                      "name": "age_band",
+                      "expression": "`age_band`"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "widgetType": "filter-multi-select",
+              "encodings": {
+                "fields": [
+                  {
+                    "fieldName": "age_band",
+                    "displayName": "Age band",
+                    "queryName": "segments_age_band"
+                  }
+                ]
+              },
+              "frame": {
+                "title": "Age band",
+                "showTitle": true
+              }
+            }
+          },
+          "position": {
+            "x": 8,
+            "y": 6,
+            "width": 4,
+            "height": 2
+          }
+        }
+      ],
+      "layoutVersion": "GRID_V1",
+      "pageType": "PAGE_TYPE_GLOBAL_FILTERS"
+    }
+  ],
+  "uiSettings": {
+    "theme": {
+      "canvasBackgroundColor": {
+        "light": "#0B0F0D",
+        "dark": "#0B0F0D"
+      },
+      "widgetBackgroundColor": {
+        "light": "#10241B",
+        "dark": "#10241B"
+      },
+      "widgetBorderColor": {
+        "light": "#24443A",
+        "dark": "#24443A"
+      },
+      "fontColor": {
+        "light": "#EDE6D3",
+        "dark": "#EDE6D3"
+      },
+      "selectionColor": {
+        "light": "#D4AF37",
+        "dark": "#D4AF37"
+      },
+      "visualizationColors": [
+        "#8A9690",
+        "#B48CFF",
+        "#3FD6E0",
+        "#FF5A6E",
+        "#C9A66B",
+        "#F4F1EA",
+        "#38D39F",
+        "#D4AF37"
+      ],
+      "widgetHeaderAlignment": "LEFT"
+    }
+  }
+}

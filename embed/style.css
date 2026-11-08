@@ -1,0 +1,10 @@
+:root { color-scheme: dark; font-family: system-ui, sans-serif; color: #ede6d3; background: #0b0f0d; }
+body { margin: 0; }
+header { padding: 1rem clamp(1rem, 4vw, 3rem); background: #10241b; border-bottom: 1px solid #d4af37; }
+header p { margin: 0; color: #9faea6; }
+.brand { color: #d4af37; font-weight: 700; letter-spacing: .13em; }
+.subtitle { color: #9faea6; margin-inline-start: .65em; font-weight: 500; }
+h1 { margin: .5rem 0; font-size: clamp(1.25rem, 3vw, 2rem); line-height: 1.25; }
+#status { margin: 1rem; }
+#dashboard { height: max(75vh, 660px); }
+#dashboard iframe { display: block; width: 100%; height: 100%; border: 0; }

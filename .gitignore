@@ -1,0 +1,13 @@
+.playwright-profile/
+embed/node_modules/
+embed/.env*
+
+.env*
+.vercel/
+/embed/.gold-export.json
+/__pycache__/
+**/__pycache__/
+.venv/
+/embed/public/
+/data/
+/submission/.preview.zip

@@ -1,0 +1,9 @@
+.env*
+.vercel/
+node_modules/
+__pycache__/
+*.py
+qa.mjs
+local.mjs
+README.md
+.gold-export.json

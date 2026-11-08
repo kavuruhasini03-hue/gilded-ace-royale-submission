@@ -1,0 +1,249 @@
+bundle:
+  name: dashboard-royale
+
+variables:
+  warehouse_id:
+    description: Serverless SQL warehouse ID
+    default: "46ae4ab074f3051d"
+
+sync:
+  include:
+    - databricks/**/*.sql
+  exclude:
+    - data/**
+    - .venv/**
+
+resources:
+  jobs:
+    royale_phase2:
+      name: Dashboard Royale Phase 2
+      max_concurrent_runs: 1
+      tasks:
+        - task_key: bronze
+          sql_task:
+            warehouse_id: ${var.warehouse_id}
+            file:
+              path: ./databricks/bronze/load.sql
+              source: WORKSPACE
+        - task_key: silver
+          depends_on:
+            - task_key: bronze
+          sql_task:
+            warehouse_id: ${var.warehouse_id}
+            file:
+              path: ./databricks/silver/align_events.sql
+              source: WORKSPACE
+        - task_key: gold_lorenz
+          depends_on:
+            - task_key: bronze
+          sql_task:
+            warehouse_id: ${var.warehouse_id}
+            file:
+              path: ./databricks/gold/gold_lorenz.sql
+              source: WORKSPACE
+        - task_key: gold_concentration
+          depends_on:
+            - task_key: gold_lorenz
+          sql_task:
+            warehouse_id: ${var.warehouse_id}
+            file:
+              path: ./databricks/gold/gold_concentration.sql
+              source: WORKSPACE
+        - task_key: gold_comp_week
+          depends_on:
+            - task_key: silver
+          sql_task:
+            warehouse_id: ${var.warehouse_id}
+            file:
+              path: ./databricks/gold/gold_comp_week.sql
+              source: WORKSPACE
+        - task_key: machine_day
+          depends_on:
+            - task_key: bronze
+          sql_task:
+            warehouse_id: ${var.warehouse_id}
+            file:
+              path: ./databricks/gold/machine_day.sql
+              source: WORKSPACE
+        - task_key: machine_verdict
+          depends_on:
+            - task_key: machine_day
+          sql_task:
+            warehouse_id: ${var.warehouse_id}
+            file:
+              path: ./databricks/gold/machine_verdict.sql
+              source: WORKSPACE
+        - task_key: supporting
+          depends_on:
+            - task_key: machine_verdict
+            - task_key: silver
+          sql_task:
+            warehouse_id: ${var.warehouse_id}
+            file:
+              path: ./databricks/gold/supporting.sql
+              source: WORKSPACE
+        - task_key: competing_explanations
+          depends_on:
+            - task_key: supporting
+            - task_key: gold_concentration
+            - task_key: gold_comp_week
+          sql_task:
+            warehouse_id: ${var.warehouse_id}
+            file:
+              path: ./databricks/gold/competing_explanations.sql
+              source: WORKSPACE
+        - task_key: quality_gates
+          depends_on:
+            - task_key: supporting
+          sql_task:
+            warehouse_id: ${var.warehouse_id}
+            file:
+              path: ./databricks/gold/quality_gates.sql
+              source: WORKSPACE
+        - task_key: phase3_demand_downtime
+          depends_on:
+            - task_key: competing_explanations
+          sql_task:
+            warehouse_id: ${var.warehouse_id}
+            file:
+              path: ./databricks/gold/phase3_demand_downtime.sql
+              source: WORKSPACE
+        - task_key: phase3_players
+          depends_on:
+            - task_key: bronze
+          sql_task:
+            warehouse_id: ${var.warehouse_id}
+            file:
+              path: ./databricks/gold/phase3_players.sql
+              source: WORKSPACE
+        - task_key: phase3_comps
+          depends_on:
+            - task_key: supporting
+          sql_task:
+            warehouse_id: ${var.warehouse_id}
+            file:
+              path: ./databricks/gold/phase3_comps.sql
+              source: WORKSPACE
+        - task_key: phase3_quality
+          depends_on:
+            - task_key: phase3_demand_downtime
+            - task_key: phase3_players
+            - task_key: phase3_comps
+          sql_task:
+            warehouse_id: ${var.warehouse_id}
+            file:
+              path: ./databricks/gold/phase3_quality.sql
+              source: WORKSPACE
+        - task_key: demand_recheck
+          depends_on:
+            - task_key: phase3_demand_downtime
+          sql_task:
+            warehouse_id: ${var.warehouse_id}
+            file:
+              path: ./databricks/gold/demand_recheck.sql
+              source: WORKSPACE
+        - task_key: comp_recheck
+          depends_on:
+            - task_key: phase3_comps
+          sql_task:
+            warehouse_id: ${var.warehouse_id}
+            file:
+              path: ./databricks/gold/comp_recheck.sql
+              source: WORKSPACE
+        - task_key: forecast
+          depends_on:
+            - task_key: supporting
+          sql_task:
+            warehouse_id: ${var.warehouse_id}
+            file:
+              path: ./databricks/gold/forecast.sql
+              source: WORKSPACE
+        - task_key: forecast_quality
+          depends_on:
+            - task_key: forecast
+          sql_task:
+            warehouse_id: ${var.warehouse_id}
+            file:
+              path: ./databricks/gold/forecast_quality.sql
+              source: WORKSPACE
+        - task_key: comp_control
+          depends_on:
+            - task_key: gold_comp_week
+            - task_key: comp_recheck
+          sql_task:
+            warehouse_id: ${var.warehouse_id}
+            file:
+              path: ./databricks/gold/comp_control.sql
+              source: WORKSPACE
+        - task_key: demand_mechanisms
+          depends_on:
+            - task_key: demand_recheck
+            - task_key: phase3_players
+          sql_task:
+            warehouse_id: ${var.warehouse_id}
+            file:
+              path: ./databricks/gold/demand_mechanisms.sql
+              source: WORKSPACE
+        - task_key: tech_shift_economics
+          depends_on:
+            - task_key: forecast
+            - task_key: competing_explanations
+          sql_task:
+            warehouse_id: ${var.warehouse_id}
+            file:
+              path: ./databricks/gold/tech_shift_economics.sql
+              source: WORKSPACE
+        - task_key: action_voi
+          depends_on:
+            - task_key: comp_control
+            - task_key: machine_verdict
+          sql_task:
+            warehouse_id: ${var.warehouse_id}
+            file:
+              path: ./databricks/gold/action_voi.sql
+              source: WORKSPACE
+        - task_key: action_plan
+          depends_on:
+            - task_key: action_voi
+            - task_key: tech_shift_economics
+            - task_key: demand_mechanisms
+          sql_task:
+            warehouse_id: ${var.warehouse_id}
+            file:
+              path: ./databricks/gold/action_plan.sql
+              source: WORKSPACE
+        - task_key: action_quality
+          depends_on:
+            - task_key: action_plan
+          sql_task:
+            warehouse_id: ${var.warehouse_id}
+            file:
+              path: ./databricks/gold/action_quality.sql
+              source: WORKSPACE
+        - task_key: evidence_vault
+          depends_on:
+            - task_key: action_quality
+            - task_key: comp_control
+          sql_task:
+            warehouse_id: ${var.warehouse_id}
+            file:
+              path: ./databricks/gold/evidence_vault.sql
+              source: WORKSPACE
+    royale_twin_export:
+      name: Dashboard Royale · Gold export
+      max_concurrent_runs: 1
+      tasks:
+        - task_key: prepare_twin_gold
+          sql_task:
+            warehouse_id: ${var.warehouse_id}
+            file:
+              path: ./databricks/gold/twin_daily.sql
+              source: WORKSPACE
+        - task_key: export_gold
+          depends_on:
+            - task_key: prepare_twin_gold
+          notebook_task:
+            notebook_path: ./databricks/export/twin.py
+            source: WORKSPACE
+            base_parameters:
+              export_id: "{{job.run_id}}"
