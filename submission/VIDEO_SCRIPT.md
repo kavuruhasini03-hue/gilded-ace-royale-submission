@@ -1,29 +1,39 @@
-# Judge walkthrough
+# Video walkthrough (2:00)
 
-[Public source repository](https://github.com/kavuruhasini03-hue/gilded-ace-royale-submission)
+Before recording, open the [public dashboard](https://gilded-ace-royale.vercel.app) in a private window. Close other tabs, hide the bookmarks bar, turn on Do Not Disturb, and set browser zoom to about 90%. Run the Genie question once in the signed-in workspace.
 
-Open [the public dashboard](https://gilded-ace-royale.vercel.app) in a private window before recording. The target runtime is 2 minutes.
+**0:00 to 0:10 · Verdict hero.** Pull the lever.
 
-**0:00 to 0:35. Verdict and dates.** Set April 1 through June 30.
+> The general manager wants to replace the ten lowest earners. Before spending, we asked whether luck, location, or a leak explains the gap.
 
-> We recommend not replacing any of the ten lowest-earning machines in July. Their low earnings come mostly from the Back Forty's lost foot traffic and from game settings, so we spend $10,500 on three tests: new signage for the Back Forty, a payout check on machine M-1158, and moving machine M-1184 to a busier spot to learn whether its weakness is the spot or the machine. We keep $89,500 in reserve. Set the dates from April through June.
+**0:10 to 0:25 · Verdict box and July plan cards.**
 
-**0:35 to 0:50. Bank and machine.** Open Demand. Select Hotel Corridor and Bank 40, apply the filters, then select a machine on the map.
+> Keep all ten in July. Nine sit in the Back Forty, where walkway construction reduced foot traffic. We spend ten thousand five hundred dollars on three tests and keep eighty-nine thousand five hundred.
 
-> Open Hotel Corridor, Bank 40. Select a machine to see when it was unavailable. The gaming day starts at six in the morning.
+**0:25 to 0:40 · Q1 Machines.** Show the bridge and the luck funnel with M-1158.
 
-**0:50 to 1:04. Guest group.** Reset, open Players, and apply the Gold tier.
+> We split each machine's gap into downtime, location, game settings, machine effects, and luck. The unusually large payout gap on M-1158 warrants a closer look.
 
-> Choose Gold to see wagers, payouts, and what these guests won or lost. No action targets heavy losers.
+**0:40 to 0:55 · Date, bank, and machine filters.** Set April 1 to June 30. Open Q2 Demand, select Hotel Corridor and Bank 40, apply, then select a machine.
 
-**1:04 to 1:18. Model validation.** Open Model Room and point to both error values.
+> Change the dates to update the period totals. Select Hotel Corridor, Bank Forty, then a machine. Its timeline follows the gaming day, which starts at six a.m.
 
-> We used only announcements known by April 30 and froze the forecast before scoring May and June. Over those 61 days, the typical error fell from about 218 thousand dollars to 51 thousand dollars.
+**0:55 to 1:05 · Q4 Players.** Reset filters, set Tier to Gold, and apply.
 
-**1:18 to 1:45. July action and evidence.** Open July Plan and follow the M-1158 link into Evidence Vault.
+> Filter to Gold guests to see what they wagered and won or lost. No action targets heavy losers.
 
-> Spend seventy-five hundred dollars on Back Forty signs and twelve hundred to inspect M-1158. Spend eighteen hundred to move M-1184 to a vacant Center Pit slot. Compare its expected win per hour with similar machines and decide at the end of August. Defer the comp pilot until it can detect a change small enough to guide the decision.
+**1:05 to 1:20 · Q5 Comps.**
 
-**1:45 to 2:00. Genie.** Open [Ask the Pit Boss](https://dbc-a3bbfca6-850a.cloud.databricks.com/genie/rooms/01f1db4548ec16ee9f10853bb4959656?o=7474653288963289) from the Evidence Vault in a signed-in tab. Select the July budget question.
+> On May first, rewards got cheaper in points. Economic exposure on unspent points rose by three point three million dollars beyond normal accrual. The comparison with uncarded play left the per-player change uncertain.
 
-> Ask Genie what July funds. Its trusted query reads Gold and confirms signage, inspection and move, with eighty-nine thousand five hundred dollars in reserve.
+**1:20 to 1:35 · Model Room.**
+
+> The forecast used information known by April thirtieth and was frozen before scoring. Average daily error fell from about two hundred eighteen thousand dollars to fifty-one thousand. The hourly profile helps schedule the inspection and move.
+
+**1:35 to 1:48 · Q6 July plan.** Select M-1158 to open its Evidence Vault row.
+
+> Every action has a cost, a range, and a decision rule. Open the M-1158 evidence to see the source, the alternative we tested, and the limits.
+
+**1:48 to 2:00 · Databricks.** Show the AI/BI dashboard for three seconds, the MLflow run for two, then Genie's July budget answer.
+
+> The pipeline, forecast, and dashboard run on Databricks. Genie confirms the three funded actions and the July reserve. Thanks for watching.
