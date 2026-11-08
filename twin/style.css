@@ -153,3 +153,5 @@ footer {text-align:center;border-color:var(--gold3)}
   nav {flex-wrap:nowrap;overflow-x:auto;scrollbar-width:thin}
   nav a {flex:none}
 }
+
+.house-verdict .verdict-context {margin:9px 0 0;font-weight:500;font-size:.92em}

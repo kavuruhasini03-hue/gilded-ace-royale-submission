@@ -91,6 +91,11 @@ def build():
     if any(forbidden.intersection(dataset["columns"]) for dataset in source.values()):
         raise SystemExit("Export includes fields outside the public snapshot contract; rerun the export job.")
     pages = [page for page in json.loads(SPEC.read_text())["pages"] if page["pageType"] != "PAGE_TYPE_GLOBAL_FILTERS"]
+    # The public views use the reviewed copy in copy.js, never AI/BI widget descriptions.
+    for page in pages:
+        page["layout"] = [item for item in page["layout"] if "spec" in item["widget"]]
+        for item in page["layout"]:
+            item["widget"]["spec"].pop("frame", None)
     date, = source["export_metadata"]["rows"][0]
     source.pop("kpi_expected")
     payload = json.dumps({"datasets": source, "pages": pages}, ensure_ascii=False, separators=(",", ":")).replace(chr(8212), ". ").encode()

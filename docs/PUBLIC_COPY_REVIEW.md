@@ -112,3 +112,7 @@
 - Model and comp result tables use readable measure names. The evidence table spells out the comparison and uncertainty in its result text.
 
 The final pass updates the verdict, loading message, live-browser note, and export-date subtitle.
+
+The verdict also explains the Back Forty closure and the effect of game settings in plain language.
+
+Nine of the ten machines are in the Back Forty, an area that lost foot traffic when its entrance walkway was closed for renovation from March 3 to April 7. Most of their shortfall comes from their location and from game settings that keep less of each bet by design, not from faulty machines.

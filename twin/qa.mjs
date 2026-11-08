@@ -50,6 +50,10 @@ try {
   await page.evaluate(()=>document.fonts.ready);
   const gold=JSON.parse(await readFile(new URL("../embed/.gold-export.json",import.meta.url),"utf8"));
   await open("verdict");
+  assert.deepEqual(await page.locator(".house-verdict p").allTextContents(),[
+    "We recommend not replacing any of the ten lowest-earning machines in July. Instead, inspect machine M-1158, hold off on the comp pilot until it can give a clear answer, and keep $98,800 of the budget in reserve.",
+    "Nine of the ten machines are in the Back Forty, an area that lost foot traffic when its entrance walkway was closed for renovation from March 3 to April 7. Most of their shortfall comes from their location and from game settings that keep less of each bet by design, not from faulty machines."
+  ]);
   for(const expected of decode(gold.kpi_expected)){
     await dates(expected.start,expected.end);
     for(const [key,value] of Object.entries(expected)){
@@ -118,7 +122,9 @@ try {
     assert.equal(await page.locator("main h2").count(),1,slug);
     assert.equal(await page.getByText("No rows match these filters.",{exact:true}).count(),0,slug);
     assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth),1440,slug);
-    assert.ok(!(await page.locator("body").innerText()).includes(String.fromCharCode(8212)),slug+" contains an em dash");
+    const text=await page.locator("body").innerText();
+    assert.ok(!text.includes(String.fromCharCode(8212)),slug+" contains an em dash");
+    assert.doesNotMatch(text,/replace none|underpowered|\bconfigs\b|\bGM(?:['’]s)?\b/i,slug+" contains legacy copy");
     await capture(slug);
   }
   await page.setViewportSize({width:390,height:844});
