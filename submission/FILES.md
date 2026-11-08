@@ -1,6 +1,10 @@
-# Public GitHub file list
+# Final public source file list
 
-This clean source package contains 146 files. It omits challenge data, generated exports, local configuration, and credentials.
+[Public source repository](https://github.com/kavuruhasini03-hue/gilded-ace-royale-submission)
+
+This list contains 146 files from final release `943a132`. It includes the July budget panel, the prepared Ask the Pit Boss answers, the Genie configuration and validation, and the strict April 30 forecast cutoff.
+
+The snapshot excludes challenge data, generated exports, local settings, browser profiles, and credentials.
 
 ```text
 .gitignore
