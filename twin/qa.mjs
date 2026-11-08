@@ -54,6 +54,10 @@ try {
     "We recommend not replacing any of the ten lowest-earning machines in July. Instead, inspect machine M-1158, hold off on the comp pilot until it can give a clear answer, and keep $98,800 of the budget in reserve.",
     "Nine of the ten machines are in the Back Forty, an area that lost foot traffic when its entrance walkway was closed for renovation from March 3 to April 7. Most of their shortfall comes from their location and from game settings that keep less of each bet by design, not from faulty machines."
   ]);
+  const prepared=page.locator(".pit-boss-answers").getByText("How much should we spend in July?",{exact:true});
+  await prepared.click();
+  assert.match(await page.locator(".pit-boss-answers details[open]").innerText(),/\$1,200\.00.*\$98,800\.00/);
+  await prepared.click();
   for(const expected of decode(gold.kpi_expected)){
     await dates(expected.start,expected.end);
     for(const [key,value] of Object.entries(expected)){

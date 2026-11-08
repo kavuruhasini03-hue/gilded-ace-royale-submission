@@ -299,6 +299,32 @@ function compTrend(name,title) {
     name==="comp-price" ? [["price","Points per dollar"]] : [["trackedRate","Tracked expected win",percent],
       ...(!selected?[["floorRate","Floor expected win",percent]]:[])],{shade:"2025-05-05"});
 }
+function pitBossAnswers() {
+  const cage=stable("cage")[0];
+  const actions=stable("actions");
+  const inspection=actions.find(r=>r.action_type_id==="A-INSPECT" && r.selected);
+  const pilot=actions.find(r=>r.action_type_id==="A-COMP-PILOT");
+  const threshold=pilot.success_rule.match(/at most ([\d.]+%)/)?.[1];
+  const primary=stable("scores").find(r=>r.model==="weekday_event_holiday");
+  const baseline=stable("scores").find(r=>r.model==="constant_baseline");
+  const reduction=1-primary.mae_usd/baseline.mae_usd;
+  const answers=[
+    ["How much should we spend in July?", "Fund "+usd.format(cage.spent_usd)+" and keep "+usd.format(cage.kept_usd)+" in reserve.",
+      "plan","Open the July plan"],
+    ["Why inspect "+inspection.target_id+"?", "The "+usd.format(inspection.cash_cost_usd)+" check can determine whether the payout meter, game settings, or accounting show a repeatable problem. The estimated net value of what we might learn is "+usd.format(inspection.expected_net_usd)+".",
+      "evidence","Open the evidence"],
+    ["How accurate is the primary forecast?", "Using announcements known by April 30, the model missed by "+usd.format(primary.mae_usd)+" per day on average over "+primary.scored_days+" days. That is "+pct.format(reduction)+" less error than the constant forecast.",
+      "model","Open the Model Room"],
+    ["Why wait on the comp pilot?", "The proposed trial costs "+usd.format(pilot.cash_cost_usd)+". Fund it when it can reliably detect a change of "+threshold+" or less.",
+      "comps","Open the comps view"],
+    ["What did downtime cost?", "Across the six-month study, unavailable machines cost an estimated "+usd.format(sum(stable("floor"),"leak_usd"))+" in expected house win.",
+      "leak","Open the downtime view"],
+  ];
+  return '<aside class="card pit-boss-answers" aria-labelledby="pit-boss-heading"><h3 id="pit-boss-heading">Ask the Pit Boss</h3>'
+    +'<p class="muted">Choose a question. These prepared answers use the Gold export for the full study and the July decision.</p>'
+    +answers.map(([question,answer,route,link])=>'<details><summary>'+escape(question)+'</summary><p>'+escape(answer)
+      +' <a href="#/'+route+'">'+escape(link)+'</a></p></details>').join("")+'</aside>';
+}
 function budgetAllocation() {
   const spent=sum(stable("actions").filter(row=>row.selected),"cash_cost_usd");
   const reserve=data.cage[0].kept_usd;
@@ -472,6 +498,7 @@ function render() {
   $("content").innerHTML = '<section class="intro"><p class="muted">'+escape(tab)+'</p><h2><span aria-hidden="true" class="pip'
     +("♥♦".includes(pip)?" red":"")+'">'+pip+'</span>'+escape(title)+'</h2><p>'+escape(description)
     +'</p><p class="muted" id="scope">'+escape(scope)+'</p>'+intro
+    +(slug==="verdict"?pitBossAnswers():"")
     +(slug==="verdict" && insights.length?'<aside class="card strategic"><h3>What to do next</h3>'+insights.map(p=>'<p>'+escape(p)+'</p>').join("")+'</aside>':"")
     +'</section><div class="grid">'
     +layout[slug].map(name=>{

@@ -1,6 +1,6 @@
 # Public GitHub file list
 
-This source package contains 130 files, including the restyle captures. It excludes challenge data, generated exports, local configuration, and credentials.
+This clean source package contains 145 files. It omits challenge data, generated exports, local configuration, and credentials.
 
 ```text
 .gitignore
@@ -39,9 +39,11 @@ databricks/gold/supporting.sql
 databricks/gold/tech_shift_economics.sql
 databricks/gold/twin_daily.sql
 databricks/silver/align_events.sql
+docs/BUDGET_FORECAST_REVIEW.md
 docs/METHODS.md
 docs/PUBLIC_COPY_REVIEW.md
 docs/RECON.md
+docs/STRATEGIC_INSIGHTS.md
 docs/screens/README.md
 docs/screens/restyle/README.md
 docs/screens/restyle/after/comps.png
@@ -75,6 +77,16 @@ docs/screens/restyle/before/model.png
 docs/screens/restyle/before/plan.png
 docs/screens/restyle/before/players.png
 docs/screens/restyle/before/verdict.png
+docs/screens/review/budget-allocation.png
+docs/screens/review/budget-phone.png
+docs/screens/review/judge-01-dates.png
+docs/screens/review/judge-02-bank-timeline.png
+docs/screens/review/judge-03-gold.png
+docs/screens/review/judge-04-evidence.png
+docs/screens/review/judge-04-model.png
+docs/screens/review/model-comparison.png
+docs/screens/review/model.png
+docs/screens/review/plan.png
 docs/screens/views/README.md
 docs/screens/views/comps.png
 docs/screens/views/demand.png
@@ -113,7 +125,9 @@ reference/SOURCE_TERMS.md
 reference/release.json
 scripts/check_release.py
 scripts/deploy_phase2.py
+scripts/forecast_secondary_review.py
 scripts/log_forecast.py
+scripts/setup_pit_boss_genie.py
 scripts/verify_data.py
 scripts/verify_semantics.py
 submission/AI_DISCLOSURE.md
@@ -129,6 +143,7 @@ twin/contrast.py
 twin/copy.js
 twin/evidence.py
 twin/export_notebook.py
+twin/forecast-review.json
 twin/index.html
 twin/qa.mjs
 twin/refresh.py

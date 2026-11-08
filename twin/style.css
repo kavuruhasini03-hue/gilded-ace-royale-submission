@@ -167,3 +167,7 @@ footer {text-align:center;border-color:var(--gold3)}
 #unfunded-options td:first-child {min-width:155px}
 .strategic {margin:18px 0 3px}
 .strategic p+p {margin-top:10px}
+.pit-boss-answers {margin:18px 0 3px}
+.pit-boss-answers details {border-top:1px solid var(--seam);padding:7px 0}
+.pit-boss-answers summary {margin:0;font-weight:700}
+.pit-boss-answers details p {margin:7px 0 0}

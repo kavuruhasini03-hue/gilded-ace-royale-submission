@@ -162,7 +162,7 @@ def datasets():
 
 def board():
     return [
-        text("verdict", f"## {VERDICT}\n\n**THE GILDED ACE · EYE IN THE SKY** · Fictional casino · Jan–Jun 2025 evidence\n\n**Comp monitoring:** review comp pricing and tracked play if cost exceeds 1.50% of tracked theo for two consecutive complete gaming weeks.\n\n**Pilot power:** the 60-day MDE is larger in dollars ($7.61 vs $4.15) but smaller as a share (5.77% vs 6.44%) because the baseline contribution accumulates over more days.", h=5),
+        text("verdict", f"## {VERDICT}\n\n**THE GILDED ACE · EYE IN THE SKY** · Fictional casino · Jan–Jun 2025 evidence\n\n**Comp monitoring:** review comp pricing and tracked play if cost exceeds 1.50% of tracked theo for two consecutive complete gaming weeks.\n\n**Pilot power:** the 60-day MDE is larger in dollars ($7.61 vs $4.15) but smaller as a share (5.77% vs 6.44%) because the baseline contribution accumulates over more days.\n\n[Ask the Pit Boss in Genie (workspace sign-in required)](https://dbc-a3bbfca6-850a.cloud.databricks.com/genie/rooms/01f1db4548ec16ee9f10853bb4959656?o=7474653288963289).", h=5),
         counter("health", "machine", "SUM(theo_usd)/NULLIF(SUM(theo_usd + leak_usd + location_opportunity_usd),0)",
                 "Theo captured", "Health versus the best observed zone factor after leak.", pos(0, 5, 2, 3), PERCENT),
         counter("coin", "machine", "SUM(coin_in_usd)", "Coin-in", "Total wagers in the current slice.", pos(2, 5, 2, 3)),

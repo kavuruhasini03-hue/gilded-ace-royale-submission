@@ -18,3 +18,5 @@ The separate organizer data release check remains blocked on the draft data vers
 ## Restyle checks
 
 The browser reran the judge workflow, the three exact Gold KPI comparisons, the machine deal, and the plan-card flip. It also checked phone-width overflow and reduced-motion behavior. The restored palette passed the contrast checks. The built assets contain zero em dashes and no DuckDB or Parquet references. [Before and after screenshots](../docs/screens/restyle/README.md).
+
+The warehouse also checked that all holdout event flags use only announcements known at the forecast origin. The public Ask the Pit Boss panel uses fixed answers from Gold without an LLM. Genie is separate and requires Databricks workspace access.

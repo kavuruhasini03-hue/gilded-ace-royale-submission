@@ -15,3 +15,5 @@ The before captures show the previous production build. The after captures show 
 | Evidence Vault | [Before](before/evidence.png) | [After](after/evidence.png) |
 
 [Flipped plan card](after/plan-flipped.png) · [Phone width](after/mobile.png) · [Date range](after/judge-01-dates.png) · [Bank timeline](after/judge-02-bank-timeline.png) · [Gold tier](after/judge-03-gold.png) · [Model](after/judge-04-model.png) · [Inspection evidence](after/judge-04-evidence.png)
+
+These historical design captures predate the forecast correction. See the [current review captures and cutoff disclosure](../../BUDGET_FORECAST_REVIEW.md).
